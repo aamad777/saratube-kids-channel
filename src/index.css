@@ -1,88 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 340 100% 98%;
+    --foreground: 320 60% 25%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 320 60% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 320 60% 25%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 330 85% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 270 60% 75%;
+    --secondary-foreground: 270 60% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 340 30% 92%;
+    --muted-foreground: 320 30% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 45 100% 60%;
+    --accent-foreground: 45 100% 20%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 330 40% 88%;
+    --input: 330 40% 88%;
+    --ring: 330 85% 60%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
+
+    /* Custom Sara colors */
+    --sara-pink: 330 85% 60%;
+    --sara-pink-light: 340 100% 92%;
+    --sara-purple: 270 60% 65%;
+    --sara-purple-light: 270 80% 92%;
+    --sara-yellow: 45 100% 60%;
+    --sara-yellow-light: 45 100% 85%;
+    --sara-mint: 165 60% 60%;
+    --sara-mint-light: 165 60% 90%;
+    --sara-coral: 15 85% 65%;
+    --sara-blue: 200 85% 60%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(330 85% 60%) 0%, hsl(270 60% 65%) 50%, hsl(200 85% 60%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(340 100% 98%) 100%);
+    --gradient-button: linear-gradient(135deg, hsl(330 85% 60%) 0%, hsl(15 85% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(330 85% 60%) 100%);
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(330 85% 60% / 0.25);
+    --shadow-card: 0 8px 30px -8px hsl(330 85% 60% / 0.2);
+    --shadow-button: 0 6px 20px -4px hsl(330 85% 60% / 0.4);
+    --shadow-glow: 0 0 40px hsl(330 85% 60% / 0.3);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 320 40% 8%;
+    --foreground: 340 100% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 320 40% 12%;
+    --card-foreground: 340 100% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 320 40% 12%;
+    --popover-foreground: 340 100% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 330 85% 65%;
+    --primary-foreground: 320 40% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 270 50% 40%;
+    --secondary-foreground: 270 80% 92%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 320 30% 18%;
+    --muted-foreground: 320 30% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 45 100% 55%;
+    --accent-foreground: 45 100% 10%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 320 30% 22%;
+    --input: 320 30% 22%;
+    --ring: 330 85% 65%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +116,109 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Baloo 2', cursive;
+  }
+
+  .font-body {
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .text-gradient {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .bg-gradient-button {
+    background: var(--gradient-button);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-button {
+    box-shadow: var(--shadow-button);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce-slow 2s ease-in-out infinite;
+  }
+
+  .animate-wiggle {
+    animation: wiggle 1s ease-in-out infinite;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
   }
 }
