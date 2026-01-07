@@ -14,13 +14,14 @@ import thumbStories from "@/assets/thumb-stories.png";
 import thumbScience from "@/assets/thumb-science.png";
 import thumbGames from "@/assets/thumb-games.png";
 
-const videoData: Record<string, { title: string; thumbnail: string; creator: string; views: number; description: string }> = {
+const videoData: Record<string, { title: string; thumbnail: string; creator: string; views: number; description: string; youtubeId: string }> = {
   "1": {
     title: "🎵 Rainbow Dance Party with Friends!",
     thumbnail: thumbMusic,
     creator: "Sara's World",
     views: 125000,
     description: "Join us for the most colorful dance party ever! Learn fun dance moves and sing along with your favorite rainbow characters! Perfect for kids who love music and dancing! 💃🌈",
+    youtubeId: "L_jWHffIx5E", // Sesame Street - Happy Song
   },
   "2": {
     title: "🐾 Learn Animal Sounds - Fun for Kids!",
@@ -28,6 +29,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Little Learners",
     views: 89000,
     description: "Discover all the amazing sounds that animals make! From dogs and cats to elephants and lions - learn them all in this fun educational video! 🐕🦁",
+    youtubeId: "t99ULJjCsaM", // Animal Sounds
   },
   "3": {
     title: "🎨 Easy DIY Crafts - Make a Rainbow!",
@@ -35,6 +37,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Crafty Kids",
     views: 67000,
     description: "Get creative with us! Learn how to make beautiful rainbow crafts with simple materials you can find at home! 🎨✨",
+    youtubeId: "0TgLtF3PMOc", // Craft video
   },
   "4": {
     title: "🏰 The Princess and the Magic Castle",
@@ -42,6 +45,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Story Time",
     views: 234000,
     description: "Once upon a time in a magical kingdom... Join us for an enchanting story about a brave princess and her magical castle! 👑🏰",
+    youtubeId: "RQmEERvqq70", // Fairy tale
   },
   "5": {
     title: "🔬 Cool Science Experiments at Home!",
@@ -49,6 +53,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Science Fun",
     views: 156000,
     description: "Science is amazing! Learn cool experiments you can try at home with mom and dad! Safe, fun, and educational! 🧪✨",
+    youtubeId: "js0hVFCHPOo", // Science experiments
   },
   "6": {
     title: "🎮 Fun Games for Kids - Play Along!",
@@ -56,6 +61,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Game Time",
     views: 198000,
     description: "Join the fun gaming adventure! Learn new games and play along with us! Perfect for family game time! 🎮🎉",
+    youtubeId: "nKIu9yen5nc", // Kids game video
   },
 };
 
@@ -92,18 +98,15 @@ const WatchPage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Video player placeholder */}
+            {/* Video player */}
             <div className="relative aspect-video bg-foreground/10 rounded-3xl overflow-hidden shadow-card">
-              <img
-                src={video.thumbnail}
-                alt={video.title}
-                className="w-full h-full object-cover"
+              <iframe
+                src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1`}
+                title={video.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-foreground/30">
-                <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center shadow-glow animate-pulse-glow cursor-pointer hover:scale-110 transition-transform">
-                  <div className="w-0 h-0 border-t-[20px] border-t-transparent border-l-[35px] border-l-primary-foreground border-b-[20px] border-b-transparent ml-2" />
-                </div>
-              </div>
             </div>
 
             {/* Video info */}
