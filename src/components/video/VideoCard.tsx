@@ -1,0 +1,115 @@
+import { Heart, MessageCircle, Play, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
+interface VideoCardProps {
+  id: string;
+  title: string;
+  thumbnail: string;
+  creator: string;
+  views: number;
+  likes: number;
+  comments: number;
+  duration: string;
+}
+
+const VideoCard = ({
+  id,
+  title,
+  thumbnail,
+  creator,
+  views,
+  likes,
+  comments,
+  duration,
+}: VideoCardProps) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(likes);
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+  };
+
+  const formatViews = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  return (
+    <Link to={`/watch/${id}`}>
+      <div className="group relative bg-card rounded-3xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+        {/* Thumbnail */}
+        <div className="relative aspect-video overflow-hidden">
+          <img
+            src={thumbnail}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          
+          {/* Play overlay */}
+          <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-button animate-pulse-glow">
+              <Play className="h-8 w-8 text-primary-foreground fill-current ml-1" />
+            </div>
+          </div>
+
+          {/* Duration badge */}
+          <div className="absolute bottom-2 right-2 px-2 py-1 bg-foreground/80 text-primary-foreground rounded-lg text-sm font-bold">
+            {duration}
+          </div>
+
+          {/* Like button */}
+          <button
+            onClick={handleLike}
+            className="absolute top-2 right-2 p-2 rounded-full bg-card/80 backdrop-blur-sm transition-all hover:scale-110"
+          >
+            <Heart
+              className={`h-5 w-5 transition-all ${
+                isLiked
+                  ? "fill-sara-coral text-sara-coral scale-110"
+                  : "text-muted-foreground"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4">
+          <h3 className="font-display font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+          
+          <div className="flex items-center gap-2 mt-2">
+            <div className="w-6 h-6 rounded-full bg-gradient-button flex items-center justify-center">
+              <Sparkles className="h-3 w-3 text-primary-foreground" />
+            </div>
+            <span className="text-sm text-muted-foreground font-medium">
+              {creator}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Play className="h-4 w-4" />
+              {formatViews(views)}
+            </span>
+            <span className="flex items-center gap-1">
+              <Heart className={`h-4 w-4 ${isLiked ? "text-sara-coral fill-sara-coral" : ""}`} />
+              {formatViews(likeCount)}
+            </span>
+            <span className="flex items-center gap-1">
+              <MessageCircle className="h-4 w-4" />
+              {comments}
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+export default VideoCard;
