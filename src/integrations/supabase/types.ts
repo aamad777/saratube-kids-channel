@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          age: number | null
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          selected_theme: Database["public"]["Enums"]["app_theme"] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          selected_theme?: Database["public"]["Enums"]["app_theme"] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          selected_theme?: Database["public"]["Enums"]["app_theme"] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_video_preferences: {
+        Row: {
+          category: Database["public"]["Enums"]["video_category"]
+          id: string
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["video_category"]
+          id?: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["video_category"]
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +73,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_theme: "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy"
+      video_category:
+        | "music"
+        | "animals"
+        | "crafts"
+        | "stories"
+        | "science"
+        | "games"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +207,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_theme: ["rainbow", "princess", "ocean", "space", "jungle", "candy"],
+      video_category: [
+        "music",
+        "animals",
+        "crafts",
+        "stories",
+        "science",
+        "games",
+      ],
+    },
   },
 } as const
