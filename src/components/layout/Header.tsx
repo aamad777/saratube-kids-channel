@@ -1,4 +1,4 @@
-import { Search, Upload, Bell, Sparkles, LogOut, User } from "lucide-react";
+import { Search, Upload, Bell, Sparkles, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -78,8 +78,14 @@ const Header = () => {
                     <User className="w-4 h-4" />
                     <span>My Profile</span>
                   </DropdownMenuItem>
+                  <Link to="/parent">
+                    <DropdownMenuItem className="gap-2">
+                      <Shield className="w-4 h-4" />
+                      <span>Parent Dashboard</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={signOut}
                     className="gap-2 text-destructive focus:text-destructive"
                   >
