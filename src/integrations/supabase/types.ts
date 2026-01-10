@@ -14,6 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          category: string | null
+          id: string
+          user_id: string
+          video_id: string
+          video_title: string
+          watch_duration_seconds: number | null
+          watched_at: string
+        }
+        Insert: {
+          category?: string | null
+          id?: string
+          user_id: string
+          video_id: string
+          video_title: string
+          watch_duration_seconds?: number | null
+          watched_at?: string
+        }
+        Update: {
+          category?: string | null
+          id?: string
+          user_id?: string
+          video_id?: string
+          video_title?: string
+          watch_duration_seconds?: number | null
+          watched_at?: string
+        }
+        Relationships: []
+      }
+      blocked_categories: {
+        Row: {
+          blocked_by: string
+          category: string
+          child_user_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_by: string
+          category: string
+          child_user_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_by?: string
+          category?: string
+          child_user_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      daily_watch_time: {
+        Row: {
+          id: string
+          total_seconds: number | null
+          user_id: string
+          watch_date: string
+        }
+        Insert: {
+          id?: string
+          total_seconds?: number | null
+          user_id: string
+          watch_date?: string
+        }
+        Update: {
+          id?: string
+          total_seconds?: number | null
+          user_id?: string
+          watch_date?: string
+        }
+        Relationships: []
+      }
+      parent_child_links: {
+        Row: {
+          child_user_id: string
+          created_at: string
+          id: string
+          parent_user_id: string
+        }
+        Insert: {
+          child_user_id: string
+          created_at?: string
+          id?: string
+          parent_user_id: string
+        }
+        Update: {
+          child_user_id?: string
+          created_at?: string
+          id?: string
+          parent_user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -21,6 +117,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          is_parent: boolean | null
           selected_theme: Database["public"]["Enums"]["app_theme"] | null
           updated_at: string
           user_id: string
@@ -31,6 +128,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          is_parent?: boolean | null
           selected_theme?: Database["public"]["Enums"]["app_theme"] | null
           updated_at?: string
           user_id: string
@@ -41,9 +139,43 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          is_parent?: boolean | null
           selected_theme?: Database["public"]["Enums"]["app_theme"] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      time_limits: {
+        Row: {
+          bedtime_end: string | null
+          bedtime_start: string | null
+          child_user_id: string
+          created_at: string
+          daily_limit_minutes: number | null
+          id: string
+          is_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          bedtime_end?: string | null
+          bedtime_start?: string | null
+          child_user_id: string
+          created_at?: string
+          daily_limit_minutes?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          bedtime_end?: string | null
+          bedtime_start?: string | null
+          child_user_id?: string
+          created_at?: string
+          daily_limit_minutes?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          updated_at?: string
         }
         Relationships: []
       }
