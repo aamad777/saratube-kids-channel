@@ -197,6 +197,83 @@ export type Database = {
         }
         Relationships: []
       }
+      video_child_access: {
+        Row: {
+          child_user_id: string
+          created_at: string
+          granted_by: string
+          id: string
+          video_id: string
+        }
+        Insert: {
+          child_user_id: string
+          created_at?: string
+          granted_by: string
+          id?: string
+          video_id: string
+        }
+        Update: {
+          child_user_id?: string
+          created_at?: string
+          granted_by?: string
+          id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_child_access_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          available_from: string | null
+          available_until: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+          video_url: string
+        }
+        Insert: {
+          available_from?: string | null
+          available_until?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+          video_url: string
+        }
+        Update: {
+          available_from?: string | null
+          available_until?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
