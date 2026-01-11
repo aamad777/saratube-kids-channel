@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, Video, Image, Sparkles, X, Check, Clock, Users, Calendar, Loader2 } from "lucide-react";
+import { Upload, Video, Image, Sparkles, X, Check, Clock, Users, Calendar, Loader2, Link as LinkIcon } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,9 @@ const UploadPage = () => {
   const navigate = useNavigate();
   
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -34,6 +36,8 @@ const UploadPage = () => {
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const hasVideo = videoFile !== null || videoUrl.trim() !== "";
 
   // Fetch linked children for parent
   useEffect(() => {
@@ -106,11 +110,21 @@ const UploadPage = () => {
     );
   };
 
+  const clearVideo = () => {
+    setVideoFile(null);
+    setVideoUrl("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !videoFile || !title || !category) {
+    if (!user || !title || !category) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!hasVideo) {
+      toast.error("Please upload a video file or enter a video URL");
       return;
     }
 
@@ -123,20 +137,28 @@ const UploadPage = () => {
     setUploadProgress(0);
 
     try {
-      // Upload video file
-      const videoPath = `${user.id}/${Date.now()}-${videoFile.name}`;
-      setUploadProgress(20);
-      
-      const { error: videoError } = await supabase.storage
-        .from("videos")
-        .upload(videoPath, videoFile);
+      let finalVideoUrl = videoUrl.trim();
 
-      if (videoError) throw videoError;
-      setUploadProgress(60);
+      // Upload video file if using file mode
+      if (uploadMode === "file" && videoFile) {
+        const videoPath = `${user.id}/${Date.now()}-${videoFile.name}`;
+        setUploadProgress(20);
+        
+        const { error: videoError } = await supabase.storage
+          .from("videos")
+          .upload(videoPath, videoFile);
 
-      const { data: videoUrlData } = supabase.storage
-        .from("videos")
-        .getPublicUrl(videoPath);
+        if (videoError) throw videoError;
+        setUploadProgress(60);
+
+        const { data: videoUrlData } = supabase.storage
+          .from("videos")
+          .getPublicUrl(videoPath);
+
+        finalVideoUrl = videoUrlData.publicUrl;
+      } else {
+        setUploadProgress(60);
+      }
 
       // Upload thumbnail if provided
       let thumbnailUrl = null;
@@ -162,7 +184,7 @@ const UploadPage = () => {
           title,
           description,
           category,
-          video_url: videoUrlData.publicUrl,
+          video_url: finalVideoUrl,
           thumbnail_url: thumbnailUrl,
           uploaded_by: user.id,
           available_from: availableFrom || null,
@@ -188,11 +210,11 @@ const UploadPage = () => {
       if (accessError) throw accessError;
 
       setUploadProgress(100);
-      toast.success("Video uploaded successfully! 🎉");
+      toast.success("Video added successfully! 🎉");
       navigate("/parent");
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.error(error.message || "Failed to upload video");
+      toast.error(error.message || "Failed to add video");
     } finally {
       setIsUploading(false);
     }
@@ -231,60 +253,131 @@ const UploadPage = () => {
             </p>
           </div>
 
-          {!videoFile ? (
-            /* Upload area */
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              className={`relative border-4 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer ${
-                isDragging
-                  ? "border-primary bg-primary/10 scale-[1.02]"
-                  : "border-border hover:border-primary/50 hover:bg-muted/50"
-              }`}
-              onClick={() => document.getElementById("video-input")?.click()}
-            >
-              <input
-                id="video-input"
-                type="file"
-                accept="video/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-sara-pink-light flex items-center justify-center">
-                  <Video className="h-10 w-10 text-sara-pink" />
-                </div>
-                <div>
-                  <p className="font-display text-xl font-bold mb-2">
-                    Drag & Drop Your Video Here
-                  </p>
-                  <p className="text-muted-foreground">
-                    or click to browse files
-                  </p>
-                </div>
-                <div className="flex gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Video className="h-4 w-4" />
-                    MP4, MOV
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Image className="h-4 w-4" />
-                    Max 500MB
-                  </span>
-                </div>
+          {!hasVideo ? (
+            /* Upload mode selection and input */
+            <div className="space-y-6">
+              {/* Mode toggle */}
+              <div className="flex gap-2 justify-center">
+                <Button
+                  type="button"
+                  variant={uploadMode === "file" ? "default" : "outline"}
+                  onClick={() => setUploadMode("file")}
+                  className="rounded-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload File
+                </Button>
+                <Button
+                  type="button"
+                  variant={uploadMode === "url" ? "default" : "outline"}
+                  onClick={() => setUploadMode("url")}
+                  className="rounded-full"
+                >
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Paste URL
+                </Button>
               </div>
 
-              {/* Floating decorations */}
-              <div className="absolute top-4 right-4 animate-float">
-                <Sparkles className="h-6 w-6 text-sara-yellow" />
-              </div>
-              <div className="absolute bottom-4 left-4 animate-float" style={{ animationDelay: "1s" }}>
-                <Sparkles className="h-5 w-5 text-sara-purple" />
-              </div>
+              {uploadMode === "file" ? (
+                /* File upload area */
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  className={`relative border-4 border-dashed rounded-3xl p-12 text-center transition-all cursor-pointer ${
+                    isDragging
+                      ? "border-primary bg-primary/10 scale-[1.02]"
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                  }`}
+                  onClick={() => document.getElementById("video-input")?.click()}
+                >
+                  <input
+                    id="video-input"
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-sara-pink-light flex items-center justify-center">
+                      <Video className="h-10 w-10 text-sara-pink" />
+                    </div>
+                    <div>
+                      <p className="font-display text-xl font-bold mb-2">
+                        Drag & Drop Your Video Here
+                      </p>
+                      <p className="text-muted-foreground">
+                        or click to browse files
+                      </p>
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Video className="h-4 w-4" />
+                        MP4, MOV
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Image className="h-4 w-4" />
+                        Max 500MB
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Floating decorations */}
+                  <div className="absolute top-4 right-4 animate-float">
+                    <Sparkles className="h-6 w-6 text-sara-yellow" />
+                  </div>
+                  <div className="absolute bottom-4 left-4 animate-float" style={{ animationDelay: "1s" }}>
+                    <Sparkles className="h-5 w-5 text-sara-purple" />
+                  </div>
+                </div>
+              ) : (
+                /* URL input area */
+                <div className="relative border-4 border-dashed rounded-3xl p-8 text-center transition-all border-border hover:border-primary/50 hover:bg-muted/50">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-sara-blue-light flex items-center justify-center">
+                      <LinkIcon className="h-10 w-10 text-sara-blue" />
+                    </div>
+                    <div>
+                      <p className="font-display text-xl font-bold mb-2">
+                        Paste Video URL
+                      </p>
+                      <p className="text-muted-foreground mb-4">
+                        YouTube, Vimeo, or direct video link
+                      </p>
+                    </div>
+                    <Input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="max-w-md rounded-2xl text-center"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (videoUrl.trim()) {
+                          // URL is set, form will show
+                        }
+                      }}
+                      disabled={!videoUrl.trim()}
+                      className="rounded-full"
+                    >
+                      Continue with URL
+                    </Button>
+                  </div>
+
+                  {/* Floating decorations */}
+                  <div className="absolute top-4 right-4 animate-float">
+                    <Sparkles className="h-6 w-6 text-sara-yellow" />
+                  </div>
+                  <div className="absolute bottom-4 left-4 animate-float" style={{ animationDelay: "1s" }}>
+                    <Sparkles className="h-5 w-5 text-sara-purple" />
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* Upload form */
@@ -293,13 +386,26 @@ const UploadPage = () => {
               <div className="relative bg-card rounded-3xl p-4 shadow-card">
                 <div className="flex items-center gap-4">
                   <div className="w-32 h-20 rounded-xl bg-gradient-hero flex items-center justify-center">
-                    <Video className="h-8 w-8 text-primary-foreground" />
+                    {uploadMode === "url" ? (
+                      <LinkIcon className="h-8 w-8 text-primary-foreground" />
+                    ) : (
+                      <Video className="h-8 w-8 text-primary-foreground" />
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-display font-bold truncate">{videoFile.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(videoFile.size / (1024 * 1024)).toFixed(1)} MB
-                    </p>
+                  <div className="flex-1 min-w-0">
+                    {videoFile ? (
+                      <>
+                        <p className="font-display font-bold truncate">{videoFile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(videoFile.size / (1024 * 1024)).toFixed(1)} MB
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-display font-bold text-sm">Video URL</p>
+                        <p className="text-sm text-muted-foreground truncate">{videoUrl}</p>
+                      </>
+                    )}
                     {isUploading && (
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
@@ -314,7 +420,7 @@ const UploadPage = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setVideoFile(null)}
+                    onClick={clearVideo}
                     className="p-2 hover:bg-muted rounded-full transition-colors"
                     disabled={isUploading}
                   >
@@ -500,17 +606,17 @@ const UploadPage = () => {
                 <Button 
                   variant="hero" 
                   className="flex-1 gap-2"
-                  disabled={isUploading || !category || selectedChildren.length === 0}
+                  disabled={isUploading || !category || selectedChildren.length === 0 || !hasVideo}
                 >
                   {isUploading ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      Uploading...
+                      {uploadMode === "url" ? "Saving..." : "Uploading..."}
                     </>
                   ) : (
                     <>
                       <Upload className="h-5 w-5" />
-                      Publish Video!
+                      {uploadMode === "url" ? "Add Video!" : "Publish Video!"}
                     </>
                   )}
                 </Button>
