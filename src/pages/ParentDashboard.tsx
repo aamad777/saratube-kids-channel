@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
@@ -8,9 +8,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Shield, Clock, Activity, Users, Plus, Trash2, 
-  Eye, Ban, ChevronRight, Sparkles, AlertTriangle 
+  Eye, Ban, ChevronRight, Sparkles, AlertTriangle,
+  Video, Pencil, Calendar, Upload
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,6 +68,19 @@ interface DailyWatchTime {
   total_seconds: number;
 }
 
+interface ParentVideo {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  video_url: string;
+  thumbnail_url: string | null;
+  available_from: string | null;
+  available_until: string | null;
+  created_at: string;
+  child_access: { child_user_id: string; display_name: string }[];
+}
+
 const categories = [
   { id: "music", name: "Music", emoji: "🎵" },
   { id: "animals", name: "Animals", emoji: "🐾" },
@@ -54,6 +89,8 @@ const categories = [
   { id: "science", name: "Science", emoji: "🔬" },
   { id: "games", name: "Games", emoji: "🎮" },
 ];
+
+const CATEGORY_OPTIONS = ["Music & Dance", "Stories", "Art & Crafts", "Science", "Games", "Animals"];
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -67,6 +104,21 @@ const ParentDashboard = () => {
   const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
   const [childEmail, setChildEmail] = useState("");
   const [addingChild, setAddingChild] = useState(false);
+  
+  // My Videos state
+  const [myVideos, setMyVideos] = useState<ParentVideo[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<ParentVideo | null>(null);
+  const [deleteVideoId, setDeleteVideoId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    availableFrom: "",
+    availableUntil: "",
+    selectedChildren: [] as string[],
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -77,6 +129,7 @@ const ParentDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchChildren();
+      fetchMyVideos();
     }
   }, [user]);
 
@@ -85,6 +138,142 @@ const ParentDashboard = () => {
       fetchChildData(selectedChild);
     }
   }, [selectedChild]);
+
+  const fetchMyVideos = async () => {
+    if (!user) return;
+    setLoadingVideos(true);
+    try {
+      const { data: videos, error } = await supabase
+        .from("videos")
+        .select("*")
+        .eq("uploaded_by", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch child access for each video
+      const videosWithAccess: ParentVideo[] = await Promise.all(
+        (videos || []).map(async (video) => {
+          const { data: access } = await supabase
+            .from("video_child_access")
+            .select("child_user_id")
+            .eq("video_id", video.id);
+
+          const childIds = access?.map(a => a.child_user_id) || [];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, display_name")
+            .in("user_id", childIds.length > 0 ? childIds : ["none"]);
+
+          return {
+            ...video,
+            child_access: profiles?.map(p => ({
+              child_user_id: p.user_id,
+              display_name: p.display_name,
+            })) || [],
+          };
+        })
+      );
+
+      setMyVideos(videosWithAccess);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
+  const openEditDialog = (video: ParentVideo) => {
+    setEditingVideo(video);
+    setEditForm({
+      title: video.title,
+      description: video.description || "",
+      category: video.category,
+      availableFrom: video.available_from ? video.available_from.slice(0, 16) : "",
+      availableUntil: video.available_until ? video.available_until.slice(0, 16) : "",
+      selectedChildren: video.child_access.map(c => c.child_user_id),
+    });
+  };
+
+  const handleSaveVideo = async () => {
+    if (!editingVideo || !user) return;
+
+    setIsSaving(true);
+    try {
+      // Update video metadata
+      const { error: updateError } = await supabase
+        .from("videos")
+        .update({
+          title: editForm.title,
+          description: editForm.description || null,
+          category: editForm.category,
+          available_from: editForm.availableFrom || null,
+          available_until: editForm.availableUntil || null,
+        })
+        .eq("id", editingVideo.id);
+
+      if (updateError) throw updateError;
+
+      // Update child access - remove all then add selected
+      await supabase
+        .from("video_child_access")
+        .delete()
+        .eq("video_id", editingVideo.id);
+
+      if (editForm.selectedChildren.length > 0) {
+        const accessRecords = editForm.selectedChildren.map(childId => ({
+          video_id: editingVideo.id,
+          child_user_id: childId,
+          granted_by: user.id,
+        }));
+
+        await supabase.from("video_child_access").insert(accessRecords);
+      }
+
+      toast.success("Video updated successfully! 🎉");
+      setEditingVideo(null);
+      fetchMyVideos();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update video");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!deleteVideoId) return;
+
+    try {
+      // Delete child access first
+      await supabase
+        .from("video_child_access")
+        .delete()
+        .eq("video_id", deleteVideoId);
+
+      // Delete video record
+      const { error } = await supabase
+        .from("videos")
+        .delete()
+        .eq("id", deleteVideoId);
+
+      if (error) throw error;
+
+      toast.success("Video deleted successfully");
+      setDeleteVideoId(null);
+      fetchMyVideos();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete video");
+    }
+  };
+
+  const toggleEditChildSelection = (childId: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      selectedChildren: prev.selectedChildren.includes(childId)
+        ? prev.selectedChildren.filter(id => id !== childId)
+        : [...prev.selectedChildren, childId],
+    }));
+  };
 
   const fetchChildren = async () => {
     try {
@@ -348,22 +537,120 @@ const ParentDashboard = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {selectedChild && selectedChildProfile ? (
-              <Tabs defaultValue="activity" className="space-y-6">
-                <TabsList className="grid grid-cols-3 w-full max-w-md">
-                  <TabsTrigger value="activity" className="gap-2">
-                    <Activity className="w-4 h-4" />
-                    Activity
-                  </TabsTrigger>
-                  <TabsTrigger value="limits" className="gap-2">
-                    <Clock className="w-4 h-4" />
-                    Time Limits
-                  </TabsTrigger>
-                  <TabsTrigger value="content" className="gap-2">
-                    <Ban className="w-4 h-4" />
-                    Content
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="videos" className="space-y-6">
+              <TabsList className="grid grid-cols-4 w-full max-w-lg">
+                <TabsTrigger value="videos" className="gap-2">
+                  <Video className="w-4 h-4" />
+                  My Videos
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="gap-2" disabled={!selectedChild}>
+                  <Activity className="w-4 h-4" />
+                  Activity
+                </TabsTrigger>
+                <TabsTrigger value="limits" className="gap-2" disabled={!selectedChild}>
+                  <Clock className="w-4 h-4" />
+                  Time Limits
+                </TabsTrigger>
+                <TabsTrigger value="content" className="gap-2" disabled={!selectedChild}>
+                  <Ban className="w-4 h-4" />
+                  Content
+                </TabsTrigger>
+              </TabsList>
+
+              {/* My Videos Tab */}
+              <TabsContent value="videos" className="space-y-6">
+                <Card className="shadow-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Video className="w-5 h-5" />
+                        My Uploaded Videos
+                      </span>
+                      <Button asChild size="sm">
+                        <Link to="/upload">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload New
+                        </Link>
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingVideos ? (
+                      <div className="flex justify-center py-8">
+                        <Sparkles className="w-8 h-8 animate-spin text-primary" />
+                      </div>
+                    ) : myVideos.length > 0 ? (
+                      <div className="space-y-4">
+                        {myVideos.map((video) => (
+                          <div
+                            key={video.id}
+                            className="flex items-start gap-4 p-4 bg-muted rounded-xl"
+                          >
+                            <div className="w-24 h-16 rounded-lg bg-gradient-hero flex items-center justify-center overflow-hidden flex-shrink-0">
+                              {video.thumbnail_url ? (
+                                <img
+                                  src={video.thumbnail_url}
+                                  alt={video.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Video className="w-8 h-8 text-primary-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{video.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {video.category} • {new Date(video.created_at).toLocaleDateString()}
+                              </p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {video.child_access.map((child) => (
+                                  <span
+                                    key={child.child_user_id}
+                                    className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
+                                  >
+                                    {child.display_name}
+                                  </span>
+                                ))}
+                                {video.child_access.length === 0 && (
+                                  <span className="text-xs text-muted-foreground">No access granted</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => openEditDialog(video)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => setDeleteVideoId(video.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Video className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground mb-4">No videos uploaded yet</p>
+                        <Button asChild>
+                          <Link to="/upload">Upload Your First Video</Link>
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {selectedChild && selectedChildProfile && (
+                <>
 
                 {/* Activity Tab */}
                 <TabsContent value="activity" className="space-y-6">
@@ -558,21 +845,136 @@ const ParentDashboard = () => {
                     </CardContent>
                   </Card>
                 </TabsContent>
-              </Tabs>
-            ) : (
-              <Card className="shadow-card">
-                <CardContent className="py-16 text-center">
-                  <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-display font-bold mb-2">No Children Linked</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Link your child's account to start monitoring their activity
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+                </>
+              )}
+            </Tabs>
           </div>
         </div>
       </main>
+
+      {/* Edit Video Dialog */}
+      <Dialog open={!!editingVideo} onOpenChange={() => setEditingVideo(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Video</DialogTitle>
+            <DialogDescription>
+              Update video details and access permissions
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <Button
+                    key={cat}
+                    type="button"
+                    variant={editForm.category === cat ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setEditForm({ ...editForm, category: cat })}
+                  >
+                    {cat}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Who can watch?
+              </Label>
+              <div className="space-y-2 mt-2">
+                {children.map((child) => (
+                  <div key={child.user_id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`edit-child-${child.user_id}`}
+                      checked={editForm.selectedChildren.includes(child.user_id)}
+                      onCheckedChange={() => toggleEditChildSelection(child.user_id)}
+                    />
+                    <Label htmlFor={`edit-child-${child.user_id}`} className="cursor-pointer">
+                      {child.display_name}
+                    </Label>
+                  </div>
+                ))}
+                {children.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No linked children</p>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-from" className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Available from
+                </Label>
+                <Input
+                  id="edit-from"
+                  type="datetime-local"
+                  value={editForm.availableFrom}
+                  onChange={(e) => setEditForm({ ...editForm, availableFrom: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-until" className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Available until
+                </Label>
+                <Input
+                  id="edit-until"
+                  type="datetime-local"
+                  value={editForm.availableUntil}
+                  onChange={(e) => setEditForm({ ...editForm, availableUntil: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingVideo(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveVideo} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteVideoId} onOpenChange={() => setDeleteVideoId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Video?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The video will be permanently deleted and children will lose access.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteVideo}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
