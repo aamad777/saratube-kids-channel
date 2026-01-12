@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Star, Heart, Music, Palette, Book, Beaker, Gamepad2, TreePine, Candy, Waves, Rocket, Crown, Rainbow } from "lucide-react";
+import { Sparkles, Star, Heart, Music, Palette, Book, Beaker, Gamepad2, TreePine, Candy, Waves, Rocket, Crown, Rainbow, Users, Baby } from "lucide-react";
 import { toast } from "sonner";
 
+type AccountType = "child" | "parent";
 type Theme = "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy";
 type VideoCategory = "music" | "animals" | "crafts" | "stories" | "science" | "games";
 
@@ -34,12 +35,20 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState(false);
   
   // Form data
+  const [accountType, setAccountType] = useState<AccountType | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState("");
   const [selectedTheme, setSelectedTheme] = useState<Theme>("rainbow");
   const [selectedCategories, setSelectedCategories] = useState<VideoCategory[]>([]);
+
+  const totalSteps = accountType === "parent" ? 2 : 4;
+
+  const handleAccountTypeSelect = (type: AccountType) => {
+    setAccountType(type);
+    setStep(2);
+  };
 
   const toggleCategory = (category: VideoCategory) => {
     setSelectedCategories(prev => 
@@ -76,17 +85,18 @@ const SignUpPage = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Update profile with theme and age
+        // Update profile based on account type
         await supabase
           .from("profiles")
           .update({ 
-            selected_theme: selectedTheme,
+            selected_theme: accountType === "parent" ? null : selectedTheme,
             age: age ? parseInt(age) : null,
+            is_parent: accountType === "parent",
           })
           .eq("user_id", data.user.id);
 
-        // Insert video preferences
-        if (selectedCategories.length > 0) {
+        // Insert video preferences for children only
+        if (accountType === "child" && selectedCategories.length > 0) {
           await supabase
             .from("user_video_preferences")
             .insert(
@@ -97,8 +107,11 @@ const SignUpPage = () => {
             );
         }
 
-        toast.success("Welcome to SARATUBE! 🎉✨");
-        navigate("/");
+        const welcomeMessage = accountType === "parent" 
+          ? "Welcome Parent! You can now upload videos! 🎉" 
+          : "Welcome to SARATUBE! 🎉✨";
+        toast.success(welcomeMessage);
+        navigate(accountType === "parent" ? "/parent" : "/");
       }
     } catch (error: any) {
       toast.error(error.message || "Something went wrong! 😢");
@@ -124,7 +137,7 @@ const SignUpPage = () => {
           
           {/* Progress dots */}
           <div className="flex justify-center gap-2 mt-4">
-            {[1, 2, 3].map((s) => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
                 className={`w-3 h-3 rounded-full transition-all ${
@@ -139,53 +152,111 @@ const SignUpPage = () => {
           {step === 1 && (
             <div className="space-y-4 animate-fade-in">
               <h3 className="text-xl font-display text-center text-foreground">
-                Tell us about you! 👋
+                Who's signing up? 👋
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleAccountTypeSelect("child")}
+                  className="p-6 rounded-2xl border-3 border-muted hover:border-primary/50 transition-all transform hover:scale-105 flex flex-col items-center gap-3"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-400 to-purple-400 flex items-center justify-center">
+                    <Baby className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-display text-lg">I'm a Kid!</p>
+                    <p className="text-sm text-muted-foreground">Watch fun videos</p>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleAccountTypeSelect("parent")}
+                  className="p-6 rounded-2xl border-3 border-muted hover:border-primary/50 transition-all transform hover:scale-105 flex flex-col items-center gap-3"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 flex items-center justify-center">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-display text-lg">I'm a Parent</p>
+                    <p className="text-sm text-muted-foreground">Upload & manage</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4 animate-fade-in">
+              <h3 className="text-xl font-display text-center text-foreground">
+                {accountType === "parent" ? "Create your account! 👋" : "Tell us about you! 👋"}
               </h3>
               
               <div className="space-y-3">
                 <Input
-                  placeholder="Your cool name ✨"
+                  placeholder={accountType === "parent" ? "Your name ✨" : "Your cool name ✨"}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
                 />
-                <Input
-                  type="number"
-                  placeholder="Your age 🎂"
-                  min={3}
-                  max={16}
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                  className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
-                />
+                {accountType === "child" && (
+                  <Input
+                    type="number"
+                    placeholder="Your age 🎂"
+                    min={3}
+                    max={16}
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
+                  />
+                )}
                 <Input
                   type="email"
-                  placeholder="Parent's email 📧"
+                  placeholder="Email 📧"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
                 />
                 <Input
                   type="password"
-                  placeholder="Secret password 🔐"
+                  placeholder="Password 🔐"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
                 />
               </div>
 
-              <Button 
-                onClick={() => setStep(2)} 
-                className="w-full py-6 text-xl"
-                variant="hero"
-                disabled={!displayName || !email || !password}
-              >
-                Next Step! 🚀
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => { setStep(1); setAccountType(null); }} 
+                  variant="outline"
+                  className="flex-1 py-6"
+                >
+                  Back
+                </Button>
+                {accountType === "parent" ? (
+                  <Button 
+                    onClick={handleSignUp} 
+                    className="flex-1 py-6 text-lg"
+                    variant="hero"
+                    disabled={loading || !displayName || !email || !password}
+                  >
+                    {loading ? "Creating... ✨" : "Create Account! 🎉"}
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => setStep(3)} 
+                    className="flex-1 py-6 text-lg"
+                    variant="hero"
+                    disabled={!displayName || !email || !password}
+                  >
+                    Next Step! 🚀
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && accountType === "child" && (
             <div className="space-y-4 animate-fade-in">
               <h3 className="text-xl font-display text-center text-foreground">
                 Pick your favorite theme! 🎨
@@ -215,14 +286,14 @@ const SignUpPage = () => {
 
               <div className="flex gap-3">
                 <Button 
-                  onClick={() => setStep(1)} 
+                  onClick={() => setStep(2)} 
                   variant="outline"
                   className="flex-1 py-6"
                 >
                   Back
                 </Button>
                 <Button 
-                  onClick={() => setStep(3)} 
+                  onClick={() => setStep(4)} 
                   className="flex-1 py-6 text-lg"
                   variant="hero"
                 >
@@ -232,7 +303,7 @@ const SignUpPage = () => {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && accountType === "child" && (
             <div className="space-y-4 animate-fade-in">
               <h3 className="text-xl font-display text-center text-foreground">
                 What do you love to watch? 💖
@@ -273,7 +344,7 @@ const SignUpPage = () => {
 
               <div className="flex gap-3">
                 <Button 
-                  onClick={() => setStep(2)} 
+                  onClick={() => setStep(3)} 
                   variant="outline"
                   className="flex-1 py-6"
                 >
