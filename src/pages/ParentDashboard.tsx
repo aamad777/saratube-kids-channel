@@ -32,7 +32,7 @@ import {
 import { 
   Shield, Clock, Activity, Users, Plus, Trash2, 
   Eye, Ban, ChevronRight, Sparkles, AlertTriangle,
-  Video, Pencil, Calendar, Upload
+  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -104,6 +104,9 @@ const ParentDashboard = () => {
   const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
   const [childEmail, setChildEmail] = useState("");
   const [addingChild, setAddingChild] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ user_id: string; display_name: string; email: string | null }[]>([]);
+  const [searching, setSearching] = useState(false);
   
   // My Videos state
   const [myVideos, setMyVideos] = useState<ParentVideo[]>([]);
@@ -344,31 +347,54 @@ const ParentDashboard = () => {
     }
   };
 
-  const addChild = async () => {
+  const searchChildren = async () => {
     if (!childEmail.trim()) {
-      toast.error("Please enter child's email");
+      setSearchResults([]);
       return;
     }
 
+    setSearching(true);
+    try {
+      // Get already linked children
+      const { data: existingLinks } = await supabase
+        .from("parent_child_links")
+        .select("child_user_id")
+        .eq("parent_user_id", user?.id);
+
+      const linkedIds = existingLinks?.map(l => l.child_user_id) || [];
+
+      // Search for child accounts by email or display name
+      const { data: results, error } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, email")
+        .eq("is_parent", false)
+        .or(`email.ilike.%${childEmail}%,display_name.ilike.%${childEmail}%`)
+        .limit(10);
+
+      if (error) throw error;
+
+      // Filter out already linked children
+      const filteredResults = (results || []).filter(
+        r => !linkedIds.includes(r.user_id) && r.user_id !== user?.id
+      );
+
+      setSearchResults(filteredResults);
+    } catch (error) {
+      console.error("Error searching:", error);
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const linkChild = async (childUserId: string) => {
     setAddingChild(true);
     try {
-      // Find child user by email (this is simplified - in production you'd use a lookup)
-      const { data: childUser } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .ilike("display_name", `%${childEmail}%`)
-        .single();
-
-      if (!childUser) {
-        toast.error("Child account not found. Make sure they've signed up first!");
-        return;
-      }
-
       const { error } = await supabase
         .from("parent_child_links")
         .insert({
           parent_user_id: user?.id,
-          child_user_id: childUser.user_id,
+          child_user_id: childUserId,
         });
 
       if (error) throw error;
@@ -377,18 +403,40 @@ const ParentDashboard = () => {
       await supabase
         .from("time_limits")
         .insert({
-          child_user_id: childUser.user_id,
+          child_user_id: childUserId,
           daily_limit_minutes: 60,
           is_enabled: true,
         });
 
       toast.success("Child account linked successfully! 🎉");
       setChildEmail("");
+      setSearchResults([]);
+      setShowLinkDialog(false);
       fetchChildren();
     } catch (error: any) {
       toast.error(error.message || "Failed to link child account");
     } finally {
       setAddingChild(false);
+    }
+  };
+
+  const unlinkChild = async (childUserId: string) => {
+    try {
+      const { error } = await supabase
+        .from("parent_child_links")
+        .delete()
+        .eq("parent_user_id", user?.id)
+        .eq("child_user_id", childUserId);
+
+      if (error) throw error;
+
+      toast.success("Child account unlinked");
+      if (selectedChild === childUserId) {
+        setSelectedChild(null);
+      }
+      fetchChildren();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to unlink child");
     }
   };
 
@@ -491,46 +539,54 @@ const ParentDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {children.map((child) => (
-                <button
-                  key={child.user_id}
-                  onClick={() => setSelectedChild(child.user_id)}
-                  className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all ${
-                    selectedChild === child.user_id
-                      ? "bg-primary/10 border-2 border-primary"
-                      : "bg-muted hover:bg-muted/80 border-2 border-transparent"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
-                    {child.display_name?.charAt(0) || "?"}
+              {children.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No children linked yet
+                </p>
+              ) : (
+                children.map((child) => (
+                  <div
+                    key={child.user_id}
+                    className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
+                      selectedChild === child.user_id
+                        ? "bg-primary/10 border-2 border-primary"
+                        : "bg-muted hover:bg-muted/80 border-2 border-transparent"
+                    }`}
+                    onClick={() => setSelectedChild(child.user_id)}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
+                      {child.display_name?.charAt(0) || "?"}
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="font-medium">{child.display_name}</p>
+                      {child.age && (
+                        <p className="text-xs text-muted-foreground">{child.age} years old</p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        unlinkChild(child.user_id);
+                      }}
+                    >
+                      <Unlink className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <div className="text-left">
-                    <p className="font-medium">{child.display_name}</p>
-                    {child.age && (
-                      <p className="text-xs text-muted-foreground">{child.age} years old</p>
-                    )}
-                  </div>
-                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
-                </button>
-              ))}
+                ))
+              )}
 
               <div className="pt-3 border-t">
-                <p className="text-sm text-muted-foreground mb-2">Link a child account:</p>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Child's name..."
-                    value={childEmail}
-                    onChange={(e) => setChildEmail(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={addChild} 
-                    size="icon"
-                    disabled={addingChild}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => setShowLinkDialog(true)} 
+                  className="w-full"
+                  variant="outline"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Link Child Account
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -975,6 +1031,75 @@ const ParentDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Link Child Dialog */}
+      <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Link Child Account
+            </DialogTitle>
+            <DialogDescription>
+              Search for your child's account by email or name to link it to your parent account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Search by email or name..."
+                value={childEmail}
+                onChange={(e) => setChildEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchChildren()}
+              />
+              <Button onClick={searchChildren} disabled={searching}>
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {searching && (
+              <div className="flex justify-center py-4">
+                <Sparkles className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            )}
+
+            {!searching && searchResults.length > 0 && (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.user_id}
+                    className="flex items-center gap-3 p-3 bg-muted rounded-lg"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
+                      {result.display_name?.charAt(0) || "?"}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{result.display_name}</p>
+                      {result.email && (
+                        <p className="text-xs text-muted-foreground">{result.email}</p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => linkChild(result.user_id)}
+                      disabled={addingChild}
+                    >
+                      {addingChild ? "Linking..." : "Link"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!searching && childEmail && searchResults.length === 0 && (
+              <div className="text-center py-4 text-muted-foreground">
+                <p>No child accounts found.</p>
+                <p className="text-sm mt-1">Make sure your child has signed up first!</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
