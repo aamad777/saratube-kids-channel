@@ -116,6 +116,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string
+          email: string | null
           id: string
           is_parent: boolean | null
           selected_theme: Database["public"]["Enums"]["app_theme"] | null
@@ -127,6 +128,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name: string
+          email?: string | null
           id?: string
           is_parent?: boolean | null
           selected_theme?: Database["public"]["Enums"]["app_theme"] | null
@@ -138,6 +140,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
+          email?: string | null
           id?: string
           is_parent?: boolean | null
           selected_theme?: Database["public"]["Enums"]["app_theme"] | null
