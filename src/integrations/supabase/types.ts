@@ -285,7 +285,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      app_theme: "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy"
+      app_theme:
+        | "rainbow"
+        | "princess"
+        | "ocean"
+        | "space"
+        | "jungle"
+        | "candy"
+        | "superhero"
+        | "dinosaur"
       video_category:
         | "music"
         | "animals"
@@ -420,7 +428,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_theme: ["rainbow", "princess", "ocean", "space", "jungle", "candy"],
+      app_theme: [
+        "rainbow",
+        "princess",
+        "ocean",
+        "space",
+        "jungle",
+        "candy",
+        "superhero",
+        "dinosaur",
+      ],
       video_category: [
         "music",
         "animals",
