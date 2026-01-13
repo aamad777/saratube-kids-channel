@@ -1,11 +1,12 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Share2, Download, Eye, Clock, Sparkles } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Download, Eye, Clock } from "lucide-react";
 import { useState } from "react";
-import Header from "@/components/layout/Header";
+import ThemedLayout from "@/components/layout/ThemedLayout";
 import AIChatBox from "@/components/ai/AIChatBox";
 import CommentSection from "@/components/video/CommentSection";
 import { Button } from "@/components/ui/button";
 import VideoGrid from "@/components/video/VideoGrid";
+import { useTheme } from "@/hooks/useTheme";
 
 import thumbMusic from "@/assets/thumb-music.png";
 import thumbAnimals from "@/assets/thumb-animals.png";
@@ -21,7 +22,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Sara's World",
     views: 125000,
     description: "Join us for the most colorful dance party ever! Learn fun dance moves and sing along with your favorite rainbow characters! Perfect for kids who love music and dancing! 💃🌈",
-    youtubeId: "L_jWHffIx5E", // Sesame Street - Happy Song
+    youtubeId: "L_jWHffIx5E",
   },
   "2": {
     title: "🐾 Learn Animal Sounds - Fun for Kids!",
@@ -29,7 +30,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Little Learners",
     views: 89000,
     description: "Discover all the amazing sounds that animals make! From dogs and cats to elephants and lions - learn them all in this fun educational video! 🐕🦁",
-    youtubeId: "t99ULJjCsaM", // Animal Sounds
+    youtubeId: "t99ULJjCsaM",
   },
   "3": {
     title: "🎨 Easy DIY Crafts - Make a Rainbow!",
@@ -37,7 +38,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Crafty Kids",
     views: 67000,
     description: "Get creative with us! Learn how to make beautiful rainbow crafts with simple materials you can find at home! 🎨✨",
-    youtubeId: "0TgLtF3PMOc", // Craft video
+    youtubeId: "0TgLtF3PMOc",
   },
   "4": {
     title: "🏰 The Princess and the Magic Castle",
@@ -45,7 +46,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Story Time",
     views: 234000,
     description: "Once upon a time in a magical kingdom... Join us for an enchanting story about a brave princess and her magical castle! 👑🏰",
-    youtubeId: "RQmEERvqq70", // Fairy tale
+    youtubeId: "RQmEERvqq70",
   },
   "5": {
     title: "🔬 Cool Science Experiments at Home!",
@@ -53,7 +54,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Science Fun",
     views: 156000,
     description: "Science is amazing! Learn cool experiments you can try at home with mom and dad! Safe, fun, and educational! 🧪✨",
-    youtubeId: "js0hVFCHPOo", // Science experiments
+    youtubeId: "js0hVFCHPOo",
   },
   "6": {
     title: "🎮 Fun Games for Kids - Play Along!",
@@ -61,7 +62,7 @@ const videoData: Record<string, { title: string; thumbnail: string; creator: str
     creator: "Game Time",
     views: 198000,
     description: "Join the fun gaming adventure! Learn new games and play along with us! Perfect for family game time! 🎮🎉",
-    youtubeId: "nKIu9yen5nc", // Kids game video
+    youtubeId: "nKIu9yen5nc",
   },
 };
 
@@ -70,6 +71,7 @@ const WatchPage = () => {
   const video = videoData[id || "1"] || videoData["1"];
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(8500);
+  const { theme } = useTheme();
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -83,10 +85,8 @@ const WatchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container px-4 py-6">
+    <ThemedLayout showFooter={false}>
+      <div className="container px-4 py-6">
         {/* Back button */}
         <Link to="/">
           <Button variant="ghost" className="mb-4 gap-2">
@@ -110,8 +110,8 @@ const WatchPage = () => {
             </div>
 
             {/* Video info */}
-            <div className="bg-card rounded-3xl shadow-card p-6">
-              <h1 className="font-display text-2xl md:text-3xl font-bold">
+            <div className={`${theme.cardBg} rounded-3xl shadow-card p-6`}>
+              <h1 className={`font-display text-2xl md:text-3xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
                 {video.title}
               </h1>
 
@@ -127,15 +127,15 @@ const WatchPage = () => {
               </div>
 
               {/* Creator */}
-              <div className="flex items-center gap-3 mt-4 p-3 bg-muted rounded-2xl">
-                <div className="w-12 h-12 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold text-lg">
+              <div className="flex items-center gap-3 mt-4 p-3 bg-muted/50 rounded-2xl">
+                <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center text-white font-bold text-lg`}>
                   {video.creator[0]}
                 </div>
                 <div>
                   <h3 className="font-display font-bold">{video.creator}</h3>
                   <p className="text-sm text-muted-foreground">1.2K subscribers</p>
                 </div>
-                <Button variant="hero" className="ml-auto">
+                <Button className={`ml-auto bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`}>
                   Subscribe
                 </Button>
               </div>
@@ -161,7 +161,7 @@ const WatchPage = () => {
               </div>
 
               {/* Description */}
-              <div className="mt-4 p-4 bg-muted rounded-2xl">
+              <div className="mt-4 p-4 bg-muted/50 rounded-2xl">
                 <p className="text-sm">{video.description}</p>
               </div>
             </div>
@@ -176,9 +176,9 @@ const WatchPage = () => {
             <AIChatBox videoTitle={video.title} />
 
             {/* More videos */}
-            <div className="bg-card rounded-3xl shadow-card p-4">
-              <h3 className="font-display text-lg font-bold flex items-center gap-2 mb-4">
-                <Sparkles className="h-5 w-5 text-sara-yellow" />
+            <div className={`${theme.cardBg} rounded-3xl shadow-card p-4`}>
+              <h3 className={`font-display text-lg font-bold flex items-center gap-2 mb-4 bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
+                <span>{theme.emoji}</span>
                 Watch Next
               </h3>
               <div className="space-y-4">
@@ -187,8 +187,8 @@ const WatchPage = () => {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </ThemedLayout>
   );
 };
 

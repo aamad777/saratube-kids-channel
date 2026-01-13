@@ -1,6 +1,7 @@
-import { Heart, MessageCircle, Play, Sparkles } from "lucide-react";
+import { Heart, MessageCircle, Play } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "@/hooks/useTheme";
 
 interface VideoCardProps {
   id: string;
@@ -25,6 +26,7 @@ const VideoCard = ({
 }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
+  const { theme } = useTheme();
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,7 +43,7 @@ const VideoCard = ({
 
   return (
     <Link to={`/watch/${id}`}>
-      <div className="group relative bg-card rounded-3xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+      <div className={`group relative ${theme.cardBg} rounded-3xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1`}>
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden">
           <img
@@ -52,8 +54,8 @@ const VideoCard = ({
           
           {/* Play overlay */}
           <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-button animate-pulse-glow">
-              <Play className="h-8 w-8 text-primary-foreground fill-current ml-1" />
+            <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center shadow-button animate-pulse-glow`}>
+              <Play className="h-8 w-8 text-white fill-current ml-1" />
             </div>
           </div>
 
@@ -70,7 +72,7 @@ const VideoCard = ({
             <Heart
               className={`h-5 w-5 transition-all ${
                 isLiked
-                  ? "fill-sara-coral text-sara-coral scale-110"
+                  ? "fill-red-500 text-red-500 scale-110"
                   : "text-muted-foreground"
               }`}
             />
@@ -79,13 +81,13 @@ const VideoCard = ({
 
         {/* Content */}
         <div className="p-4">
-          <h3 className="font-display font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className={`font-display font-bold text-lg line-clamp-2 group-hover:bg-gradient-to-r group-hover:${theme.primary} group-hover:bg-clip-text group-hover:text-transparent transition-colors`}>
             {title}
           </h3>
           
           <div className="flex items-center gap-2 mt-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-button flex items-center justify-center">
-              <Sparkles className="h-3 w-3 text-primary-foreground" />
+            <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center`}>
+              <span className="text-xs">{theme.emoji}</span>
             </div>
             <span className="text-sm text-muted-foreground font-medium">
               {creator}
@@ -98,7 +100,7 @@ const VideoCard = ({
               {formatViews(views)}
             </span>
             <span className="flex items-center gap-1">
-              <Heart className={`h-4 w-4 ${isLiked ? "text-sara-coral fill-sara-coral" : ""}`} />
+              <Heart className={`h-4 w-4 ${isLiked ? "text-red-500 fill-red-500" : ""}`} />
               {formatViews(likeCount)}
             </span>
             <span className="flex items-center gap-1">
