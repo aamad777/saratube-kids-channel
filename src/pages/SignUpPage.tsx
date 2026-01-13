@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Star, Heart, Music, Palette, Book, Beaker, Gamepad2, TreePine, Candy, Waves, Rocket, Crown, Rainbow, Users, Baby } from "lucide-react";
+import { Sparkles, Star, Heart, Music, Palette, Book, Beaker, Gamepad2, TreePine, Candy, Waves, Rocket, Crown, Rainbow, Users, Baby, Zap, Skull } from "lucide-react";
 import { toast } from "sonner";
 
 type AccountType = "child" | "parent";
-type Theme = "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy";
+type Theme = "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy" | "superhero" | "dinosaur";
 type VideoCategory = "music" | "animals" | "crafts" | "stories" | "science" | "games";
 
 const themes: { id: Theme; name: string; icon: React.ElementType; colors: string; bg: string }[] = [
@@ -18,6 +18,8 @@ const themes: { id: Theme; name: string; icon: React.ElementType; colors: string
   { id: "space", name: "Space", icon: Rocket, colors: "from-indigo-500 to-purple-600", bg: "bg-gradient-to-r from-indigo-100 to-purple-100" },
   { id: "jungle", name: "Jungle", icon: TreePine, colors: "from-green-400 to-emerald-500", bg: "bg-gradient-to-r from-green-100 to-emerald-100" },
   { id: "candy", name: "Candy", icon: Candy, colors: "from-pink-400 to-orange-400", bg: "bg-gradient-to-r from-pink-100 to-orange-100" },
+  { id: "superhero", name: "Superhero", icon: Zap, colors: "from-red-500 via-yellow-400 to-blue-600", bg: "bg-gradient-to-r from-red-100 to-blue-100" },
+  { id: "dinosaur", name: "Dinosaur", icon: Skull, colors: "from-amber-500 to-green-600", bg: "bg-gradient-to-r from-amber-100 to-green-100" },
 ];
 
 const categories: { id: VideoCategory; name: string; icon: React.ElementType; emoji: string }[] = [
