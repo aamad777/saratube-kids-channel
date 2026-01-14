@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, themeConfigs, AppTheme } from "@/hooks/useTheme";
 import ThemedLayout from "@/components/layout/ThemedLayout";
+import ThemeTransitionEffect from "@/components/effects/ThemeTransitionEffect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, Sparkles } from "lucide-react";
@@ -18,6 +19,7 @@ const ProfilePage = () => {
     (profile?.selected_theme as AppTheme) || "rainbow"
   );
   const [saving, setSaving] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
 
   const themeOptions: { id: AppTheme; name: string; emoji: string }[] = [
     { id: "rainbow", name: "Rainbow", emoji: "🌈" },
@@ -34,6 +36,8 @@ const ProfilePage = () => {
     if (!profile) return;
     
     setSaving(true);
+    setShowTransition(true);
+    
     try {
       const { error } = await supabase
         .from("profiles")
@@ -63,7 +67,11 @@ const ProfilePage = () => {
 
   return (
     <ThemedLayout>
-      <div className="min-h-screen p-4 md:p-8">
+      <ThemeTransitionEffect 
+        isActive={showTransition} 
+        onComplete={() => setShowTransition(false)} 
+      />
+      <div className="min-h-screen p-4 md:p-8 theme-transition">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
