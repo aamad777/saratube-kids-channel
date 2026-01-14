@@ -222,3 +222,93 @@
     transform: scale(1.1);
   }
 }
+
+/* Theme transition animations */
+.theme-transition {
+  transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.4s ease-out,
+              border-color 0.4s ease-out;
+}
+
+@keyframes theme-sparkle-burst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes theme-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 60px 20px currentColor;
+  }
+}
+
+@keyframes theme-scale-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes magic-swirl {
+  0% {
+    transform: rotate(0deg) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-theme-sparkle {
+  animation: theme-sparkle-burst 0.8s ease-out forwards;
+}
+
+.animate-theme-glow {
+  animation: theme-glow-pulse 0.6s ease-out;
+}
+
+.animate-theme-pop {
+  animation: theme-scale-pop 0.4s ease-out;
+}
+
+.animate-confetti {
+  animation: confetti-fall 2s ease-in forwards;
+}
+
+.animate-magic-swirl {
+  animation: magic-swirl 1s ease-out forwards;
+}

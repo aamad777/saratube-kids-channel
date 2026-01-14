@@ -90,7 +90,7 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
   const { theme, themeName } = useTheme();
 
   return (
-    <div className={`min-h-screen ${theme.background} transition-colors duration-500`}>
+    <div className={`min-h-screen ${theme.background} theme-transition`}>
       <FloatingElements themeName={themeName} />
       
       {showHeader && <Header />}
