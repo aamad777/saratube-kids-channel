@@ -76,10 +76,12 @@ const Header = () => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem className="gap-2">
-                    <User className="w-4 h-4" />
-                    <span>My Profile</span>
-                  </DropdownMenuItem>
+                  <Link to="/profile">
+                    <DropdownMenuItem className="gap-2">
+                      <User className="w-4 h-4" />
+                      <span>My Profile</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <Link to="/parent">
                     <DropdownMenuItem className="gap-2">
                       <Shield className="w-4 h-4" />
