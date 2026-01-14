@@ -1,6 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
+
+/* Float animation for interactive elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-15px) rotate(3deg);
+  }
+}
 @tailwind components;
 @tailwind utilities;
 

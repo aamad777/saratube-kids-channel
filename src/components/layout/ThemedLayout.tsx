@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import Header from "./Header";
-import { Sparkles, Star, Heart, Zap, Skull } from "lucide-react";
+import InteractiveFloatingElements from "@/components/effects/InteractiveFloatingElements";
+import { Sparkles, Star, Heart, Zap } from "lucide-react";
 
 interface ThemedLayoutProps {
   children: ReactNode;
@@ -92,6 +93,7 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
   return (
     <div className={`min-h-screen ${theme.background} theme-transition`}>
       <FloatingElements themeName={themeName} />
+      <InteractiveFloatingElements themeName={themeName} />
       
       {showHeader && <Header />}
       
