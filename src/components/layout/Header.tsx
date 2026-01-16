@@ -1,12 +1,11 @@
-import { Search, Upload, Bell, LogOut, User, Shield, Crown, Rocket } from "lucide-react";
+import { useState } from "react";
+import { Search, Upload, Bell, LogOut, User, Shield, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme, AppTheme } from "@/hooks/useTheme";
-import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { ThemeWheel } from "@/components/effects/ThemeWheel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,43 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const { user, signOut, loading, refreshProfile } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { theme, themeName } = useTheme();
-
-  // Theme pairs: girl theme <-> boy theme
-  const themePairs: Record<AppTheme, AppTheme> = {
-    princess: "superhero",
-    superhero: "princess",
-    rainbow: "space",
-    space: "rainbow",
-    ocean: "jungle",
-    jungle: "ocean",
-    candy: "dinosaur",
-    dinosaur: "candy",
-  };
-
-  const isBoyTheme = ["superhero", "space", "jungle", "dinosaur"].includes(themeName);
-
-  const handleThemeToggle = async () => {
-    if (!user) return;
-    
-    const newTheme = themePairs[themeName];
-    
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ selected_theme: newTheme })
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-      
-      await refreshProfile();
-      toast.success(`Switched to ${newTheme} theme! ${isBoyTheme ? "👑" : "🚀"}`);
-    } catch (error) {
-      console.error("Error switching theme:", error);
-      toast.error("Failed to switch theme");
-    }
-  };
+  const [showThemeWheel, setShowThemeWheel] = useState(false);
 
   const getInitial = () => {
     if (!user) return "?";
@@ -61,44 +26,50 @@ const Header = () => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 w-full ${theme.cardBg} backdrop-blur-lg border-b shadow-soft`}>
-      <div className="container flex h-16 items-center justify-between gap-4 px-4">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="relative">
-            <span className="text-3xl animate-sparkle">{theme.emoji}</span>
-            <div className={`absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
-          </div>
-          <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline`}>
-            SARATUBE
-          </span>
-        </Link>
-
-        {/* Search Bar */}
-        <div className="flex-1 max-w-xl">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              type="search"
-              placeholder="Search fun videos..."
-              className="pl-10 pr-4 h-11 rounded-full bg-muted/50 border-2 border-transparent focus:border-primary focus:bg-card transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {user && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border">
-              <Crown className={`h-4 w-4 transition-all ${!isBoyTheme ? "text-pink-500 scale-110" : "text-muted-foreground"}`} />
-              <Switch
-                checked={isBoyTheme}
-                onCheckedChange={handleThemeToggle}
-                className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-pink-400"
-              />
-              <Rocket className={`h-4 w-4 transition-all ${isBoyTheme ? "text-blue-500 scale-110" : "text-muted-foreground"}`} />
+    <>
+      <ThemeWheel
+        isOpen={showThemeWheel}
+        onClose={() => setShowThemeWheel(false)}
+        currentTheme={themeName}
+      />
+      <header className={`sticky top-0 z-50 w-full ${theme.cardBg} backdrop-blur-lg border-b shadow-soft`}>
+        <div className="container flex h-16 items-center justify-between gap-4 px-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="relative">
+              <span className="text-3xl animate-sparkle">{theme.emoji}</span>
+              <div className={`absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
             </div>
-          )}
+            <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline`}>
+              SARATUBE
+            </span>
+          </Link>
+
+          {/* Search Bar */}
+          <div className="flex-1 max-w-xl">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                type="search"
+                placeholder="Search fun videos..."
+                className="pl-10 pr-4 h-11 rounded-full bg-muted/50 border-2 border-transparent focus:border-primary focus:bg-card transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowThemeWheel(true)}
+                className={`relative group rounded-full bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 transition-all`}
+              >
+                <Palette className="h-5 w-5" />
+                <span className="absolute -bottom-1 -right-1 text-sm">{theme.emoji}</span>
+              </Button>
+            )}
           {user ? (
             <>
               <Link to="/upload">
@@ -164,9 +135,10 @@ const Header = () => {
               </Link>
             </>
           )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 };
 
