@@ -1,9 +1,12 @@
-import { Search, Upload, Bell, LogOut, User, Shield } from "lucide-react";
+import { Search, Upload, Bell, LogOut, User, Shield, Crown, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme, AppTheme } from "@/hooks/useTheme";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +16,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, refreshProfile } = useAuth();
   const { theme, themeName } = useTheme();
+
+  // Theme pairs: girl theme <-> boy theme
+  const themePairs: Record<AppTheme, AppTheme> = {
+    princess: "superhero",
+    superhero: "princess",
+    rainbow: "space",
+    space: "rainbow",
+    ocean: "jungle",
+    jungle: "ocean",
+    candy: "dinosaur",
+    dinosaur: "candy",
+  };
+
+  const isBoyTheme = ["superhero", "space", "jungle", "dinosaur"].includes(themeName);
+
+  const handleThemeToggle = async () => {
+    if (!user) return;
+    
+    const newTheme = themePairs[themeName];
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ selected_theme: newTheme })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      
+      await refreshProfile();
+      toast.success(`Switched to ${newTheme} theme! ${isBoyTheme ? "👑" : "🚀"}`);
+    } catch (error) {
+      console.error("Error switching theme:", error);
+      toast.error("Failed to switch theme");
+    }
+  };
 
   const getInitial = () => {
     if (!user) return "?";
@@ -50,6 +88,17 @@ const Header = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {user && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border">
+              <Crown className={`h-4 w-4 transition-all ${!isBoyTheme ? "text-pink-500 scale-110" : "text-muted-foreground"}`} />
+              <Switch
+                checked={isBoyTheme}
+                onCheckedChange={handleThemeToggle}
+                className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-pink-400"
+              />
+              <Rocket className={`h-4 w-4 transition-all ${isBoyTheme ? "text-blue-500 scale-110" : "text-muted-foreground"}`} />
+            </div>
+          )}
           {user ? (
             <>
               <Link to="/upload">
