@@ -5,6 +5,7 @@ import { AppTheme, themeConfigs } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ThemeTransitionEffect from "./ThemeTransitionEffect";
 
 interface ThemeWheelProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
   const [selectedTheme, setSelectedTheme] = useState<AppTheme>(currentTheme);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
   const wheelRef = useRef<HTMLDivElement>(null);
 
   const handleThemeSelect = async (theme: AppTheme) => {
@@ -54,6 +56,10 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
         if (error) throw error;
 
         await refreshProfile();
+        
+        // Trigger confetti explosion
+        setShowConfetti(true);
+        
         toast.success(
           <span className="flex items-center gap-2">
             <span className="text-xl">{themeConfigs[theme].emoji}</span>
@@ -61,13 +67,17 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
           </span>
         );
         setIsSpinning(false);
-        onClose();
       } catch (error) {
         console.error("Error updating theme:", error);
         toast.error("Failed to change theme");
         setIsSpinning(false);
       }
     }, 1500);
+  };
+
+  const handleConfettiComplete = () => {
+    setShowConfetti(false);
+    onClose();
   };
 
   const handleRandomSpin = () => {
@@ -211,6 +221,12 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
               </motion.div>
             )}
           </motion.div>
+          
+          {/* Confetti explosion effect */}
+          <ThemeTransitionEffect 
+            isActive={showConfetti} 
+            onComplete={handleConfettiComplete} 
+          />
         </motion.div>
       )}
     </AnimatePresence>
