@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "./Header";
 import InteractiveFloatingElements from "@/components/effects/InteractiveFloatingElements";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
@@ -89,9 +90,19 @@ const FloatingElements = ({ themeName }: { themeName: string }) => {
 
 const ThemedLayout = ({ children, showHeader = true, showFooter = true }: ThemedLayoutProps) => {
   const { theme, themeName } = useTheme();
+  const { profile } = useAuth();
+
+  // Get personalized app name based on child's display name
+  const getAppName = () => {
+    if (profile?.display_name) {
+      const firstName = profile.display_name.split(" ")[0].toUpperCase();
+      return `${firstName}TUBE`;
+    }
+    return "SARATUBE";
+  };
 
   return (
-    <div className={`min-h-screen ${theme.background} theme-transition`}>
+    <div key={themeName} className={`min-h-screen ${theme.background} theme-transition`}>
       <FloatingElements themeName={themeName} />
       <InteractiveFloatingElements themeName={themeName} />
       
@@ -102,12 +113,12 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
       </main>
 
       {showFooter && (
-        <footer className={`${theme.cardBg} border-t py-8 mt-12 relative z-10`}>
+        <footer className={`${theme.cardBg} border-t py-8 mt-12 relative z-10 theme-transition`}>
           <div className="container px-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="text-2xl">{theme.emoji}</span>
-              <span className={`font-display text-xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
-                SARATUBE
+              <span className={`font-display text-xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent transition-all duration-300`}>
+                {getAppName()}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
