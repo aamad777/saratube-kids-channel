@@ -2,10 +2,21 @@ import { Play, Upload, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
 import heroBg from "@/assets/hero-bg.png";
 
 const HeroSection = () => {
   const { theme } = useTheme();
+  const { profile } = useAuth();
+
+  // Get personalized app name based on child's display name
+  const getAppName = () => {
+    if (profile?.display_name) {
+      const firstName = profile.display_name.split(" ")[0].toUpperCase();
+      return `${firstName}TUBE`;
+    }
+    return "SARATUBE";
+  };
 
   return (
     <section className="relative overflow-hidden">
@@ -37,9 +48,11 @@ const HeroSection = () => {
         </div>
 
         <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-4">
-          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>Welcome to</span>
+          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent transition-all duration-300`}>Welcome to</span>
           <br />
-          <span className="text-foreground">SARATUBE! ✨</span>
+          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent transition-all duration-300`}>
+            {getAppName()}! {theme.emoji}
+          </span>
         </h1>
 
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8">
