@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
-  const { user, signOut, loading } = useAuth();
+  const { user, profile, signOut, loading } = useAuth();
   const { theme, themeName } = useTheme();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
 
@@ -23,6 +23,15 @@ const Header = () => {
     if (!user) return "?";
     const email = user.email || "";
     return email.charAt(0).toUpperCase();
+  };
+
+  // Get personalized app name based on child's display name
+  const getAppName = () => {
+    if (profile?.display_name) {
+      const firstName = profile.display_name.split(" ")[0].toUpperCase();
+      return `${firstName}TUBE`;
+    }
+    return "SARATUBE";
   };
 
   return (
@@ -40,8 +49,8 @@ const Header = () => {
               <span className="text-3xl animate-sparkle">{theme.emoji}</span>
               <div className={`absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
             </div>
-            <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline`}>
-              SARATUBE
+            <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline transition-all duration-300`}>
+              {getAppName()}
             </span>
           </Link>
 
