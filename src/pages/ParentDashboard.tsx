@@ -32,9 +32,10 @@ import {
 import { 
   Shield, Clock, Activity, Users, Plus, Trash2, 
   Eye, Ban, ChevronRight, Sparkles, AlertTriangle,
-  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink
+  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby
 } from "lucide-react";
 import { toast } from "sonner";
+import AddChildForm from "@/components/parent/AddChildForm";
 
 interface ChildProfile {
   id: string;
@@ -42,6 +43,9 @@ interface ChildProfile {
   display_name: string;
   avatar_url: string | null;
   age: number | null;
+  pin_hash: string | null;
+  created_by_parent: string | null;
+  selected_theme: string | null;
 }
 
 interface ActivityLog {
@@ -107,6 +111,8 @@ const ParentDashboard = () => {
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [searchResults, setSearchResults] = useState<{ user_id: string; display_name: string; email: string | null }[]>([]);
   const [searching, setSearching] = useState(false);
+  const [showAddChildForm, setShowAddChildForm] = useState(false);
+  const [createdChildren, setCreatedChildren] = useState<ChildProfile[]>([]);
   
   // My Videos state
   const [myVideos, setMyVideos] = useState<ParentVideo[]>([]);
@@ -132,9 +138,27 @@ const ParentDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchChildren();
+      fetchCreatedChildren();
       fetchMyVideos();
     }
   }, [user]);
+
+  const fetchCreatedChildren = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("created_by_parent", user.id)
+        .eq("is_parent", false);
+
+      if (error) throw error;
+      setCreatedChildren(data || []);
+    } catch (error) {
+      console.error("Error fetching created children:", error);
+    }
+  };
 
   useEffect(() => {
     if (selectedChild) {
@@ -539,53 +563,119 @@ const ParentDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {children.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No children linked yet
-                </p>
-              ) : (
-                children.map((child) => (
-                  <div
-                    key={child.user_id}
-                    className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
-                      selectedChild === child.user_id
-                        ? "bg-primary/10 border-2 border-primary"
-                        : "bg-muted hover:bg-muted/80 border-2 border-transparent"
-                    }`}
-                    onClick={() => setSelectedChild(child.user_id)}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
-                      {child.display_name?.charAt(0) || "?"}
-                    </div>
-                    <div className="text-left flex-1">
-                      <p className="font-medium">{child.display_name}</p>
-                      {child.age && (
-                        <p className="text-xs text-muted-foreground">{child.age} years old</p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        unlinkChild(child.user_id);
-                      }}
+              {/* Created Children (with PIN) */}
+              {createdChildren.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Kids with PIN 🔐
+                  </p>
+                  {createdChildren.map((child) => (
+                    <div
+                      key={child.user_id}
+                      className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
+                        selectedChild === child.user_id
+                          ? "bg-primary/10 border-2 border-primary"
+                          : "bg-muted hover:bg-muted/80 border-2 border-transparent"
+                      }`}
+                      onClick={() => setSelectedChild(child.user_id)}
                     >
-                      <Unlink className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-2xl">
+                        {child.selected_theme === "princess" ? "👑" : 
+                         child.selected_theme === "superhero" ? "⚡" :
+                         child.selected_theme === "dinosaur" ? "🦖" :
+                         child.selected_theme === "ocean" ? "🌊" :
+                         child.selected_theme === "space" ? "🚀" :
+                         child.selected_theme === "jungle" ? "🌴" :
+                         child.selected_theme === "candy" ? "🍭" : "🌈"}
+                      </div>
+                      <div className="text-left flex-1">
+                        <p className="font-medium">{child.display_name}</p>
+                        {child.age && (
+                          <p className="text-xs text-muted-foreground">{child.age} years old</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (confirm("Delete this profile?")) {
+                            await supabase.from("profiles").delete().eq("id", child.id);
+                            toast.success("Profile deleted");
+                            fetchCreatedChildren();
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               )}
 
-              <div className="pt-3 border-t">
+              {/* Linked Children */}
+              {children.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Linked Accounts
+                  </p>
+                  {children.map((child) => (
+                    <div
+                      key={child.user_id}
+                      className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
+                        selectedChild === child.user_id
+                          ? "bg-primary/10 border-2 border-primary"
+                          : "bg-muted hover:bg-muted/80 border-2 border-transparent"
+                      }`}
+                      onClick={() => setSelectedChild(child.user_id)}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
+                        {child.display_name?.charAt(0) || "?"}
+                      </div>
+                      <div className="text-left flex-1">
+                        <p className="font-medium">{child.display_name}</p>
+                        {child.age && (
+                          <p className="text-xs text-muted-foreground">{child.age} years old</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          unlinkChild(child.user_id);
+                        }}
+                      >
+                        <Unlink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {children.length === 0 && createdChildren.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No children added yet
+                </p>
+              )}
+
+              <div className="pt-3 border-t space-y-2">
+                <Button 
+                  onClick={() => setShowAddChildForm(true)} 
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500"
+                >
+                  <Baby className="w-4 h-4 mr-2" />
+                  Create Child Profile
+                </Button>
                 <Button 
                   onClick={() => setShowLinkDialog(true)} 
                   className="w-full"
                   variant="outline"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Link Child Account
+                  Link Existing Account
                 </Button>
               </div>
             </CardContent>
@@ -1098,6 +1188,19 @@ const ParentDashboard = () => {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Child Form Dialog */}
+      <Dialog open={showAddChildForm} onOpenChange={setShowAddChildForm}>
+        <DialogContent className="max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <AddChildForm
+            onSuccess={() => {
+              setShowAddChildForm(false);
+              fetchCreatedChildren();
+            }}
+            onCancel={() => setShowAddChildForm(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
