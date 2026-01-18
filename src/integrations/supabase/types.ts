@@ -115,10 +115,12 @@ export type Database = {
           age: number | null
           avatar_url: string | null
           created_at: string
+          created_by_parent: string | null
           display_name: string
           email: string | null
           id: string
           is_parent: boolean | null
+          pin_hash: string | null
           selected_theme: Database["public"]["Enums"]["app_theme"] | null
           updated_at: string
           user_id: string
@@ -127,10 +129,12 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           created_at?: string
+          created_by_parent?: string | null
           display_name: string
           email?: string | null
           id?: string
           is_parent?: boolean | null
+          pin_hash?: string | null
           selected_theme?: Database["public"]["Enums"]["app_theme"] | null
           updated_at?: string
           user_id: string
@@ -139,10 +143,12 @@ export type Database = {
           age?: number | null
           avatar_url?: string | null
           created_at?: string
+          created_by_parent?: string | null
           display_name?: string
           email?: string | null
           id?: string
           is_parent?: boolean | null
+          pin_hash?: string | null
           selected_theme?: Database["public"]["Enums"]["app_theme"] | null
           updated_at?: string
           user_id?: string

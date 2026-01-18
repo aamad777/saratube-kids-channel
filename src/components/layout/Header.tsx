@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Upload, Bell, LogOut, User, Shield, Palette } from "lucide-react";
+import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -81,6 +81,17 @@ const Header = () => {
             )}
           {user ? (
             <>
+              {/* Kids Zone Button */}
+              <Link to="/kids">
+                <Button className={`gap-2 hidden sm:flex bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
+                  <Users className="h-5 w-5" />
+                  Kids Zone
+                </Button>
+                <Button className={`sm:hidden bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="icon">
+                  <Users className="h-5 w-5" />
+                </Button>
+              </Link>
+
               <Link to="/upload">
                 <Button className={`gap-2 hidden sm:flex bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <Upload className="h-5 w-5" />
