@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useMemo } from "react";
 
 export type AppTheme = "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy" | "superhero" | "dinosaur";
@@ -99,19 +100,32 @@ const themeConfigs: Record<AppTheme, ThemeConfig> = {
 
 export const useTheme = () => {
   const { profile } = useAuth();
+  const { childSession, isChildActive } = useChildSession();
 
   const currentTheme = useMemo(() => {
+    // Prioritize child session theme when active
+    if (isChildActive && childSession?.theme) {
+      return themeConfigs[childSession.theme] || themeConfigs.rainbow;
+    }
+    // Fall back to parent profile theme
     const selectedTheme = (profile?.selected_theme as AppTheme) || "rainbow";
     return themeConfigs[selectedTheme] || themeConfigs.rainbow;
-  }, [profile?.selected_theme]);
+  }, [profile?.selected_theme, childSession?.theme, isChildActive]);
 
-  const themeName = (profile?.selected_theme as AppTheme) || "rainbow";
+  const themeName = useMemo(() => {
+    if (isChildActive && childSession?.theme) {
+      return childSession.theme;
+    }
+    return (profile?.selected_theme as AppTheme) || "rainbow";
+  }, [profile?.selected_theme, childSession?.theme, isChildActive]);
 
   return {
     theme: currentTheme,
     themeName,
     themeConfigs,
-    isAuthenticated: !!profile,
+    isAuthenticated: !!profile || isChildActive,
+    isChildActive,
+    childName: childSession?.name,
   };
 };
 

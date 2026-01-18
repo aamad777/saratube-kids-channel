@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Lock, Star, Sparkles } from "lucide-react";
@@ -20,6 +21,7 @@ interface ChildProfile {
 const ChildSelectPage = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { setChildSession } = useChildSession();
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState<ChildProfile | null>(null);
@@ -66,10 +68,12 @@ const ChildSelectPage = () => {
 
     // Simple PIN verification (in production, use proper hashing)
     if (selectedChild.pin_hash === pin) {
-      // Store the child session in localStorage
-      localStorage.setItem("activeChildId", selectedChild.id);
-      localStorage.setItem("activeChildName", selectedChild.display_name);
-      localStorage.setItem("activeChildTheme", selectedChild.selected_theme || "rainbow");
+      // Store the child session using context
+      setChildSession({
+        id: selectedChild.id,
+        name: selectedChild.display_name,
+        theme: selectedChild.selected_theme || "rainbow",
+      });
       
       toast.success(
         <span className="flex items-center gap-2">
