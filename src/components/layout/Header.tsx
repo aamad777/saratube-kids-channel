@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users } from "lucide-react";
+import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useTheme, AppTheme } from "@/hooks/useTheme";
 import { ThemeWheel } from "@/components/effects/ThemeWheel";
 import {
@@ -15,23 +16,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
+  const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
-  const { theme, themeName } = useTheme();
+  const { childSession, clearChildSession, isChildActive } = useChildSession();
+  const { theme, themeName, childName } = useTheme();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
 
   const getInitial = () => {
+    if (isChildActive && childName) {
+      return childName.charAt(0).toUpperCase();
+    }
     if (!user) return "?";
     const email = user.email || "";
     return email.charAt(0).toUpperCase();
   };
 
-  // Get personalized app name based on child's display name
+  // Get personalized app name based on active child or parent's display name
   const getAppName = () => {
+    if (isChildActive && childName) {
+      const firstName = childName.split(" ")[0].toUpperCase();
+      return `${firstName}TUBE`;
+    }
     if (profile?.display_name) {
       const firstName = profile.display_name.split(" ")[0].toUpperCase();
       return `${firstName}TUBE`;
     }
-    return "SARATUBE";
+    return "KIDSTUBE";
+  };
+
+  const handleSwitchProfile = () => {
+    clearChildSession();
+    navigate("/kids");
   };
 
   return (
@@ -116,26 +131,43 @@ const Header = () => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <Link to="/profile">
-                    <DropdownMenuItem className="gap-2">
-                      <User className="w-4 h-4" />
-                      <span>My Profile</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link to="/parent">
-                    <DropdownMenuItem className="gap-2">
-                      <Shield className="w-4 h-4" />
-                      <span>Parent Dashboard</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={signOut}
-                    className="gap-2 text-destructive focus:text-destructive"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </DropdownMenuItem>
+                  {isChildActive && (
+                    <>
+                      <DropdownMenuItem className="gap-2 font-semibold">
+                        <span className="text-lg">{theme.emoji}</span>
+                        <span>{childName}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleSwitchProfile} className="gap-2">
+                        <UserCircle className="w-4 h-4" />
+                        <span>Switch Profile</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  {!isChildActive && (
+                    <>
+                      <Link to="/profile">
+                        <DropdownMenuItem className="gap-2">
+                          <User className="w-4 h-4" />
+                          <span>My Profile</span>
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link to="/parent">
+                        <DropdownMenuItem className="gap-2">
+                          <Shield className="w-4 h-4" />
+                          <span>Parent Dashboard</span>
+                        </DropdownMenuItem>
+                      </Link>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={signOut}
+                        className="gap-2 text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>

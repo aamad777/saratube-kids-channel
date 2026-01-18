@@ -89,16 +89,20 @@ const FloatingElements = ({ themeName }: { themeName: string }) => {
 };
 
 const ThemedLayout = ({ children, showHeader = true, showFooter = true }: ThemedLayoutProps) => {
-  const { theme, themeName } = useTheme();
+  const { theme, themeName, isChildActive, childName } = useTheme();
   const { profile } = useAuth();
 
-  // Get personalized app name based on child's display name
+  // Get personalized app name based on active child or parent's display name
   const getAppName = () => {
+    if (isChildActive && childName) {
+      const firstName = childName.split(" ")[0].toUpperCase();
+      return `${firstName}TUBE`;
+    }
     if (profile?.display_name) {
       const firstName = profile.display_name.split(" ")[0].toUpperCase();
       return `${firstName}TUBE`;
     }
-    return "SARATUBE";
+    return "KIDSTUBE";
   };
 
   return (
