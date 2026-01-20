@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChildSession } from "@/contexts/ChildSessionContext";
-import { useTheme, AppTheme } from "@/hooks/useTheme";
+import { useTheme, AppTheme, themeConfigs } from "@/hooks/useTheme";
 import { ThemeWheel } from "@/components/effects/ThemeWheel";
 import {
   DropdownMenu,
@@ -13,15 +13,21 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
-
 const Header = () => {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
-  const { childSession, clearChildSession, isChildActive } = useChildSession();
+  const { childSession, clearChildSession, isChildActive, updateChildTheme } = useChildSession();
   const { theme, themeName, childName } = useTheme();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
 
+  const handleChildThemeChange = async (newTheme: AppTheme) => {
+    await updateChildTheme(newTheme);
+  };
   const getInitial = () => {
     if (isChildActive && childName) {
       return childName.charAt(0).toUpperCase();
@@ -131,12 +137,35 @@ const Header = () => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {isChildActive && (
+                {isChildActive && (
                     <>
                       <DropdownMenuItem className="gap-2 font-semibold">
                         <span className="text-lg">{theme.emoji}</span>
                         <span>{childName}</span>
                       </DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="gap-2">
+                          <Palette className="w-4 h-4" />
+                          <span>Change Theme</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent className="max-h-64 overflow-y-auto">
+                            {(Object.keys(themeConfigs) as AppTheme[]).map((themeKey) => (
+                              <DropdownMenuItem
+                                key={themeKey}
+                                onClick={() => handleChildThemeChange(themeKey)}
+                                className={`gap-2 ${themeName === themeKey ? 'bg-accent' : ''}`}
+                              >
+                                <span className="text-lg">{themeConfigs[themeKey].emoji}</span>
+                                <span>{themeConfigs[themeKey].name}</span>
+                                {themeName === themeKey && (
+                                  <span className="ml-auto text-xs">✓</span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
                       <DropdownMenuItem onClick={handleSwitchProfile} className="gap-2">
                         <UserCircle className="w-4 h-4" />
                         <span>Switch Profile</span>
