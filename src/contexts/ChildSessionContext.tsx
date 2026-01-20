@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AppTheme } from "@/hooks/useTheme";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChildSession {
   id: string;
@@ -11,6 +12,7 @@ interface ChildSessionContextType {
   childSession: ChildSession | null;
   setChildSession: (session: ChildSession | null) => void;
   clearChildSession: () => void;
+  updateChildTheme: (theme: AppTheme) => Promise<void>;
   isChildActive: boolean;
 }
 
@@ -18,6 +20,7 @@ const ChildSessionContext = createContext<ChildSessionContextType>({
   childSession: null,
   setChildSession: () => {},
   clearChildSession: () => {},
+  updateChildTheme: async () => {},
   isChildActive: false,
 });
 
@@ -65,12 +68,28 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setChildSessionState(null);
   };
 
+  const updateChildTheme = async (theme: AppTheme) => {
+    if (!childSession) return;
+
+    // Update in database
+    await supabase
+      .from("profiles")
+      .update({ selected_theme: theme })
+      .eq("id", childSession.id);
+
+    // Update local state and storage
+    const updatedSession = { ...childSession, theme };
+    localStorage.setItem("activeChildTheme", theme);
+    setChildSessionState(updatedSession);
+  };
+
   return (
     <ChildSessionContext.Provider 
       value={{ 
         childSession, 
         setChildSession, 
         clearChildSession,
+        updateChildTheme,
         isChildActive: !!childSession 
       }}
     >
