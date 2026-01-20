@@ -24,7 +24,7 @@ const themeConfigs: Record<AppTheme, ThemeConfig> = {
     background: "bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50",
     gradient: "bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500",
     cardBg: "bg-white/80 backdrop-blur-sm border-pink-200",
-    emoji: "🌈",
+    emoji: "🎨",
   },
   princess: {
     name: "Princess",
