@@ -7,7 +7,7 @@ import CommentSection from "@/components/video/CommentSection";
 import { Button } from "@/components/ui/button";
 import VideoGrid from "@/components/video/VideoGrid";
 import { useTheme } from "@/hooks/useTheme";
-
+import { useScreenTimeTracker } from "@/hooks/useScreenTimeTracker";
 import thumbMusic from "@/assets/thumb-music.png";
 import thumbAnimals from "@/assets/thumb-animals.png";
 import thumbCrafts from "@/assets/thumb-crafts.png";
@@ -73,11 +73,21 @@ const WatchPage = () => {
   const [likes, setLikes] = useState(8500);
   const { theme } = useTheme();
 
+  // Track screen time for children
+  useScreenTimeTracker({
+    videoId: id || "1",
+    videoTitle: video.title,
+    category: video.title.includes("🎵") ? "music" : 
+              video.title.includes("🐾") ? "animals" :
+              video.title.includes("🎨") ? "crafts" :
+              video.title.includes("🏰") ? "stories" :
+              video.title.includes("🔬") ? "science" : "games",
+  });
+
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
   };
-
   const formatViews = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;

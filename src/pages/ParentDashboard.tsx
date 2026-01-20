@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import AddChildForm from "@/components/parent/AddChildForm";
+import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 
 interface ChildProfile {
   id: string;
@@ -800,6 +801,12 @@ const ParentDashboard = () => {
 
                 {/* Activity Tab */}
                 <TabsContent value="activity" className="space-y-6">
+                  {/* Screen Time Chart */}
+                  <ScreenTimeChart 
+                    childId={selectedChild} 
+                    childName={selectedChildProfile.display_name} 
+                  />
+
                   {/* Today's Summary */}
                   <Card className="shadow-card">
                     <CardHeader>
