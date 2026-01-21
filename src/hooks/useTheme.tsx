@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useMemo } from "react";
 
-export type AppTheme = "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy" | "superhero" | "dinosaur";
+export type AppTheme = "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy" | "superhero" | "dinosaur" | "unicorn" | "pirate" | "fairy" | "robot";
 
 interface ThemeConfig {
   name: string;
@@ -95,6 +95,46 @@ const themeConfigs: Record<AppTheme, ThemeConfig> = {
     gradient: "bg-gradient-to-r from-amber-500 to-green-600",
     cardBg: "bg-white/80 backdrop-blur-sm border-amber-200",
     emoji: "🦖",
+  },
+  unicorn: {
+    name: "Unicorn",
+    primary: "from-pink-400 via-purple-400 to-blue-400",
+    secondary: "from-violet-300 to-pink-300",
+    accent: "text-purple-400",
+    background: "bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50",
+    gradient: "bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400",
+    cardBg: "bg-white/80 backdrop-blur-sm border-purple-200",
+    emoji: "🦄",
+  },
+  pirate: {
+    name: "Pirate",
+    primary: "from-amber-600 to-stone-700",
+    secondary: "from-yellow-500 to-amber-600",
+    accent: "text-amber-600",
+    background: "bg-gradient-to-br from-amber-50 via-yellow-50 to-stone-50",
+    gradient: "bg-gradient-to-r from-amber-600 to-stone-700",
+    cardBg: "bg-white/80 backdrop-blur-sm border-amber-300",
+    emoji: "🏴‍☠️",
+  },
+  fairy: {
+    name: "Fairy",
+    primary: "from-fuchsia-400 to-purple-500",
+    secondary: "from-pink-300 to-fuchsia-400",
+    accent: "text-fuchsia-500",
+    background: "bg-gradient-to-br from-fuchsia-50 via-pink-50 to-purple-50",
+    gradient: "bg-gradient-to-r from-fuchsia-400 to-purple-500",
+    cardBg: "bg-white/80 backdrop-blur-sm border-fuchsia-200",
+    emoji: "🧚",
+  },
+  robot: {
+    name: "Robot",
+    primary: "from-sky-500 to-slate-600",
+    secondary: "from-cyan-400 to-sky-500",
+    accent: "text-sky-500",
+    background: "bg-gradient-to-br from-sky-50 via-slate-50 to-cyan-50",
+    gradient: "bg-gradient-to-r from-sky-500 to-slate-600",
+    cardBg: "bg-white/80 backdrop-blur-sm border-sky-200",
+    emoji: "🤖",
   },
 };
 

@@ -13,6 +13,10 @@ import heroBgJungle from "@/assets/hero-bg-jungle.png";
 import heroBgCandy from "@/assets/hero-bg-candy.png";
 import heroBgSuperhero from "@/assets/hero-bg-superhero.png";
 import heroBgDinosaur from "@/assets/hero-bg-dinosaur.png";
+import heroBgUnicorn from "@/assets/hero-bg-unicorn.png";
+import heroBgPirate from "@/assets/hero-bg-pirate.png";
+import heroBgFairy from "@/assets/hero-bg-fairy.png";
+import heroBgRobot from "@/assets/hero-bg-robot.png";
 
 const themeBackgrounds: Record<AppTheme, string> = {
   rainbow: heroBgRainbow,
@@ -23,6 +27,10 @@ const themeBackgrounds: Record<AppTheme, string> = {
   candy: heroBgCandy,
   superhero: heroBgSuperhero,
   dinosaur: heroBgDinosaur,
+  unicorn: heroBgUnicorn,
+  pirate: heroBgPirate,
+  fairy: heroBgFairy,
+  robot: heroBgRobot,
 };
 
 const HeroSection = () => {
