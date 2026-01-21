@@ -300,6 +300,10 @@ export type Database = {
         | "candy"
         | "superhero"
         | "dinosaur"
+        | "unicorn"
+        | "pirate"
+        | "fairy"
+        | "robot"
       video_category:
         | "music"
         | "animals"
@@ -443,6 +447,10 @@ export const Constants = {
         "candy",
         "superhero",
         "dinosaur",
+        "unicorn",
+        "pirate",
+        "fairy",
+        "robot",
       ],
       video_category: [
         "music",

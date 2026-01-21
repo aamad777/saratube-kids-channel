@@ -104,6 +104,54 @@ const getThemeElements = (themeName: string): { icons: ReactNode[]; colors: stri
         ],
         colors: ["text-green-400", "text-orange-400", "text-amber-400", "text-lime-400"],
       };
+    case "unicorn":
+      return {
+        icons: [
+          <span key="e1">🦄</span>,
+          <span key="e2">🌈</span>,
+          <span key="e3">✨</span>,
+          <span key="e4">💖</span>,
+          <span key="e5">🌟</span>,
+          <span key="e6">☁️</span>,
+        ],
+        colors: ["text-pink-300", "text-purple-300", "text-blue-300", "text-violet-300"],
+      };
+    case "pirate":
+      return {
+        icons: [
+          <span key="e1">🏴‍☠️</span>,
+          <span key="e2">⚓</span>,
+          <span key="e3">🦜</span>,
+          <span key="e4">💰</span>,
+          <span key="e5">🗺️</span>,
+          <span key="e6">⚔️</span>,
+        ],
+        colors: ["text-amber-400", "text-yellow-400", "text-stone-400", "text-orange-400"],
+      };
+    case "fairy":
+      return {
+        icons: [
+          <span key="e1">🧚</span>,
+          <span key="e2">🌸</span>,
+          <span key="e3">✨</span>,
+          <span key="e4">🦋</span>,
+          <span key="e5">🍄</span>,
+          <span key="e6">🌺</span>,
+        ],
+        colors: ["text-fuchsia-300", "text-pink-300", "text-purple-300", "text-violet-300"],
+      };
+    case "robot":
+      return {
+        icons: [
+          <span key="e1">🤖</span>,
+          <span key="e2">⚙️</span>,
+          <span key="e3">🔧</span>,
+          <span key="e4">💡</span>,
+          <span key="e5">🔋</span>,
+          <span key="e6">📡</span>,
+        ],
+        colors: ["text-sky-400", "text-cyan-400", "text-slate-400", "text-blue-400"],
+      };
     default: // rainbow
       return {
         icons: [
@@ -112,7 +160,7 @@ const getThemeElements = (themeName: string): { icons: ReactNode[]; colors: stri
           <Heart key="h" className="w-full h-full" />,
           <Music key="m" className="w-full h-full" />,
           <Palette key="p" className="w-full h-full" />,
-          <span key="e1">🌈</span>,
+          <span key="e1">🎨</span>,
         ],
         colors: ["text-pink-300", "text-yellow-300", "text-purple-300", "text-cyan-300"],
       };
