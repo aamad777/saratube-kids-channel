@@ -1,12 +1,32 @@
 import { Play, Upload, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme, AppTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import heroBg from "@/assets/hero-bg.png";
+
+// Theme-based background images
+import heroBgRainbow from "@/assets/hero-bg-rainbow.png";
+import heroBgPrincess from "@/assets/hero-bg-princess.png";
+import heroBgOcean from "@/assets/hero-bg-ocean.png";
+import heroBgSpace from "@/assets/hero-bg-space.png";
+import heroBgJungle from "@/assets/hero-bg-jungle.png";
+import heroBgCandy from "@/assets/hero-bg-candy.png";
+import heroBgSuperhero from "@/assets/hero-bg-superhero.png";
+import heroBgDinosaur from "@/assets/hero-bg-dinosaur.png";
+
+const themeBackgrounds: Record<AppTheme, string> = {
+  rainbow: heroBgRainbow,
+  princess: heroBgPrincess,
+  ocean: heroBgOcean,
+  space: heroBgSpace,
+  jungle: heroBgJungle,
+  candy: heroBgCandy,
+  superhero: heroBgSuperhero,
+  dinosaur: heroBgDinosaur,
+};
 
 const HeroSection = () => {
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
   const { profile } = useAuth();
 
   // Get personalized app name based on child's display name
@@ -18,14 +38,16 @@ const HeroSection = () => {
     return "SARATUBE";
   };
 
+  const currentBackground = themeBackgrounds[themeName as AppTheme] || heroBgRainbow;
+
   return (
     <section className="relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <img
-          src={heroBg}
+          src={currentBackground}
           alt="SARATUBE Background"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-all duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background" />
       </div>
