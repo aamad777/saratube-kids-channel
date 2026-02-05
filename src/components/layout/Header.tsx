@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle } from "lucide-react";
+ import { useState, useCallback } from "react";
+ import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useTheme, AppTheme, themeConfigs } from "@/hooks/useTheme";
 import { ThemeWheel } from "@/components/effects/ThemeWheel";
+ import SearchDialog from "@/components/search/SearchDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,11 @@ const Header = () => {
   const { childSession, clearChildSession, isChildActive, updateChildTheme } = useChildSession();
   const { theme, themeName, childName } = useTheme();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
+   const [showSearch, setShowSearch] = useState(false);
+ 
+   const handleSearchOpen = useCallback(() => {
+     setShowSearch(true);
+   }, []);
 
   const handleChildThemeChange = async (newTheme: AppTheme) => {
     await updateChildTheme(newTheme);
@@ -57,12 +63,13 @@ const Header = () => {
 
   return (
     <>
+       <SearchDialog open={showSearch} onOpenChange={setShowSearch} />
       <ThemeWheel
         isOpen={showThemeWheel}
         onClose={() => setShowThemeWheel(false)}
         currentTheme={themeName}
       />
-      <header className={`sticky top-0 z-50 w-full ${theme.cardBg} backdrop-blur-lg border-b shadow-soft`}>
+       <header className={`sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg`}>
         <div className="container flex h-16 items-center justify-between gap-4 px-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
@@ -77,14 +84,16 @@ const Header = () => {
 
           {/* Search Bar */}
           <div className="flex-1 max-w-xl">
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                type="search"
-                placeholder="Search fun videos..."
-                className="pl-10 pr-4 h-11 rounded-full bg-muted/50 border-2 border-transparent focus:border-primary focus:bg-card transition-all"
-              />
-            </div>
+             <button
+               onClick={handleSearchOpen}
+               className={`w-full flex items-center gap-3 px-4 h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
+             >
+               <Search className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+               <span className="text-muted-foreground flex-1 text-left">Search fun videos...</span>
+               <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-muted-foreground bg-background rounded border">
+                 <span className="text-xs">⌘</span>K
+               </kbd>
+             </button>
           </div>
 
           {/* Actions */}
