@@ -328,3 +328,29 @@
 .animate-magic-swirl {
   animation: magic-swirl 1s ease-out forwards;
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes rainbow-glow {
+  0%, 100% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  50% {
+    filter: hue-rotate(30deg) brightness(1.1);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+.animate-rainbow-glow {
+  animation: rainbow-glow 4s ease-in-out infinite;
+}
