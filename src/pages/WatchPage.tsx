@@ -8,86 +8,27 @@ import { Button } from "@/components/ui/button";
 import VideoGrid from "@/components/video/VideoGrid";
 import { useTheme } from "@/hooks/useTheme";
 import { useScreenTimeTracker } from "@/hooks/useScreenTimeTracker";
-import thumbMusic from "@/assets/thumb-music.png";
-import thumbAnimals from "@/assets/thumb-animals.png";
-import thumbCrafts from "@/assets/thumb-crafts.png";
-import thumbStories from "@/assets/thumb-stories.png";
-import thumbScience from "@/assets/thumb-science.png";
-import thumbGames from "@/assets/thumb-games.png";
-
-const videoData: Record<string, { title: string; thumbnail: string; creator: string; views: number; description: string; youtubeId: string }> = {
-  "1": {
-    title: "🎵 Rainbow Dance Party with Friends!",
-    thumbnail: thumbMusic,
-    creator: "Sara's World",
-    views: 125000,
-    description: "Join us for the most colorful dance party ever! Learn fun dance moves and sing along with your favorite rainbow characters! Perfect for kids who love music and dancing! 💃🌈",
-    youtubeId: "L_jWHffIx5E",
-  },
-  "2": {
-    title: "🐾 Learn Animal Sounds - Fun for Kids!",
-    thumbnail: thumbAnimals,
-    creator: "Little Learners",
-    views: 89000,
-    description: "Discover all the amazing sounds that animals make! From dogs and cats to elephants and lions - learn them all in this fun educational video! 🐕🦁",
-    youtubeId: "t99ULJjCsaM",
-  },
-  "3": {
-    title: "🎨 Easy DIY Crafts - Make a Rainbow!",
-    thumbnail: thumbCrafts,
-    creator: "Crafty Kids",
-    views: 67000,
-    description: "Get creative with us! Learn how to make beautiful rainbow crafts with simple materials you can find at home! 🎨✨",
-    youtubeId: "0TgLtF3PMOc",
-  },
-  "4": {
-    title: "🏰 The Princess and the Magic Castle",
-    thumbnail: thumbStories,
-    creator: "Story Time",
-    views: 234000,
-    description: "Once upon a time in a magical kingdom... Join us for an enchanting story about a brave princess and her magical castle! 👑🏰",
-    youtubeId: "RQmEERvqq70",
-  },
-  "5": {
-    title: "🔬 Cool Science Experiments at Home!",
-    thumbnail: thumbScience,
-    creator: "Science Fun",
-    views: 156000,
-    description: "Science is amazing! Learn cool experiments you can try at home with mom and dad! Safe, fun, and educational! 🧪✨",
-    youtubeId: "js0hVFCHPOo",
-  },
-  "6": {
-    title: "🎮 Fun Games for Kids - Play Along!",
-    thumbnail: thumbGames,
-    creator: "Game Time",
-    views: 198000,
-    description: "Join the fun gaming adventure! Learn new games and play along with us! Perfect for family game time! 🎮🎉",
-    youtubeId: "nKIu9yen5nc",
-  },
-};
+import { getVideoById, sampleVideos } from "@/data/videoData";
 
 const WatchPage = () => {
   const { id } = useParams<{ id: string }>();
-  const video = videoData[id || "1"] || videoData["1"];
+  const video = getVideoById(id || "1") || sampleVideos[0];
   const [isLiked, setIsLiked] = useState(false);
-  const [likes, setLikes] = useState(8500);
+  const [likes, setLikes] = useState(video.likes);
   const { theme } = useTheme();
 
   // Track screen time for children
   useScreenTimeTracker({
     videoId: id || "1",
     videoTitle: video.title,
-    category: video.title.includes("🎵") ? "music" : 
-              video.title.includes("🐾") ? "animals" :
-              video.title.includes("🎨") ? "crafts" :
-              video.title.includes("🏰") ? "stories" :
-              video.title.includes("🔬") ? "science" : "games",
+    category: video.category,
   });
 
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
   };
+  
   const formatViews = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
