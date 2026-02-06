@@ -37,6 +37,8 @@ import {
 import { toast } from "sonner";
 import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
+import CategoryManager from "@/components/parent/CategoryManager";
+import { videoCategories } from "@/data/videoData";
 
 interface ChildProfile {
   id: string;
@@ -86,16 +88,7 @@ interface ParentVideo {
   child_access: { child_user_id: string; display_name: string }[];
 }
 
-const categories = [
-  { id: "music", name: "Music", emoji: "🎵" },
-  { id: "animals", name: "Animals", emoji: "🐾" },
-  { id: "crafts", name: "Crafts", emoji: "🎨" },
-  { id: "stories", name: "Stories", emoji: "🏰" },
-  { id: "science", name: "Science", emoji: "🔬" },
-  { id: "games", name: "Games", emoji: "🎮" },
-];
-
-const CATEGORY_OPTIONS = ["Music & Dance", "Stories", "Art & Crafts", "Science", "Games", "Animals"];
+const CATEGORY_OPTIONS = videoCategories.map(c => c.name);
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -966,35 +959,16 @@ const ParentDashboard = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Ban className="w-5 h-5" />
-                        Blocked Categories
+                        Content Controls for {selectedChildProfile.display_name}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Select categories to block for {selectedChildProfile.display_name}
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {categories.map((category) => {
-                          const isBlocked = blockedCategories.includes(category.id);
-                          return (
-                            <button
-                              key={category.id}
-                              onClick={() => toggleBlockedCategory(category.id)}
-                              className={`p-4 rounded-xl border-2 transition-all ${
-                                isBlocked
-                                  ? "border-destructive bg-destructive/10"
-                                  : "border-muted hover:border-primary/50"
-                              }`}
-                            >
-                              <span className="text-2xl">{category.emoji}</span>
-                              <p className="font-medium mt-1">{category.name}</p>
-                              {isBlocked && (
-                                <p className="text-xs text-destructive mt-1">Blocked</p>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <CategoryManager
+                        childId={selectedChild}
+                        childName={selectedChildProfile.display_name}
+                        blockedCategories={blockedCategories}
+                        onBlockedChange={setBlockedCategories}
+                      />
                     </CardContent>
                   </Card>
                 </TabsContent>
