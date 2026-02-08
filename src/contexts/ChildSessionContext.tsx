@@ -6,6 +6,7 @@ interface ChildSession {
   id: string;
   name: string;
   theme: AppTheme;
+  age: number | null;
 }
 
 interface ChildSessionContextType {
@@ -40,12 +41,14 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const storedId = localStorage.getItem("activeChildId");
     const storedName = localStorage.getItem("activeChildName");
     const storedTheme = localStorage.getItem("activeChildTheme") as AppTheme;
+    const storedAge = localStorage.getItem("activeChildAge");
 
     if (storedId && storedName) {
       setChildSessionState({
         id: storedId,
         name: storedName,
         theme: storedTheme || "rainbow",
+        age: storedAge ? parseInt(storedAge) : null,
       });
     }
   }, []);
@@ -55,6 +58,11 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       localStorage.setItem("activeChildId", session.id);
       localStorage.setItem("activeChildName", session.name);
       localStorage.setItem("activeChildTheme", session.theme);
+      if (session.age !== null) {
+        localStorage.setItem("activeChildAge", String(session.age));
+      } else {
+        localStorage.removeItem("activeChildAge");
+      }
       setChildSessionState(session);
     } else {
       clearChildSession();
@@ -65,6 +73,7 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     localStorage.removeItem("activeChildId");
     localStorage.removeItem("activeChildName");
     localStorage.removeItem("activeChildTheme");
+    localStorage.removeItem("activeChildAge");
     setChildSessionState(null);
   };
 

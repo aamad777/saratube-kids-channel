@@ -155,8 +155,11 @@ const CategoryManager = ({ childId, childName, blockedCategories, onBlockedChang
                   </h4>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {category.description} • Ages {category.ageRange}
+                  {category.description}
                 </p>
+                <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-muted rounded-full text-xs font-medium text-muted-foreground">
+                  👶 Ages {category.ageRange}
+                </span>
               </div>
 
               {/* Status badge */}
