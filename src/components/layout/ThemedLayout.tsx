@@ -1,8 +1,12 @@
 import { ReactNode } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChildSession } from "@/contexts/ChildSessionContext";
+import { useTimeLimitChecker } from "@/hooks/useTimeLimitChecker";
 import Header from "./Header";
 import InteractiveFloatingElements from "@/components/effects/InteractiveFloatingElements";
+import ScreenLockOverlay from "@/components/effects/ScreenLockOverlay";
+import TimeRemainingBanner from "@/components/effects/TimeRemainingBanner";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
 
 interface ThemedLayoutProps {
@@ -91,6 +95,8 @@ const FloatingElements = ({ themeName }: { themeName: string }) => {
 const ThemedLayout = ({ children, showHeader = true, showFooter = true }: ThemedLayoutProps) => {
   const { theme, themeName, isChildActive, childName } = useTheme();
   const { profile } = useAuth();
+  const { childSession } = useChildSession();
+  const timeLimits = useTimeLimitChecker();
 
   // Get personalized app name based on active child or parent's display name
   const getAppName = () => {
@@ -111,6 +117,15 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
       <InteractiveFloatingElements themeName={themeName} />
       
       {showHeader && <Header />}
+
+      {/* Time remaining banner for active child sessions */}
+      {isChildActive && timeLimits.isEnabled && !timeLimits.isLocked && (
+        <TimeRemainingBanner
+          remainingMinutes={timeLimits.remainingMinutes}
+          dailyLimitMinutes={timeLimits.dailyLimitMinutes}
+          usedMinutes={timeLimits.usedMinutes}
+        />
+      )}
       
       <main className="relative z-10">
         {children}
@@ -134,6 +149,16 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
           </div>
         </footer>
       )}
+
+      {/* Screen Lock Overlay - blocks everything when time is up */}
+      <ScreenLockOverlay
+        isLocked={timeLimits.isLocked}
+        lockReason={timeLimits.lockReason}
+        dailyLimitMinutes={timeLimits.dailyLimitMinutes}
+        usedMinutes={timeLimits.usedMinutes}
+        bedtimeEnd={timeLimits.bedtimeEnd}
+        childName={childSession?.name || "Kiddo"}
+      />
     </div>
   );
 };
