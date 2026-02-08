@@ -14,6 +14,7 @@ interface ChildProfile {
   user_id: string;
   display_name: string;
   avatar_url: string | null;
+  age: number | null;
   selected_theme: AppTheme;
   pin_hash: string | null;
 }
@@ -73,6 +74,7 @@ const ChildSelectPage = () => {
         id: selectedChild.id,
         name: selectedChild.display_name,
         theme: selectedChild.selected_theme || "rainbow",
+        age: selectedChild.age,
       });
       
       toast.success(

@@ -2,6 +2,8 @@ import { Heart, MessageCircle, Play } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
+import { useChildSession } from "@/contexts/ChildSessionContext";
+import { getAgeSuitability, getAgeBadgeStyle } from "@/utils/ageFilter";
 
 interface VideoCardProps {
   id: string;
@@ -12,6 +14,7 @@ interface VideoCardProps {
   likes: number;
   comments: number;
   duration: string;
+  ageRecommendation?: string;
 }
 
 const VideoCard = ({
@@ -23,10 +26,17 @@ const VideoCard = ({
   likes,
   comments,
   duration,
+  ageRecommendation,
 }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
   const { theme } = useTheme();
+  const { childSession } = useChildSession();
+
+  const suitability = ageRecommendation 
+    ? getAgeSuitability(childSession?.age ?? null, ageRecommendation) 
+    : "unknown";
+  const ageBadge = getAgeBadgeStyle(suitability);
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -63,6 +73,14 @@ const VideoCard = ({
           <div className="absolute bottom-2 right-2 px-2 py-1 bg-foreground/80 text-primary-foreground rounded-lg text-sm font-bold">
             {duration}
           </div>
+
+          {/* Age badge */}
+          {ageRecommendation && childSession?.age && (
+            <div className={`absolute top-2 left-2 px-2 py-1 ${ageBadge.bg} ${ageBadge.text} rounded-lg text-xs font-bold flex items-center gap-1 backdrop-blur-sm`}>
+              <span>{ageBadge.icon}</span>
+              <span>Ages {ageRecommendation}</span>
+            </div>
+          )}
 
           {/* Like button */}
           <button

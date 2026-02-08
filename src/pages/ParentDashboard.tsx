@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
+import AgeFilterInfo from "@/components/parent/AgeFilterInfo";
 import { videoCategories } from "@/data/videoData";
 
 interface ChildProfile {
@@ -953,13 +954,29 @@ const ParentDashboard = () => {
                   </Card>
                 </TabsContent>
 
-                {/* Content Control Tab */}
                 <TabsContent value="content" className="space-y-6">
+                  {/* Age-Based Filtering */}
+                  <Card className="shadow-card">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Baby className="w-5 h-5" />
+                        Age-Based Filtering
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <AgeFilterInfo
+                        childAge={selectedChildProfile.age ?? null}
+                        childName={selectedChildProfile.display_name}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Category Controls */}
                   <Card className="shadow-card">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Ban className="w-5 h-5" />
-                        Content Controls for {selectedChildProfile.display_name}
+                        Category Controls for {selectedChildProfile.display_name}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
