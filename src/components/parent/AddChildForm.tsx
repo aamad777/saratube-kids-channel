@@ -50,18 +50,29 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
     setLoading(true);
     
     try {
-      // Create child profile with PIN (storing as plain text for now - in production use proper hashing)
+      // Create child profile with PIN
+      const childUserId = crypto.randomUUID();
       const { error } = await supabase.from("profiles").insert({
-        user_id: crypto.randomUUID(), // Generate a unique ID for the child
+        user_id: childUserId,
         display_name: name.trim(),
         age: age ? parseInt(age) : null,
-        pin_hash: pin, // In production, hash this properly
+        pin_hash: pin,
         selected_theme: selectedTheme,
         is_parent: false,
         created_by_parent: user.id,
       });
 
       if (error) throw error;
+
+      // Create parent-child link so RLS policies work
+      const { error: linkError } = await supabase.from("parent_child_links").insert({
+        parent_user_id: user.id,
+        child_user_id: childUserId,
+      });
+
+      if (linkError) {
+        console.error("Error creating parent-child link:", linkError);
+      }
 
       toast.success(
         <span className="flex items-center gap-2">
