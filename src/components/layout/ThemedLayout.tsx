@@ -158,6 +158,7 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
         usedMinutes={timeLimits.usedMinutes}
         bedtimeEnd={timeLimits.bedtimeEnd}
         childName={childSession?.name || "Kiddo"}
+        onExtend={timeLimits.grantExtension}
       />
     </div>
   );

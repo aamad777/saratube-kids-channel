@@ -11,6 +11,32 @@ interface TimeLimitState {
   bedtimeStart: string | null;
   bedtimeEnd: string | null;
   isEnabled: boolean;
+  extensionActive: boolean;
+  extensionMinutes: number;
+}
+
+const EXTENSION_KEY = "parentTimeExtension";
+
+interface StoredExtension {
+  childId: string;
+  expiresAt: number; // timestamp
+  extraMinutes: number;
+}
+
+function getActiveExtension(childId: string): StoredExtension | null {
+  try {
+    const raw = localStorage.getItem(EXTENSION_KEY);
+    if (!raw) return null;
+    const ext: StoredExtension = JSON.parse(raw);
+    if (ext.childId !== childId) return null;
+    if (Date.now() > ext.expiresAt) {
+      localStorage.removeItem(EXTENSION_KEY);
+      return null;
+    }
+    return ext;
+  } catch {
+    return null;
+  }
 }
 
 export const useTimeLimitChecker = () => {
@@ -24,6 +50,8 @@ export const useTimeLimitChecker = () => {
     bedtimeStart: null,
     bedtimeEnd: null,
     isEnabled: false,
+    extensionActive: false,
+    extensionMinutes: 0,
   });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -83,9 +111,13 @@ export const useTimeLimitChecker = () => {
 
         const usedSeconds = watchTime?.total_seconds || 0;
         const usedMinutes = Math.floor(usedSeconds / 60);
-        const remainingMinutes = Math.max(0, limits.daily_limit_minutes - usedMinutes);
+        
+        // Check for active parent extension
+        const extension = getActiveExtension(childSession.id);
+        const effectiveLimit = limits.daily_limit_minutes + (extension?.extraMinutes || 0);
+        const remainingMinutes = Math.max(0, effectiveLimit - usedMinutes);
 
-        if (usedMinutes >= limits.daily_limit_minutes) {
+        if (usedMinutes >= effectiveLimit) {
           setState({
             isLocked: true,
             lockReason: "time-limit",
@@ -95,6 +127,8 @@ export const useTimeLimitChecker = () => {
             bedtimeStart: limits.bedtime_start,
             bedtimeEnd: limits.bedtime_end,
             isEnabled: true,
+            extensionActive: !!extension,
+            extensionMinutes: extension?.extraMinutes || 0,
           });
           return;
         }
@@ -108,6 +142,8 @@ export const useTimeLimitChecker = () => {
           bedtimeStart: limits.bedtime_start,
           bedtimeEnd: limits.bedtime_end,
           isEnabled: true,
+          extensionActive: !!extension,
+          extensionMinutes: extension?.extraMinutes || 0,
         });
       } else {
         setState(prev => ({
@@ -121,6 +157,21 @@ export const useTimeLimitChecker = () => {
       console.error("Error checking time limits:", error);
     }
   }, [isChildActive, childSession?.id]);
+
+  // Grant a temporary time extension
+  const grantExtension = useCallback((extraMinutes: number) => {
+    if (!childSession?.id) return;
+    
+    const extension: StoredExtension = {
+      childId: childSession.id,
+      expiresAt: Date.now() + extraMinutes * 60 * 1000,
+      extraMinutes,
+    };
+    localStorage.setItem(EXTENSION_KEY, JSON.stringify(extension));
+    
+    // Immediately recheck to unlock the screen
+    checkTimeLimit();
+  }, [childSession?.id, checkTimeLimit]);
 
   // Check every 30 seconds
   useEffect(() => {
@@ -139,7 +190,7 @@ export const useTimeLimitChecker = () => {
     };
   }, [isChildActive, checkTimeLimit]);
 
-  return { ...state, recheckLimits: checkTimeLimit };
+  return { ...state, recheckLimits: checkTimeLimit, grantExtension };
 };
 
 /**
