@@ -19,7 +19,7 @@ interface LinkedChild {
 const CATEGORIES = ["Music & Dance", "Stories", "Art & Crafts", "Science", "Games", "Animals"];
 
 const UploadPage = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   
   const [isDragging, setIsDragging] = useState(false);
@@ -69,7 +69,13 @@ const UploadPage = () => {
     fetchLinkedChildren();
   }, [user, profile]);
 
-  // Redirect non-parents
+  // Refresh profile and redirect non-parents
+  useEffect(() => {
+    if (user) {
+      refreshProfile();
+    }
+  }, [user]);
+
   useEffect(() => {
     if (profile && !profile.is_parent) {
       toast.error("Only parents can upload videos");
