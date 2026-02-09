@@ -288,7 +288,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_video_access: {
+        Args: { _child_user_id: string; _video_id: string }
+        Returns: boolean
+      }
+      is_video_owner: {
+        Args: { _user_id: string; _video_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_theme:
