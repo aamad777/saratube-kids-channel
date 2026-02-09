@@ -12,6 +12,29 @@ const SignInPage = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/signin`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+      toast.success("Password reset link sent! Check your email 📧");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset link");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,49 +93,105 @@ const SignInPage = () => {
         </CardHeader>
 
         <CardContent className="p-6">
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-3">
-              <Input
-                type="email"
-                placeholder="Your email 📧"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
-              />
-              <Input
-                type="password"
-                placeholder="Your secret password 🔐"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
-              />
-            </div>
+          {resetMode ? (
+            resetSent ? (
+              <div className="text-center space-y-4 py-4">
+                <div className="text-5xl">📬</div>
+                <h3 className="font-display text-xl font-bold">Check Your Email!</h3>
+                <p className="text-muted-foreground text-sm">
+                  We sent a password reset link to <strong>{email}</strong>
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => { setResetMode(false); setResetSent(false); }}
+                  className="rounded-2xl"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <p className="text-muted-foreground text-sm text-center">
+                  Enter your email and we'll send you a reset link 🔗
+                </p>
+                <Input
+                  type="email"
+                  placeholder="Your email 📧"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
+                />
+                <Button
+                  type="submit"
+                  className="w-full py-6 text-xl"
+                  variant="hero"
+                  disabled={loading}
+                >
+                  {loading ? "Sending..." : "Send Reset Link 📧"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setResetMode(false)}
+                  className="w-full text-muted-foreground"
+                >
+                  Back to Sign In
+                </Button>
+              </form>
+            )
+          ) : (
+            <>
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-3">
+                  <Input
+                    type="email"
+                    placeholder="Your email 📧"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Your secret password 🔐"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
+                  />
+                </div>
 
-            <Button 
-              type="submit"
-              className="w-full py-6 text-xl"
-              variant="hero"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 animate-spin" />
-                  Signing in...
-                </span>
-              ) : (
-                "Let's Play! 🎮"
-              )}
-            </Button>
-          </form>
+                <Button 
+                  type="submit"
+                  className="w-full py-6 text-xl"
+                  variant="hero"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 animate-spin" />
+                      Signing in...
+                    </span>
+                  ) : (
+                    "Let's Play! 🎮"
+                  )}
+                </Button>
+              </form>
 
-          <div className="mt-6 text-center space-y-2">
-            <p className="text-muted-foreground text-sm">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
-                Join the fun! 🎉
-              </Link>
-            </p>
-          </div>
+              <div className="mt-6 text-center space-y-2">
+                <button
+                  onClick={() => setResetMode(true)}
+                  className="text-primary hover:underline text-sm font-medium"
+                >
+                  Forgot your password? 🔑
+                </button>
+                <p className="text-muted-foreground text-sm">
+                  Don't have an account?{" "}
+                  <Link to="/signup" className="text-primary hover:underline font-medium">
+                    Join the fun! 🎉
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

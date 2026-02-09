@@ -64,11 +64,12 @@ const ChildSelectPage = () => {
     setPinError(false);
   };
 
-  const handlePinSubmit = async () => {
-    if (!selectedChild || pin.length !== 4) return;
+  const handlePinSubmit = async (submittedPin?: string) => {
+    const pinToCheck = submittedPin || pin;
+    if (!selectedChild || pinToCheck.length !== 4) return;
 
     // Simple PIN verification (in production, use proper hashing)
-    if (selectedChild.pin_hash === pin) {
+    if (selectedChild.pin_hash === pinToCheck) {
       // Store the child session using context
       setChildSession({
         id: selectedChild.id,
@@ -100,7 +101,7 @@ const ChildSelectPage = () => {
       
       if (newPin.length === 4) {
         setTimeout(() => {
-          handlePinSubmit();
+          handlePinSubmit(newPin);
         }, 200);
       }
     }

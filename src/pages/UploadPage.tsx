@@ -37,7 +37,8 @@ const UploadPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const hasVideo = videoFile !== null || videoUrl.trim() !== "";
+  const [urlConfirmed, setUrlConfirmed] = useState(false);
+  const hasVideo = videoFile !== null || (uploadMode === "url" && urlConfirmed && videoUrl.trim() !== "");
 
   // Fetch linked children for parent
   useEffect(() => {
@@ -113,6 +114,7 @@ const UploadPage = () => {
   const clearVideo = () => {
     setVideoFile(null);
     setVideoUrl("");
+    setUrlConfirmed(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -359,7 +361,7 @@ const UploadPage = () => {
                       type="button"
                       onClick={() => {
                         if (videoUrl.trim()) {
-                          // URL is set, form will show
+                          setUrlConfirmed(true);
                         }
                       }}
                       disabled={!videoUrl.trim()}
