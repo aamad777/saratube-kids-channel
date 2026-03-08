@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, forwardRef } from "react";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
 
 interface Particle {
@@ -17,7 +17,7 @@ interface ThemeTransitionEffectProps {
 
 const emojis = ["✨", "⭐", "💫", "🌟", "💖", "🎉", "🦋", "🌈"];
 
-const ThemeTransitionEffect = ({ isActive, onComplete }: ThemeTransitionEffectProps) => {
+const ThemeTransitionEffect = forwardRef<HTMLDivElement, ThemeTransitionEffectProps>(({ isActive, onComplete }, ref) => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -54,7 +54,7 @@ const ThemeTransitionEffect = ({ isActive, onComplete }: ThemeTransitionEffectPr
   if (!showOverlay) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
+    <div ref={ref} className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
       {/* Sparkle burst overlay */}
       <div className="absolute inset-0 bg-white/20 animate-theme-glow" />
       
@@ -85,6 +85,8 @@ const ThemeTransitionEffect = ({ isActive, onComplete }: ThemeTransitionEffectPr
       ))}
     </div>
   );
-};
+});
+
+ThemeTransitionEffect.displayName = "ThemeTransitionEffect";
 
 export default ThemeTransitionEffect;
