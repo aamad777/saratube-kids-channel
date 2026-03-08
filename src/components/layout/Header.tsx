@@ -128,14 +128,14 @@ const Header = () => {
               <Link to="/kids" className="hidden sm:block">
                 <Button className={`gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
                   <Users className="h-5 w-5" />
-                  Kids Zone
-                </Button>
-              </Link>
+                   {t("kids.zone")}
+                 </Button>
+               </Link>
 
               <Link to="/upload" className="hidden sm:block">
                 <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <Upload className="h-5 w-5" />
-                  Upload
+                  {t("upload")}
                 </Button>
               </Link>
               
