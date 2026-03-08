@@ -9,7 +9,7 @@ import SearchDialog from "@/components/search/SearchDialog";
 
 const tapAnimation = {
   whileTap: { scale: 0.82, y: 2 },
-  transition: { type: "spring", stiffness: 500, damping: 15, mass: 0.6 },
+  transition: { type: "spring" as const, stiffness: 500, damping: 15, mass: 0.6 },
 };
 
 const MobileBottomNav = () => {
