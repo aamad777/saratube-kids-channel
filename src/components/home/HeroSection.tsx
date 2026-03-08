@@ -18,6 +18,14 @@ import heroBgUnicorn from "@/assets/hero-bg-unicorn.png";
 import heroBgPirate from "@/assets/hero-bg-pirate.png";
 import heroBgFairy from "@/assets/hero-bg-fairy.png";
 import heroBgRobot from "@/assets/hero-bg-robot.png";
+import heroBgQuranStories from "@/assets/hero-bg-quran-stories.png";
+import heroBgNasheed from "@/assets/hero-bg-nasheed.png";
+import heroBgRamadan from "@/assets/hero-bg-ramadan.png";
+import heroBgDuaPrayer from "@/assets/hero-bg-dua-prayer.png";
+import heroBgFarm from "@/assets/hero-bg-farm.png";
+import heroBgSports from "@/assets/hero-bg-sports.png";
+import heroBgCars from "@/assets/hero-bg-cars.png";
+import heroBgMagic from "@/assets/hero-bg-magic.png";
 
 const themeBackgrounds: Record<AppTheme, string> = {
   rainbow: heroBgRainbow,
@@ -32,6 +40,14 @@ const themeBackgrounds: Record<AppTheme, string> = {
   pirate: heroBgPirate,
   fairy: heroBgFairy,
   robot: heroBgRobot,
+  quran_stories: heroBgQuranStories,
+  nasheed: heroBgNasheed,
+  ramadan: heroBgRamadan,
+  dua_prayer: heroBgDuaPrayer,
+  farm: heroBgFarm,
+  sports: heroBgSports,
+  cars: heroBgCars,
+  magic: heroBgMagic,
 };
 
 const HeroSection = () => {
