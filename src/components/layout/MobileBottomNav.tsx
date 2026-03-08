@@ -27,11 +27,11 @@ const MobileBottomNav = () => {
   if (!user) return null;
 
   const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: Search, label: "Search", path: "#search", onClick: handleSearchOpen },
-    { icon: Upload, label: "Upload", path: "/upload" },
-    { icon: Users, label: "Kids", path: "/kids" },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: Home, label: t("nav.home"), path: "/" },
+    { icon: Search, label: t("nav.search"), path: "#search", onClick: handleSearchOpen },
+    { icon: Upload, label: t("nav.upload"), path: "/upload" },
+    { icon: Users, label: t("nav.kids"), path: "/kids" },
+    { icon: User, label: t("nav.profile"), path: "/profile" },
   ];
 
   return (

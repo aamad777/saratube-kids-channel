@@ -21,27 +21,29 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <ChildSessionProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/watch/:id" element={<WatchPage />} />
-              <Route path="/upload" element={<UploadPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/signin" element={<SignInPage />} />
-              <Route path="/parent" element={<ParentDashboard />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/kids" element={<ChildSelectPage />} />
-              <Route path="/explore" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </ChildSessionProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ChildSessionProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/watch/:id" element={<WatchPage />} />
+                <Route path="/upload" element={<UploadPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/signin" element={<SignInPage />} />
+                <Route path="/parent" element={<ParentDashboard />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/kids" element={<ChildSelectPage />} />
+                <Route path="/explore" element={<Index />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </ChildSessionProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

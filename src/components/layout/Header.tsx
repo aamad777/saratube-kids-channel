@@ -262,14 +262,14 @@ const Header = () => {
             <>
               <Link to="/signin">
                 <Button variant="outline" size="lg" className="hidden sm:flex">
-                  Sign In
+                  {t("sign.in")}
                 </Button>
               </Link>
               <Link to="/signup">
                 <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <span>{theme.emoji}</span>
-                  <span className="hidden sm:inline">Join Free!</span>
-                  <span className="sm:hidden">Join</span>
+                  <span className="hidden sm:inline">{t("join.free")}</span>
+                  <span className="sm:hidden">{t("join")}</span>
                 </Button>
               </Link>
             </>
