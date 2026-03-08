@@ -32,7 +32,7 @@ import {
 import { 
   Shield, Clock, Activity, Users, Plus, Trash2, 
   Eye, Ban, ChevronRight, Sparkles, AlertTriangle,
-  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby
+  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby, Image
 } from "lucide-react";
 import { toast } from "sonner";
 import AddChildForm from "@/components/parent/AddChildForm";
@@ -40,6 +40,7 @@ import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
 import AgeFilterInfo from "@/components/parent/AgeFilterInfo";
 import ParentAIAdvisor from "@/components/parent/ParentAIAdvisor";
+import KidsPhotoGallery from "@/components/parent/KidsPhotoGallery";
 import { videoCategories } from "@/data/videoData";
 
 interface ChildProfile {
@@ -680,10 +681,14 @@ const ParentDashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="videos" className="space-y-6">
-              <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+              <TabsList className="grid grid-cols-6 w-full max-w-3xl">
                 <TabsTrigger value="videos" className="gap-2">
                   <Video className="w-4 h-4" />
                   <span className="hidden sm:inline">My Videos</span>
+                </TabsTrigger>
+                <TabsTrigger value="photos" className="gap-2" disabled={!selectedChild}>
+                  <Image className="w-4 h-4" />
+                  <span className="hidden sm:inline">Photos</span>
                 </TabsTrigger>
                 <TabsTrigger value="advisor" className="gap-2">
                   <Sparkles className="w-4 h-4" />
@@ -793,6 +798,14 @@ const ParentDashboard = () => {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Photos Tab */}
+              <TabsContent value="photos" className="space-y-6">
+                <KidsPhotoGallery
+                  selectedChildId={selectedChild}
+                  childName={selectedChildProfile?.display_name}
+                />
               </TabsContent>
 
               {/* AI Advisor Tab */}

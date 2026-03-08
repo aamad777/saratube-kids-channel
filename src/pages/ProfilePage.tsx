@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, themeConfigs, AppTheme } from "@/hooks/useTheme";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import ThemedLayout from "@/components/layout/ThemedLayout";
 import ThemeTransitionEffect from "@/components/effects/ThemeTransitionEffect";
+import KidsPhotoUpload from "@/components/kids/KidsPhotoUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ProfilePage = () => {
@@ -98,10 +100,34 @@ const ProfilePage = () => {
                 Hello, {profile?.display_name || "Friend"}!
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <p className="text-muted-foreground">
                 Age: {profile?.age || "Not set"} years old
               </p>
+
+              {/* Avatar display */}
+              {profile?.avatar_url && (
+                <div className="flex items-center gap-4">
+                  <img
+                    src={profile.avatar_url}
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-4 border-primary/20"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Photo Upload */}
+          <Card className={`mb-8 border-2 ${theme.cardBg}`}>
+            <CardHeader>
+              <CardTitle className={`flex items-center gap-2 bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
+                <Camera className="w-5 h-5" />
+                📸 My Photos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <KidsPhotoUpload onAvatarUpdated={refreshProfile} />
             </CardContent>
           </Card>
 

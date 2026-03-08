@@ -89,6 +89,33 @@ export type Database = {
         }
         Relationships: []
       }
+      kids_photos: {
+        Row: {
+          caption: string | null
+          child_profile_id: string
+          created_at: string
+          id: string
+          parent_user_id: string
+          photo_url: string
+        }
+        Insert: {
+          caption?: string | null
+          child_profile_id: string
+          created_at?: string
+          id?: string
+          parent_user_id: string
+          photo_url: string
+        }
+        Update: {
+          caption?: string | null
+          child_profile_id?: string
+          created_at?: string
+          id?: string
+          parent_user_id?: string
+          photo_url?: string
+        }
+        Relationships: []
+      }
       parent_child_links: {
         Row: {
           child_user_id: string
