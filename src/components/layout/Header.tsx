@@ -132,12 +132,38 @@ const Header = () => {
                 </Button>
               </Link>
               
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className={`absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r ${theme.primary} text-white text-xs rounded-full flex items-center justify-center font-bold`}>
-                  3
-                </span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    <span className={`absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r ${theme.primary} text-white text-xs rounded-full flex items-center justify-center font-bold`}>
+                      3
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <div className="px-3 py-2 font-display font-bold text-sm text-foreground">
+                    Notifications
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
+                    <span className="font-medium text-sm">🎉 Welcome to KidsTube!</span>
+                    <span className="text-xs text-muted-foreground">Start exploring fun videos for kids.</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
+                    <span className="font-medium text-sm">🎨 New themes available!</span>
+                    <span className="text-xs text-muted-foreground">Try out Robot, Fairy, and more themes.</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
+                    <span className="font-medium text-sm">⏰ Screen time reminder</span>
+                    <span className="text-xs text-muted-foreground">Set up daily limits in Parent Dashboard.</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="justify-center text-xs text-muted-foreground">
+                    No more notifications
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
