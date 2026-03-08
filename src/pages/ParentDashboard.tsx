@@ -617,7 +617,7 @@ const ParentDashboard = () => {
               {children.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Linked Accounts
+                    {t("parent.linked.accounts")}
                   </p>
                   {children.map((child) => (
                     <div
