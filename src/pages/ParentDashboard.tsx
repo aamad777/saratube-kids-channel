@@ -681,10 +681,14 @@ const ParentDashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="videos" className="space-y-6">
-              <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+              <TabsList className="grid grid-cols-6 w-full max-w-3xl">
                 <TabsTrigger value="videos" className="gap-2">
                   <Video className="w-4 h-4" />
                   <span className="hidden sm:inline">My Videos</span>
+                </TabsTrigger>
+                <TabsTrigger value="photos" className="gap-2" disabled={!selectedChild}>
+                  <Image className="w-4 h-4" />
+                  <span className="hidden sm:inline">Photos</span>
                 </TabsTrigger>
                 <TabsTrigger value="advisor" className="gap-2">
                   <Sparkles className="w-4 h-4" />
