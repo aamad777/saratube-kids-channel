@@ -25,6 +25,7 @@ const Header = () => {
   const { user, profile, signOut, loading } = useAuth();
   const { childSession, clearChildSession, isChildActive, updateChildTheme } = useChildSession();
   const { theme, themeName, childName } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
    const [showSearch, setShowSearch] = useState(false);
  
