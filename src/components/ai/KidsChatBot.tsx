@@ -29,61 +29,85 @@ const PetIcon = ({ size = 40, waving = false }: { size?: number; waving?: boolea
     className="relative"
     style={{ width: size, height: size }}
   >
-    {/* Pet face */}
+    {/* Penguin body */}
     <motion.div
-      className="w-full h-full rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center shadow-lg border-2 border-amber-200 relative overflow-hidden"
+      className="w-full h-full rounded-full bg-gradient-to-b from-gray-800 to-gray-900 flex items-center justify-center shadow-lg border-2 border-gray-700 relative overflow-hidden"
+      animate={waving ? { rotate: [0, -3, 3, -3, 0] } : {}}
+      transition={{ duration: 1.5, repeat: waving ? Infinity : 0, repeatDelay: 2 }}
     >
+      {/* White belly */}
+      <div
+        className="absolute bg-white rounded-full"
+        style={{
+          width: size * 0.6,
+          height: size * 0.55,
+          bottom: size * 0.08,
+        }}
+      />
       {/* Eyes */}
-      <div className="flex gap-[18%] absolute top-[30%]">
+      <div className="flex gap-[22%] absolute top-[25%]">
         <motion.div
-          className="w-[14%] h-[14%] rounded-full bg-gray-800"
-          style={{ width: size * 0.14, height: size * 0.14 }}
+          className="rounded-full bg-white"
+          style={{ width: size * 0.18, height: size * 0.18 }}
           animate={{ scaleY: [1, 0.1, 1] }}
-          transition={{ duration: 3, repeat: Infinity, repeatDelay: 4 }}
-        />
+          transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 5 }}
+        >
+          <div
+            className="rounded-full bg-gray-900 absolute"
+            style={{
+              width: size * 0.1,
+              height: size * 0.1,
+              top: size * 0.04,
+              left: size * 0.04,
+            }}
+          />
+        </motion.div>
         <motion.div
-          className="w-[14%] h-[14%] rounded-full bg-gray-800"
-          style={{ width: size * 0.14, height: size * 0.14 }}
+          className="rounded-full bg-white"
+          style={{ width: size * 0.18, height: size * 0.18 }}
           animate={{ scaleY: [1, 0.1, 1] }}
-          transition={{ duration: 3, repeat: Infinity, repeatDelay: 4 }}
-        />
+          transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 5 }}
+        >
+          <div
+            className="rounded-full bg-gray-900 absolute"
+            style={{
+              width: size * 0.1,
+              height: size * 0.1,
+              top: size * 0.04,
+              left: size * 0.04,
+            }}
+          />
+        </motion.div>
       </div>
-      {/* Nose */}
+      {/* Beak */}
       <div
-        className="absolute rounded-full bg-gray-700"
-        style={{ width: size * 0.14, height: size * 0.1, top: "48%" }}
-      />
-      {/* Mouth / smile */}
-      <div
-        className="absolute border-b-2 border-gray-700 rounded-b-full"
-        style={{ width: size * 0.2, height: size * 0.08, top: "60%", borderBottomLeftRadius: "50%", borderBottomRightRadius: "50%" }}
-      />
-      {/* Ears */}
-      <motion.div
-        className="absolute bg-amber-600 rounded-full"
-        style={{ width: size * 0.28, height: size * 0.35, top: -size * 0.08, left: size * 0.02, rotate: -20 }}
-        animate={{ rotate: waving ? [-20, -10, -20] : -20 }}
-        transition={{ duration: 0.6, repeat: waving ? Infinity : 0 }}
-      />
-      <motion.div
-        className="absolute bg-amber-600 rounded-full"
-        style={{ width: size * 0.28, height: size * 0.35, top: -size * 0.08, right: size * 0.02, rotate: 20 }}
-        animate={{ rotate: waving ? [20, 10, 20] : 20 }}
-        transition={{ duration: 0.6, repeat: waving ? Infinity : 0 }}
+        className="absolute"
+        style={{
+          width: 0,
+          height: 0,
+          top: "48%",
+          borderLeft: `${size * 0.08}px solid transparent`,
+          borderRight: `${size * 0.08}px solid transparent`,
+          borderTop: `${size * 0.1}px solid #f59e0b`,
+        }}
       />
     </motion.div>
 
-    {/* Waving paw */}
+    {/* Waving flipper */}
     <motion.div
-      className="absolute -right-1 -bottom-1 text-lg"
+      className="absolute bg-gray-800 rounded-full origin-top"
+      style={{
+        width: size * 0.18,
+        height: size * 0.4,
+        top: size * 0.35,
+        right: -size * 0.06,
+        borderRadius: "40%",
+      }}
       animate={waving ? {
-        rotate: [0, 20, -10, 20, -10, 0],
-        y: [0, -3, 0, -3, 0, 0],
-      } : {}}
-      transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 2 }}
-    >
-      🐾
-    </motion.div>
+        rotate: [0, -30, 10, -30, 10, 0],
+      } : { rotate: 0 }}
+      transition={{ duration: 1, repeat: waving ? Infinity : 0, repeatDelay: 2 }}
+    />
   </motion.div>
 );
 
