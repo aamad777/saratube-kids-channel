@@ -117,7 +117,9 @@ const KidsChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isWaddling, setIsWaddling] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevMsgCount = useRef(0);
 
   useEffect(() => {
     if (scrollRef.current) {
