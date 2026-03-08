@@ -226,7 +226,7 @@ const Header = () => {
                       </DropdownMenuSub>
                       <DropdownMenuItem onClick={handleSwitchProfile} className="gap-2">
                         <UserCircle className="w-4 h-4" />
-                        <span>Switch Profile</span>
+                        <span>{t("switch.profile")}</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
