@@ -97,9 +97,29 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
 
       if (linkError) console.error("Error creating parent-child link:", linkError);
 
+      // Auto-block categories: if theme has a matching category, block everything else
+      const themeDefaultCategory = themeCategoryMap[selectedTheme];
+      if (themeDefaultCategory) {
+        const categoriesToBlock = videoCategories
+          .filter((cat) => cat.id !== themeDefaultCategory)
+          .map((cat) => ({
+            child_user_id: childUserId,
+            category: cat.id,
+            blocked_by: user.id,
+          }));
+
+        if (categoriesToBlock.length > 0) {
+          const { error: blockError } = await supabase
+            .from("blocked_categories")
+            .insert(categoriesToBlock);
+          if (blockError) console.error("Error blocking categories:", blockError);
+        }
+      }
+
       // Save interests as video preferences
       if (selectedInterests.length > 0) {
-        const validCategories = ["music", "animals", "crafts", "stories", "science", "games"];
+        const validCategories = ["music", "animals", "crafts", "stories", "science", "games",
+          "quran_stories", "nasheed", "ramadan", "dua_prayer", "farm", "sports", "cars", "magic"];
         const prefsToInsert = selectedInterests
           .filter((i) => validCategories.includes(i))
           .map((category) => ({
