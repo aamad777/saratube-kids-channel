@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { themeConfigs, AppTheme } from "@/hooks/useTheme";
-import { User, Lock, Palette, Check, X } from "lucide-react";
+import { User, Lock, Palette, Check, X, Heart } from "lucide-react";
 
 interface AddChildFormProps {
   onSuccess: () => void;
@@ -19,6 +19,21 @@ const themeOptions: AppTheme[] = [
   "jungle", "candy", "superhero", "dinosaur"
 ];
 
+const INTEREST_OPTIONS = [
+  { id: "music", label: "Music & Dance", emoji: "🎵" },
+  { id: "animals", label: "Animals & Nature", emoji: "🐾" },
+  { id: "crafts", label: "Arts & Crafts", emoji: "🎨" },
+  { id: "stories", label: "Stories & Reading", emoji: "📚" },
+  { id: "science", label: "Science & Experiments", emoji: "🔬" },
+  { id: "games", label: "Games & Play", emoji: "🎮" },
+  { id: "cooking", label: "Cooking & Food", emoji: "🍳" },
+  { id: "yoga", label: "Yoga & Mindfulness", emoji: "🧘" },
+  { id: "cartoons", label: "Cartoons", emoji: "📺" },
+  { id: "education", label: "Education & Learning", emoji: "🎓" },
+  { id: "nursery", label: "Nursery Rhymes", emoji: "🎶" },
+  { id: "nature", label: "Nature Docs", emoji: "🌿" },
+];
+
 const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -27,7 +42,14 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [selectedTheme, setSelectedTheme] = useState<AppTheme>("rainbow");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const toggleInterest = (id: string) => {
+    setSelectedInterests((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -50,7 +72,6 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
     setLoading(true);
     
     try {
-      // Create child profile with PIN
       const childUserId = crypto.randomUUID();
       const { error } = await supabase.from("profiles").insert({
         user_id: childUserId,
@@ -64,14 +85,30 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
 
       if (error) throw error;
 
-      // Create parent-child link so RLS policies work
+      // Create parent-child link
       const { error: linkError } = await supabase.from("parent_child_links").insert({
         parent_user_id: user.id,
         child_user_id: childUserId,
       });
 
-      if (linkError) {
-        console.error("Error creating parent-child link:", linkError);
+      if (linkError) console.error("Error creating parent-child link:", linkError);
+
+      // Save interests as video preferences
+      if (selectedInterests.length > 0) {
+        const validCategories = ["music", "animals", "crafts", "stories", "science", "games"];
+        const prefsToInsert = selectedInterests
+          .filter((i) => validCategories.includes(i))
+          .map((category) => ({
+            user_id: childUserId,
+            category: category as any,
+          }));
+
+        if (prefsToInsert.length > 0) {
+          const { error: prefError } = await supabase
+            .from("user_video_preferences")
+            .insert(prefsToInsert);
+          if (prefError) console.error("Error saving preferences:", prefError);
+        }
       }
 
       toast.success(
@@ -90,6 +127,8 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
     }
   };
 
+  const totalSteps = 4;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -107,7 +146,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
 
       {/* Progress Steps */}
       <div className="flex items-center justify-center gap-2 mb-6">
-        {[1, 2, 3].map((s) => (
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
           <div
             key={s}
             className={`w-3 h-3 rounded-full transition-all ${
@@ -216,7 +255,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
               onClick={() => setStep(3)}
               className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl"
             >
-              Next: Set PIN
+              Next: Interests
             </Button>
           </div>
         </motion.div>
@@ -225,6 +264,69 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
       {step === 3 && (
         <motion.div
           key="step3"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="space-y-4"
+        >
+          <Label className="flex items-center gap-2 mb-1">
+            <Heart className="w-4 h-4" />
+            What does {name || "your child"} enjoy?
+          </Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Pick as many as you like — we'll personalize their experience!
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1">
+            {INTEREST_OPTIONS.map((interest) => {
+              const isSelected = selectedInterests.includes(interest.id);
+              return (
+                <motion.button
+                  key={interest.id}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => toggleInterest(interest.id)}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 text-left text-sm transition-all ${
+                    isSelected
+                      ? "border-purple-500 bg-purple-50 shadow-sm"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}
+                >
+                  <span className="text-lg">{interest.emoji}</span>
+                  <span className={`font-medium ${isSelected ? "text-purple-700" : "text-gray-700"}`}>
+                    {interest.label}
+                  </span>
+                  {isSelected && (
+                    <Check className="w-4 h-4 text-purple-500 ml-auto flex-shrink-0" />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {selectedInterests.length > 0 && (
+            <p className="text-xs text-center text-purple-600 font-medium">
+              {selectedInterests.length} interest{selectedInterests.length > 1 ? "s" : ""} selected ✨
+            </p>
+          )}
+
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setStep(2)} className="flex-1 rounded-xl">
+              Back
+            </Button>
+            <Button
+              onClick={() => setStep(4)}
+              className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl"
+            >
+              Next: Set PIN
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {step === 4 && (
+        <motion.div
+          key="step4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
@@ -269,7 +371,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
           )}
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(2)} className="flex-1 rounded-xl">
+            <Button variant="outline" onClick={() => setStep(3)} className="flex-1 rounded-xl">
               Back
             </Button>
             <Button
@@ -277,7 +379,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
               disabled={loading || pin.length !== 4 || pin !== confirmPin}
               className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl"
             >
-              {loading ? "Creating..." : "Create Profile"}
+              {loading ? "Creating..." : "Create Profile ✨"}
             </Button>
           </div>
         </motion.div>
