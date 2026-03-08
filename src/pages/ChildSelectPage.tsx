@@ -21,7 +21,7 @@ interface ChildProfile {
 
 const ChildSelectPage = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { setChildSession } = useChildSession();
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,13 +30,15 @@ const ChildSelectPage = () => {
   const [pinError, setPinError] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       navigate("/signin");
       return;
     }
-    
+
     fetchChildren();
-  }, [user]);
+  }, [user, authLoading, navigate]);
 
   const fetchChildren = async () => {
     if (!user) return;
