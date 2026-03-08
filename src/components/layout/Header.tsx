@@ -161,11 +161,27 @@ const Header = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className={`w-9 h-9 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center text-white font-display font-bold shadow-button hover:scale-110 transition-transform`}>
+                  <button className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center text-white font-display font-bold text-sm sm:text-base shadow-button hover:scale-110 transition-transform`}>
                     {getInitial()}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  {/* Mobile-only nav links */}
+                  <div className="sm:hidden">
+                    <Link to="/kids">
+                      <DropdownMenuItem className="gap-2">
+                        <Users className="w-4 h-4" />
+                        <span>Kids Zone</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link to="/upload">
+                      <DropdownMenuItem className="gap-2">
+                        <Upload className="w-4 h-4" />
+                        <span>Upload</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <DropdownMenuSeparator />
+                  </div>
                 {isChildActive && (
                     <>
                       <DropdownMenuItem className="gap-2 font-semibold">
