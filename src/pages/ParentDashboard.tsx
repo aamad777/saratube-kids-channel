@@ -32,7 +32,7 @@ import {
 import { 
   Shield, Clock, Activity, Users, Plus, Trash2, 
   Eye, Ban, ChevronRight, Sparkles, AlertTriangle,
-  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby
+  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby, Image
 } from "lucide-react";
 import { toast } from "sonner";
 import AddChildForm from "@/components/parent/AddChildForm";
