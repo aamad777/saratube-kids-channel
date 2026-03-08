@@ -184,6 +184,26 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.stat.videos": "فيديوهات",
     "hero.stat.creators": "مبدعين",
     "hero.stat.happy.kids": "أطفال سعداء",
+    // Watch Page
+    "watch.back": "العودة للرئيسية",
+    "watch.views": "مشاهدة",
+    "watch.ago": "منذ يومين",
+    "watch.subscribers": "مشترك",
+    "watch.subscribe": "اشتراك",
+    "watch.share": "مشاركة",
+    "watch.save": "حفظ",
+    "watch.next": "شاهد التالي",
+    // Child Select
+    "child.whos.watching": "من يشاهد؟ 👀",
+    "child.choose.profile": "اختر ملفك الشخصي لبدء المشاهدة!",
+    "child.no.profiles": "لا توجد ملفات بعد!",
+    "child.ask.parent": "اطلب من والديك إنشاء ملفك الشخصي.",
+    "child.go.parent": "الذهاب للوحة الوالدين",
+    "child.back": "رجوع",
+    "child.hi": "مرحباً،",
+    "child.enter.pin": "أدخل رمزك السري 🔐",
+    "child.wrong.pin": "عذراً! رمز خاطئ. حاول مرة أخرى! 🙈",
+    "child.loading": "جارٍ تحميل الملفات...",
     // General
     "language": "اللغة",
     // Sign In

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChildSession } from "@/contexts/ChildSessionContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Lock, Star, Sparkles } from "lucide-react";
@@ -23,6 +24,7 @@ const ChildSelectPage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { setChildSession } = useChildSession();
+  const { t } = useLanguage();
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState<ChildProfile | null>(null);
@@ -31,25 +33,21 @@ const ChildSelectPage = () => {
 
   useEffect(() => {
     if (authLoading) return;
-
     if (!user) {
       navigate("/signin");
       return;
     }
-
     fetchChildren();
   }, [user, authLoading, navigate]);
 
   const fetchChildren = async () => {
     if (!user) return;
-    
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("created_by_parent", user.id)
         .eq("is_parent", false);
-
       if (error) throw error;
       setChildren(data || []);
     } catch (error) {
@@ -70,28 +68,24 @@ const ChildSelectPage = () => {
     const pinToCheck = submittedPin || pin;
     if (!selectedChild || pinToCheck.length !== 4) return;
 
-    // Simple PIN verification (in production, use proper hashing)
     if (selectedChild.pin_hash === pinToCheck) {
-      // Store the child session using context
       setChildSession({
         id: selectedChild.id,
         name: selectedChild.display_name,
         theme: selectedChild.selected_theme || "rainbow",
         age: selectedChild.age,
       });
-      
       toast.success(
         <span className="flex items-center gap-2">
           <span className="text-xl">{themeConfigs[selectedChild.selected_theme || "rainbow"].emoji}</span>
-          <span>Welcome, {selectedChild.display_name}!</span>
+          <span>{t("child.hi")} {selectedChild.display_name}!</span>
         </span>
       );
-      
       navigate("/");
     } else {
       setPinError(true);
       setPin("");
-      toast.error("Wrong PIN! Try again.");
+      toast.error(t("child.wrong.pin"));
     }
   };
 
@@ -100,11 +94,8 @@ const ChildSelectPage = () => {
       const newPin = pin + digit;
       setPin(newPin);
       setPinError(false);
-      
       if (newPin.length === 4) {
-        setTimeout(() => {
-          handlePinSubmit(newPin);
-        }, 200);
+        setTimeout(() => handlePinSubmit(newPin), 200);
       }
     }
   };
@@ -123,7 +114,7 @@ const ChildSelectPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl animate-bounce">🎡</div>
-          <p className="text-lg font-display text-purple-600 mt-4">Loading profiles...</p>
+          <p className="text-lg font-display text-purple-600 mt-4">{t("child.loading")}</p>
         </div>
       </div>
     );
@@ -131,19 +122,17 @@ const ChildSelectPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 p-6">
-      {/* Back button */}
       <Button
         variant="ghost"
         onClick={() => selectedChild ? setSelectedChild(null) : navigate("/parent")}
         className="mb-6"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
-        Back
+        {t("child.back")}
       </Button>
 
       <AnimatePresence mode="wait">
         {!selectedChild ? (
-          // Child Selection View
           <motion.div
             key="selection"
             initial={{ opacity: 0, y: 20 }}
@@ -153,10 +142,10 @@ const ChildSelectPage = () => {
           >
             <div className="text-center mb-8">
               <h1 className="text-4xl md:text-5xl font-display font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
-                Who's Watching? 👀
+                {t("child.whos.watching")}
               </h1>
               <p className="text-muted-foreground mt-2">
-                Choose your profile to start watching!
+                {t("child.choose.profile")}
               </p>
             </div>
 
@@ -164,23 +153,22 @@ const ChildSelectPage = () => {
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">👶</div>
                 <h2 className="text-xl font-display font-bold text-gray-700 mb-2">
-                  No profiles yet!
+                  {t("child.no.profiles")}
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Ask your parent to create your profile.
+                  {t("child.ask.parent")}
                 </p>
                 <Button
                   onClick={() => navigate("/parent")}
                   className="bg-gradient-to-r from-pink-500 to-purple-500"
                 >
-                  Go to Parent Dashboard
+                  {t("child.go.parent")}
                 </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {children.map((child, index) => {
                   const theme = getThemeColors(child.selected_theme || "rainbow");
-                  
                   return (
                     <motion.button
                       key={child.id}
@@ -191,24 +179,17 @@ const ChildSelectPage = () => {
                       className="group relative"
                     >
                       <div className={`relative p-6 rounded-3xl bg-gradient-to-br ${theme.primary} shadow-xl transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl`}>
-                        {/* Avatar */}
                         <div className="w-24 h-24 mx-auto rounded-full bg-white/30 flex items-center justify-center text-5xl mb-4 ring-4 ring-white/50">
                           {theme.emoji}
                         </div>
-                        
-                        {/* Name */}
                         <h3 className="text-xl font-display font-bold text-white text-center mb-2">
                           {child.display_name}
                         </h3>
-                        
-                        {/* Lock indicator */}
                         {child.pin_hash && (
                           <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/30 flex items-center justify-center">
                             <Lock className="w-4 h-4 text-white" />
                           </div>
                         )}
-                        
-                        {/* Decorative stars */}
                         <Sparkles className="absolute top-3 left-3 w-6 h-6 text-white/60 animate-pulse" />
                       </div>
                     </motion.button>
@@ -218,7 +199,6 @@ const ChildSelectPage = () => {
             )}
           </motion.div>
         ) : (
-          // PIN Entry View
           <motion.div
             key="pin"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -236,14 +216,13 @@ const ChildSelectPage = () => {
                 {getThemeColors(selectedChild.selected_theme || "rainbow").emoji}
               </motion.div>
               <h2 className="text-3xl font-display font-bold text-gray-800">
-                Hi, {selectedChild.display_name}!
+                {t("child.hi")} {selectedChild.display_name}!
               </h2>
               <p className="text-muted-foreground mt-2">
-                Enter your secret PIN 🔐
+                {t("child.enter.pin")}
               </p>
             </div>
 
-            {/* PIN Dots */}
             <div className="flex justify-center gap-4 mb-8">
               {[0, 1, 2, 3].map((i) => (
                 <motion.div
@@ -261,12 +240,10 @@ const ChildSelectPage = () => {
               ))}
             </div>
 
-            {/* PIN Keypad */}
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-xl">
               <div className="grid grid-cols-3 gap-3">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, "", 0, "⌫"].map((digit, i) => {
                   if (digit === "") return <div key={i} />;
-                  
                   return (
                     <motion.button
                       key={i}
@@ -292,7 +269,7 @@ const ChildSelectPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center text-red-500 mt-4 font-medium"
               >
-                Oops! Wrong PIN. Try again! 🙈
+                {t("child.wrong.pin")}
               </motion.p>
             )}
           </motion.div>
