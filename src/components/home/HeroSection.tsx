@@ -167,7 +167,7 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent drop-shadow-sm`}>Welcome to</span>
+          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent drop-shadow-sm`}>{t("hero.welcome")}</span>
           <br />
           <motion.span 
             className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent inline-block`}
