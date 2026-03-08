@@ -686,7 +686,7 @@ const ParentDashboard = () => {
               <TabsList className="grid grid-cols-6 w-full max-w-3xl">
                 <TabsTrigger value="videos" className="gap-2">
                   <Video className="w-4 h-4" />
-                  <span className="hidden sm:inline">My Videos</span>
+                  <span className="hidden sm:inline">{t("parent.my.videos")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="photos" className="gap-2" disabled={!selectedChild}>
                   <Image className="w-4 h-4" />
