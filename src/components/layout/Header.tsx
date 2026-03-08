@@ -70,12 +70,12 @@ const Header = () => {
         currentTheme={themeName}
       />
        <header className={`sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg`}>
-        <div className="container flex h-16 items-center justify-between gap-4 px-4">
+        <div className="container flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <div className="relative">
-              <span className="text-3xl animate-sparkle">{theme.emoji}</span>
-              <div className={`absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
+              <span className="text-2xl sm:text-3xl animate-sparkle">{theme.emoji}</span>
+              <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
             </div>
             <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline transition-all duration-300`}>
               {getAppName()}
@@ -83,13 +83,13 @@ const Header = () => {
           </Link>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-xl">
+          <div className="flex-1 max-w-xl min-w-0">
              <button
                onClick={handleSearchOpen}
-               className={`w-full flex items-center gap-3 px-4 h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
+               className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-9 sm:h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
              >
-               <Search className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-               <span className="text-muted-foreground flex-1 text-left">Search fun videos...</span>
+               <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+               <span className="text-muted-foreground flex-1 text-left text-sm sm:text-base truncate">Search fun videos...</span>
                <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-muted-foreground bg-background rounded border">
                  <span className="text-xs">⌘</span>K
                </kbd>
@@ -97,7 +97,7 @@ const Header = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {user && (
               <Button
                 variant="ghost"
