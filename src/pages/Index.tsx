@@ -104,8 +104,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Floating AI Quiz Bot */}
-      <GuidedQuizBot />
+      {/* Floating AI Chatbots */}
+      {isChildActive ? <KidsChatBot /> : <GuidedQuizBot />}
     </ThemedLayout>
   );
 };
