@@ -31,7 +31,8 @@ const THEME_GROUPS = [
 
 export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) => {
   const { user, refreshProfile } = useAuth();
-  const { isChildActive, updateChildTheme } = useChildSession();
+  const { isChildActive, updateChildTheme, childSession } = useChildSession();
+  const childName = childSession?.name;
   const [selectedTheme, setSelectedTheme] = useState<AppTheme>(currentTheme);
   const [isApplying, setIsApplying] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -107,6 +108,19 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
 
             {/* Title */}
             <div className="text-center mb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 text-xs font-medium text-muted-foreground mb-2">
+                {isChildActive ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    Changing theme for <span className="font-bold text-foreground">{childName}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    Changing your theme
+                  </>
+                )}
+              </div>
               <h2 className="text-2xl font-display font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
                 ✨ Pick Your Theme! ✨
               </h2>
