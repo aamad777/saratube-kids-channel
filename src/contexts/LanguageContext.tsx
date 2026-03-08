@@ -46,6 +46,26 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.stat.videos": "Videos",
     "hero.stat.creators": "Creators",
     "hero.stat.happy.kids": "Happy Kids",
+    // Watch Page
+    "watch.back": "Back to Home",
+    "watch.views": "views",
+    "watch.ago": "2 days ago",
+    "watch.subscribers": "subscribers",
+    "watch.subscribe": "Subscribe",
+    "watch.share": "Share",
+    "watch.save": "Save",
+    "watch.next": "Watch Next",
+    // Child Select
+    "child.whos.watching": "Who's Watching? 👀",
+    "child.choose.profile": "Choose your profile to start watching!",
+    "child.no.profiles": "No profiles yet!",
+    "child.ask.parent": "Ask your parent to create your profile.",
+    "child.go.parent": "Go to Parent Dashboard",
+    "child.back": "Back",
+    "child.hi": "Hi,",
+    "child.enter.pin": "Enter your secret PIN 🔐",
+    "child.wrong.pin": "Oops! Wrong PIN. Try again! 🙈",
+    "child.loading": "Loading profiles...",
     // General
     "language": "Language",
     // Sign In
