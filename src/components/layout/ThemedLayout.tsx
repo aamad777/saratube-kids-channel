@@ -128,12 +128,12 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
         />
       )}
       
-      <main className="relative z-10">
+      <main className="relative z-10 pb-16 sm:pb-0">
         {children}
       </main>
 
       {showFooter && (
-        <footer className={`${theme.cardBg} border-t py-8 mt-12 relative z-10 theme-transition`}>
+        <footer className={`${theme.cardBg} border-t py-8 mt-12 pb-20 sm:pb-8 relative z-10 theme-transition`}>
           <div className="container px-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="text-2xl">{theme.emoji}</span>
@@ -150,6 +150,8 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
           </div>
         </footer>
       )}
+
+      <MobileBottomNav />
 
       {/* Screen Lock Overlay - blocks everything when time is up */}
       <ScreenLockOverlay
