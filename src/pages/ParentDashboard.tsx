@@ -558,7 +558,7 @@ const ParentDashboard = () => {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                My Kids
+                {t("parent.my.kids")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
