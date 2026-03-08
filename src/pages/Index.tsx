@@ -109,7 +109,4 @@ const Index = () => {
   );
 };
 
-// Need to import themeConfigs for the section title
-import { themeConfigs } from "@/hooks/useTheme";
-
 export default Index;
