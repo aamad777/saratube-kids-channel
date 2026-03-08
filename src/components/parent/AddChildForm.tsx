@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { themeConfigs, AppTheme } from "@/hooks/useTheme";
+import { themeConfigs, AppTheme, themeCategoryMap } from "@/hooks/useTheme";
+import { videoCategories } from "@/data/videoData";
 import { User, Lock, Palette, Check, X, Heart } from "lucide-react";
 
 interface AddChildFormProps {
