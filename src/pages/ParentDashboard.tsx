@@ -35,6 +35,7 @@ import {
   Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby, Image
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
