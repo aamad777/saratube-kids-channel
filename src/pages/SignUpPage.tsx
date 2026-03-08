@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Star, Shield, Users, Eye, Baby, Upload, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   
   // Form data
@@ -44,7 +46,6 @@ const SignUpPage = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Update profile to mark as parent
         await supabase
           .from("profiles")
           .update({ 
@@ -69,11 +70,11 @@ const SignUpPage = () => {
           <div className="flex items-center justify-center gap-2 mb-2">
             <Shield className="w-8 h-8 text-white animate-pulse" />
             <CardTitle className="text-3xl font-display text-white">
-              Parent Sign Up
+              {t("signup.title")}
             </CardTitle>
             <Star className="w-8 h-8 text-yellow-300 animate-bounce" />
           </div>
-          <p className="text-white/90">Create a safe space for your kids! ✨</p>
+          <p className="text-white/90">{t("signup.subtitle")}</p>
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
@@ -81,39 +82,39 @@ const SignUpPage = () => {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl">
               <Baby className="w-5 h-5 text-blue-500" />
-              <span className="text-sm font-medium">Create Kid Profiles</span>
+              <span className="text-sm font-medium">{t("signup.feature.profiles")}</span>
             </div>
             <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-xl">
               <Upload className="w-5 h-5 text-purple-500" />
-              <span className="text-sm font-medium">Upload Videos</span>
+              <span className="text-sm font-medium">{t("signup.feature.upload")}</span>
             </div>
             <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl">
               <Eye className="w-5 h-5 text-green-500" />
-              <span className="text-sm font-medium">Monitor Activity</span>
+              <span className="text-sm font-medium">{t("signup.feature.monitor")}</span>
             </div>
             <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-xl">
               <Clock className="w-5 h-5 text-orange-500" />
-              <span className="text-sm font-medium">Set Time Limits</span>
+              <span className="text-sm font-medium">{t("signup.feature.limits")}</span>
             </div>
           </div>
 
           <div className="space-y-3">
             <Input
-              placeholder="Your name"
+              placeholder={t("signup.name")}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
             />
             <Input
               type="email"
-              placeholder="Email address"
+              placeholder={t("signup.email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
             />
             <Input
               type="password"
-              placeholder="Create a password (min 6 characters)"
+              placeholder={t("signup.password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
@@ -125,18 +126,18 @@ const SignUpPage = () => {
             className="w-full py-6 text-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90"
             disabled={loading || !displayName || !email || !password}
           >
-            {loading ? "Creating Account... ✨" : "Create Parent Account 🎉"}
+            {loading ? t("signup.creating") : t("signup.button")}
           </Button>
 
           <div className="text-center space-y-2">
             <p className="text-muted-foreground text-sm">
-              Already have an account?{" "}
+              {t("signup.has.account")}{" "}
               <Link to="/signin" className="text-primary hover:underline font-medium">
-                Sign In
+                {t("signup.signin")}
               </Link>
             </p>
             <p className="text-xs text-muted-foreground">
-              After signing up, you'll be able to create PIN-protected profiles for your children.
+              {t("signup.note")}
             </p>
           </div>
         </CardContent>

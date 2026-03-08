@@ -35,6 +35,7 @@ import {
   Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby, Image
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
@@ -96,6 +97,7 @@ const CATEGORY_OPTIONS = videoCategories.map(c => c.name);
 const ParentDashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
@@ -543,10 +545,10 @@ const ParentDashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-foreground flex items-center gap-3">
             <Shield className="w-8 h-8 text-primary" />
-            Parent Dashboard
+            {t("parent.title")}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Monitor and manage your children's viewing experience 👨‍👩‍👧‍👦
+            {t("parent.subtitle")}
           </p>
         </div>
 
@@ -556,7 +558,7 @@ const ParentDashboard = () => {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                My Kids
+                {t("parent.my.kids")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -564,7 +566,7 @@ const ParentDashboard = () => {
               {createdChildren.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Kids with PIN 🔐
+                    {t("parent.kids.pin")}
                   </p>
                   {createdChildren.map((child) => (
                     <div
@@ -588,7 +590,7 @@ const ParentDashboard = () => {
                       <div className="text-left flex-1">
                         <p className="font-medium">{child.display_name}</p>
                         {child.age && (
-                          <p className="text-xs text-muted-foreground">{child.age} years old</p>
+                          <p className="text-xs text-muted-foreground">{child.age} {t("parent.years.old")}</p>
                         )}
                       </div>
                       <Button
@@ -615,7 +617,7 @@ const ParentDashboard = () => {
               {children.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Linked Accounts
+                    {t("parent.linked.accounts")}
                   </p>
                   {children.map((child) => (
                     <div
@@ -633,7 +635,7 @@ const ParentDashboard = () => {
                       <div className="text-left flex-1">
                         <p className="font-medium">{child.display_name}</p>
                         {child.age && (
-                          <p className="text-xs text-muted-foreground">{child.age} years old</p>
+                          <p className="text-xs text-muted-foreground">{child.age} {t("parent.years.old")}</p>
                         )}
                       </div>
                       <Button
@@ -654,7 +656,7 @@ const ParentDashboard = () => {
 
               {children.length === 0 && createdChildren.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No children added yet
+                  {t("parent.no.children")}
                 </p>
               )}
 
@@ -664,7 +666,7 @@ const ParentDashboard = () => {
                   className="w-full bg-gradient-to-r from-pink-500 to-purple-500"
                 >
                   <Baby className="w-4 h-4 mr-2" />
-                  Create Child Profile
+                  {t("parent.create.child")}
                 </Button>
                 <Button 
                   onClick={() => setShowLinkDialog(true)} 
@@ -672,7 +674,7 @@ const ParentDashboard = () => {
                   variant="outline"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Link Existing Account
+                  {t("parent.link.account")}
                 </Button>
               </div>
             </CardContent>
@@ -684,23 +686,23 @@ const ParentDashboard = () => {
               <TabsList className="grid grid-cols-6 w-full max-w-3xl">
                 <TabsTrigger value="videos" className="gap-2">
                   <Video className="w-4 h-4" />
-                  <span className="hidden sm:inline">My Videos</span>
+                  <span className="hidden sm:inline">{t("parent.my.videos")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="photos" className="gap-2" disabled={!selectedChild}>
                   <Image className="w-4 h-4" />
-                  <span className="hidden sm:inline">Photos</span>
+                  <span className="hidden sm:inline">{t("parent.photos")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="advisor" className="gap-2">
                   <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">AI Advisor</span>
+                  <span className="hidden sm:inline">{t("parent.ai.advisor")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-2" disabled={!selectedChild}>
                   <Activity className="w-4 h-4" />
-                  <span className="hidden sm:inline">Activity</span>
+                  <span className="hidden sm:inline">{t("parent.activity")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="limits" className="gap-2" disabled={!selectedChild}>
                   <Clock className="w-4 h-4" />
-                  <span className="hidden sm:inline">Time Limits</span>
+                  <span className="hidden sm:inline">{t("parent.time.limits")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="content" className="gap-2" disabled={!selectedChild}>
                   <Ban className="w-4 h-4" />
