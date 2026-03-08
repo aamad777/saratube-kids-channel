@@ -157,6 +157,13 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.profile": "الملف",
     // Index / Hero
     "trending.now": "الأكثر رواجاً ✨",
+    "hero.welcome": "مرحباً بك في",
+    "hero.description": "أروع مكان للأطفال لمشاهدة وإنشاء ومشاركة فيديوهات رائعة! تعلم والعب وكوّن أصدقاء جدد!",
+    "hero.start.watching": "ابدأ المشاهدة",
+    "hero.upload.video": "رفع فيديو",
+    "hero.stat.videos": "فيديوهات",
+    "hero.stat.creators": "مبدعين",
+    "hero.stat.happy.kids": "أطفال سعداء",
     // General
     "language": "اللغة",
     // Sign In
