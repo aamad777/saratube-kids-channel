@@ -17,6 +17,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [showSearch, setShowSearch] = useState(false);
 
   const handleSearchOpen = useCallback(() => {
