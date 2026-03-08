@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LinkedChild {
   child_user_id: string;
@@ -21,6 +22,7 @@ const CATEGORIES = ["Music & Dance", "Stories", "Art & Crafts", "Science", "Game
 const UploadPage = () => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   const [isDragging, setIsDragging] = useState(false);
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
@@ -233,9 +235,9 @@ const UploadPage = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container px-4 py-8 text-center">
-          <p className="text-muted-foreground">Please sign in to upload videos.</p>
+          <p className="text-muted-foreground">{t("upload.signin.prompt")}</p>
           <Button asChild className="mt-4">
-            <Link to="/signin">Sign In</Link>
+            <Link to="/signin">{t("sign.in")}</Link>
           </Button>
         </main>
       </div>
@@ -254,10 +256,10 @@ const UploadPage = () => {
               <Upload className="h-8 w-8 text-primary-foreground" />
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-              Upload Your Video! 🎬
+              {t("upload.title")}
             </h1>
             <p className="text-muted-foreground">
-              Share your awesome creations with friends!
+              {t("upload.subtitle")}
             </p>
           </div>
 
@@ -273,7 +275,7 @@ const UploadPage = () => {
                   className="rounded-full"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload File
+                  {t("upload.file")}
                 </Button>
                 <Button
                   type="button"
@@ -282,7 +284,7 @@ const UploadPage = () => {
                   className="rounded-full"
                 >
                   <LinkIcon className="h-4 w-4 mr-2" />
-                  Paste URL
+                  {t("upload.paste.url")}
                 </Button>
               </div>
 
@@ -315,10 +317,10 @@ const UploadPage = () => {
                     </div>
                     <div>
                       <p className="font-display text-xl font-bold mb-2">
-                        Drag & Drop Your Video Here
+                        {t("upload.drag")}
                       </p>
                       <p className="text-muted-foreground">
-                        or click to browse files
+                        {t("upload.browse")}
                       </p>
                     </div>
                     <div className="flex gap-4 text-sm text-muted-foreground">
@@ -350,10 +352,10 @@ const UploadPage = () => {
                     </div>
                     <div>
                       <p className="font-display text-xl font-bold mb-2">
-                        Paste Video URL
+                        {t("upload.paste.title")}
                       </p>
                       <p className="text-muted-foreground mb-4">
-                        YouTube, Vimeo, or direct video link
+                        {t("upload.paste.desc")}
                       </p>
                     </div>
                     <Input
@@ -373,7 +375,7 @@ const UploadPage = () => {
                       disabled={!videoUrl.trim()}
                       className="rounded-full"
                     >
-                      Continue with URL
+                      {t("upload.continue.url")}
                     </Button>
                   </div>
 
@@ -410,7 +412,7 @@ const UploadPage = () => {
                       </>
                     ) : (
                       <>
-                        <p className="font-display font-bold text-sm">Video URL</p>
+                        <p className="font-display font-bold text-sm">{t("upload.video.url")}</p>
                         <p className="text-sm text-muted-foreground truncate">{videoUrl}</p>
                       </>
                     )}
@@ -440,7 +442,7 @@ const UploadPage = () => {
               {/* Thumbnail */}
               <div>
                 <label className="font-display font-bold text-sm mb-2 block">
-                  Thumbnail 🖼️ (optional)
+                  {t("upload.thumbnail")}
                 </label>
                 <div className="flex items-center gap-4">
                   {thumbnailFile ? (
@@ -472,7 +474,7 @@ const UploadPage = () => {
                     </label>
                   )}
                   <span className="text-sm text-muted-foreground">
-                    Add a thumbnail image for your video
+                    {t("upload.thumbnail.add")}
                   </span>
                 </div>
               </div>
@@ -480,12 +482,12 @@ const UploadPage = () => {
               {/* Title */}
               <div>
                 <label className="font-display font-bold text-sm mb-2 block">
-                  Video Title ✨
+                  {t("upload.video.title")}
                 </label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Give your video an awesome title!"
+                  placeholder={t("upload.title.placeholder")}
                   className="rounded-2xl"
                   required
                 />
@@ -494,12 +496,12 @@ const UploadPage = () => {
               {/* Description */}
               <div>
                 <label className="font-display font-bold text-sm mb-2 block">
-                  Description 📝
+                  {t("upload.description")}
                 </label>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Tell everyone what your video is about..."
+                  placeholder={t("upload.desc.placeholder")}
                   className="rounded-2xl min-h-[100px]"
                 />
               </div>
@@ -507,7 +509,7 @@ const UploadPage = () => {
               {/* Category */}
               <div>
                 <label className="font-display font-bold text-sm mb-2 block">
-                  Category 🎨
+                  {t("upload.category")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map((cat) => (
@@ -530,7 +532,7 @@ const UploadPage = () => {
                 <div className="flex items-center gap-2 mb-4">
                   <Users className="h-5 w-5 text-primary" />
                   <label className="font-display font-bold text-sm">
-                    Who can watch? 👀
+                    {t("upload.who.watch")}
                   </label>
                 </div>
                 {linkedChildren.length > 0 ? (
@@ -557,12 +559,12 @@ const UploadPage = () => {
                       className="text-primary"
                       onClick={() => setSelectedChildren(linkedChildren.map(c => c.child_user_id))}
                     >
-                      Select All
+                      {t("upload.select.all")}
                     </Button>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    No linked children found. <Link to="/parent" className="text-primary underline">Link a child account</Link> first.
+                    {t("upload.no.children")} <Link to="/parent" className="text-primary underline">{t("upload.link.child")}</Link> first.
                   </p>
                 )}
               </div>
@@ -572,13 +574,13 @@ const UploadPage = () => {
                 <div className="flex items-center gap-2 mb-4">
                   <Clock className="h-5 w-5 text-primary" />
                   <label className="font-display font-bold text-sm">
-                    When can they watch? ⏰
+                    {t("upload.when.watch")}
                   </label>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="available-from" className="text-sm text-muted-foreground">
-                      Available from (optional)
+                      {t("upload.available.from")}
                     </Label>
                     <Input
                       id="available-from"
@@ -590,7 +592,7 @@ const UploadPage = () => {
                   </div>
                   <div>
                     <Label htmlFor="available-until" className="text-sm text-muted-foreground">
-                      Available until (optional)
+                      {t("upload.available.until")}
                     </Label>
                     <Input
                       id="available-until"
@@ -602,14 +604,14 @@ const UploadPage = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Leave empty for no time restrictions
+                  {t("upload.no.restrict")}
                 </p>
               </div>
 
               {/* Submit */}
               <div className="flex gap-4">
                 <Button variant="outline" className="flex-1" asChild disabled={isUploading}>
-                  <Link to="/">Cancel</Link>
+                  <Link to="/">{t("upload.cancel")}</Link>
                 </Button>
                 <Button 
                   variant="hero" 
@@ -619,12 +621,12 @@ const UploadPage = () => {
                   {isUploading ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      {uploadMode === "url" ? "Saving..." : "Uploading..."}
+                      {uploadMode === "url" ? t("upload.saving") : t("upload.uploading")}
                     </>
                   ) : (
                     <>
                       <Upload className="h-5 w-5" />
-                      {uploadMode === "url" ? "Add Video!" : "Publish Video!"}
+                      {uploadMode === "url" ? t("upload.add.video") : t("upload.publish")}
                     </>
                   )}
                 </Button>
