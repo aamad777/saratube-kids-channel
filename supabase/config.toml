@@ -1,1 +1,4 @@
 project_id = "mlnqnfmxzqeqzjmefpiy"
+
+[functions.parent-advisor]
+verify_jwt = false
