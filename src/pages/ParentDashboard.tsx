@@ -694,7 +694,7 @@ const ParentDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="advisor" className="gap-2">
                   <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">AI Advisor</span>
+                  <span className="hidden sm:inline">{t("parent.ai.advisor")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-2" disabled={!selectedChild}>
                   <Activity className="w-4 h-4" />
