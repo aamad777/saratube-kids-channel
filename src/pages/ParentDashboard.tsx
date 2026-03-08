@@ -666,7 +666,7 @@ const ParentDashboard = () => {
                   className="w-full bg-gradient-to-r from-pink-500 to-purple-500"
                 >
                   <Baby className="w-4 h-4 mr-2" />
-                  Create Child Profile
+                  {t("parent.create.child")}
                 </Button>
                 <Button 
                   onClick={() => setShowLinkDialog(true)} 
