@@ -4,7 +4,7 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
 import VideoGrid from "@/components/video/VideoGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
-import { useTheme, themeCategoryMap } from "@/hooks/useTheme";
+import { useTheme, themeCategoryMap, themeConfigs } from "@/hooks/useTheme";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
