@@ -117,12 +117,25 @@ const KidsChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isWaddling, setIsWaddling] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevMsgCount = useRef(0);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [messages]);
+
+  // Trigger waddle when assistant sends a new message
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (messages.length > prevMsgCount.current && lastMsg?.role === "assistant") {
+      setIsWaddling(true);
+      const timer = setTimeout(() => setIsWaddling(false), 1200);
+      return () => clearTimeout(timer);
+    }
+    prevMsgCount.current = messages.length;
   }, [messages]);
 
   const streamChat = async (allMessages: Message[]) => {
@@ -246,7 +259,12 @@ const KidsChatBot = () => {
               {/* Header */}
               <div className={`bg-gradient-to-r ${theme.primary} p-4 flex items-center justify-between`}>
                 <div className="flex items-center gap-3">
-                  <PetIcon size={36} waving />
+                  <motion.div
+                    animate={isWaddling ? { rotate: [0, -8, 8, -8, 8, 0], y: [0, -2, 0, -2, 0] } : {}}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <PetIcon size={36} waving={isWaddling} />
+                  </motion.div>
                   <div>
                     <h3 className="font-display font-bold text-white text-sm">
                       Buddy 🐧
