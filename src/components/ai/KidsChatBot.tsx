@@ -127,6 +127,17 @@ const KidsChatBot = () => {
     }
   }, [messages]);
 
+  // Trigger waddle when assistant sends a new message
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (messages.length > prevMsgCount.current && lastMsg?.role === "assistant") {
+      setIsWaddling(true);
+      const timer = setTimeout(() => setIsWaddling(false), 1200);
+      return () => clearTimeout(timer);
+    }
+    prevMsgCount.current = messages.length;
+  }, [messages]);
+
   const streamChat = async (allMessages: Message[]) => {
     const resp = await fetch(CHAT_URL, {
       method: "POST",
