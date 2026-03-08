@@ -4,6 +4,7 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
 import VideoGrid from "@/components/video/VideoGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
+import KidsChatBot from "@/components/ai/KidsChatBot";
 import { useTheme, themeCategoryMap, themeConfigs } from "@/hooks/useTheme";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,8 +104,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Floating AI Quiz Bot */}
-      <GuidedQuizBot />
+      {/* Floating AI Chatbots */}
+      {isChildActive ? <KidsChatBot /> : <GuidedQuizBot />}
     </ThemedLayout>
   );
 };
