@@ -150,24 +150,24 @@ const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <div className="px-3 py-2 font-display font-bold text-sm text-foreground">
-                    Notifications
+                    {t("notifications")}
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                    <span className="font-medium text-sm">🎉 Welcome to KidsTube!</span>
-                    <span className="text-xs text-muted-foreground">Start exploring fun videos for kids.</span>
+                    <span className="font-medium text-sm">{t("welcome.notification")}</span>
+                    <span className="text-xs text-muted-foreground">{t("welcome.notification.desc")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                    <span className="font-medium text-sm">🎨 New themes available!</span>
-                    <span className="text-xs text-muted-foreground">Try out Robot, Fairy, and more themes.</span>
+                    <span className="font-medium text-sm">{t("themes.notification")}</span>
+                    <span className="text-xs text-muted-foreground">{t("themes.notification.desc")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                    <span className="font-medium text-sm">⏰ Screen time reminder</span>
-                    <span className="text-xs text-muted-foreground">Set up daily limits in Parent Dashboard.</span>
+                    <span className="font-medium text-sm">{t("screentime.notification")}</span>
+                    <span className="text-xs text-muted-foreground">{t("screentime.notification.desc")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="justify-center text-xs text-muted-foreground">
-                    No more notifications
+                    {t("no.more.notifications")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
