@@ -184,8 +184,7 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          The most fun place for kids to watch, create, and share amazing videos!
-          Learn, play, and make new friends! {theme.emoji}
+          {t("hero.description")} {theme.emoji}
         </motion.p>
 
         <motion.div 
