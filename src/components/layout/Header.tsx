@@ -100,7 +100,18 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {user && (
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+              className="relative rounded-full hover:bg-muted transition-all h-8 w-8 sm:h-9 sm:w-9"
+              title={language === "en" ? "العربية" : "English"}
+            >
+              <span className="font-bold text-xs sm:text-sm">{language === "en" ? "ع" : "EN"}</span>
+            </Button>
+
+          {user && (
               <Button
                 variant="ghost"
                 size="icon"
