@@ -5,12 +5,20 @@ import { filterVideosByAge } from "@/utils/ageFilter";
 
 interface VideoGridProps {
   category?: string;
+  blockedCategories?: string[];
 }
 
-const VideoGrid = ({ category = "all" }: VideoGridProps) => {
+const VideoGrid = ({ category = "all", blockedCategories = [] }: VideoGridProps) => {
   const { childSession } = useChildSession();
-  const categoryVideos = getVideosByCategory(category);
+  let categoryVideos = getVideosByCategory(category);
   
+  // If showing "all", filter out blocked categories
+  if (category === "all" && blockedCategories.length > 0) {
+    categoryVideos = categoryVideos.filter(
+      (v) => !blockedCategories.includes(v.category)
+    );
+  }
+
   // Filter by child's age when a child session is active
   const filteredVideos = childSession?.age
     ? filterVideosByAge(categoryVideos, childSession.age)
@@ -21,11 +29,11 @@ const VideoGrid = ({ category = "all" }: VideoGridProps) => {
       <div className="text-center py-12 px-4">
         <div className="text-5xl mb-4">🔍</div>
         <h3 className="text-lg font-bold text-muted-foreground mb-2">
-          No videos for this age group
+          No videos for this category
         </h3>
         <p className="text-sm text-muted-foreground">
           {childSession?.name 
-            ? `Try another category suitable for ${childSession.name}'s age (${childSession.age} years old)`
+            ? `Ask a parent to add more categories for ${childSession.name}!`
             : "Try another category!"
           }
         </p>
