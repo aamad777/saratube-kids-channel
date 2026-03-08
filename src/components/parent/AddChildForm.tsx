@@ -16,7 +16,10 @@ interface AddChildFormProps {
 
 const themeOptions: AppTheme[] = [
   "rainbow", "princess", "ocean", "space", 
-  "jungle", "candy", "superhero", "dinosaur"
+  "jungle", "candy", "superhero", "dinosaur",
+  "unicorn", "fairy", "robot", "pirate",
+  "quran_stories", "nasheed", "ramadan", "dua_prayer",
+  "farm", "sports", "cars", "magic",
 ];
 
 const INTEREST_OPTIONS = [

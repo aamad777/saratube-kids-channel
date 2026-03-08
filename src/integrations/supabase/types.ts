@@ -311,6 +311,14 @@ export type Database = {
         | "pirate"
         | "fairy"
         | "robot"
+        | "quran_stories"
+        | "nasheed"
+        | "ramadan"
+        | "dua_prayer"
+        | "farm"
+        | "sports"
+        | "cars"
+        | "magic"
       video_category:
         | "music"
         | "animals"
@@ -318,6 +326,14 @@ export type Database = {
         | "stories"
         | "science"
         | "games"
+        | "quran_stories"
+        | "nasheed"
+        | "ramadan"
+        | "dua_prayer"
+        | "farm"
+        | "sports"
+        | "cars"
+        | "magic"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -458,6 +474,14 @@ export const Constants = {
         "pirate",
         "fairy",
         "robot",
+        "quran_stories",
+        "nasheed",
+        "ramadan",
+        "dua_prayer",
+        "farm",
+        "sports",
+        "cars",
+        "magic",
       ],
       video_category: [
         "music",
@@ -466,6 +490,14 @@ export const Constants = {
         "stories",
         "science",
         "games",
+        "quran_stories",
+        "nasheed",
+        "ramadan",
+        "dua_prayer",
+        "farm",
+        "sports",
+        "cars",
+        "magic",
       ],
     },
   },
