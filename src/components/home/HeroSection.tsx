@@ -203,7 +203,7 @@ const HeroSection = () => {
           <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
             <Link to="/upload">
               <Upload className="h-6 w-6" />
-              Upload Video
+              {t("hero.upload.video")}
             </Link>
           </Button>
         </motion.div>
