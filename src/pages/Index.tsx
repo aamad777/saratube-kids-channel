@@ -46,11 +46,11 @@ const Index = () => {
           <CategoryNav onCategoryChange={setCategory} />
           
           <motion.div 
+            key={category}
             className="mt-8"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
           >
             <VideoGrid category={category} />
           </motion.div>
