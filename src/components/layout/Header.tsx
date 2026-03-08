@@ -181,16 +181,16 @@ const Header = () => {
                 <DropdownMenuContent align="end" className="w-48">
                   {/* Mobile-only nav links */}
                   <div className="sm:hidden">
-                    <Link to="/kids">
+                     <Link to="/kids">
                       <DropdownMenuItem className="gap-2">
                         <Users className="w-4 h-4" />
-                        <span>Kids Zone</span>
+                        <span>{t("kids.zone")}</span>
                       </DropdownMenuItem>
                     </Link>
                     <Link to="/upload">
                       <DropdownMenuItem className="gap-2">
                         <Upload className="w-4 h-4" />
-                        <span>Upload</span>
+                        <span>{t("upload")}</span>
                       </DropdownMenuItem>
                     </Link>
                     <DropdownMenuSeparator />
