@@ -156,7 +156,7 @@ const HeroSection = () => {
           }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-7xl md:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter">{theme.emoji}</span>
+          <span className="text-5xl md:text-7xl lg:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter">{theme.emoji}</span>
         </motion.div>
 
         <motion.h1 
