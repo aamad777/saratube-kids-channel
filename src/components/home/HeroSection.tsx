@@ -221,7 +221,7 @@ const HeroSection = () => {
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
-              className="flex flex-col items-center p-5 bg-background/70 backdrop-blur-md rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 min-w-[130px] hover:scale-110 transition-all duration-300"
+              className="flex flex-col items-center p-3 md:p-5 bg-background/70 backdrop-blur-md rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 min-w-[100px] md:min-w-[130px] hover:scale-110 transition-all duration-300"
               whileHover={{ y: -5 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
