@@ -545,7 +545,7 @@ const ParentDashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-foreground flex items-center gap-3">
             <Shield className="w-8 h-8 text-primary" />
-            Parent Dashboard
+            {t("parent.title")}
           </h1>
           <p className="text-muted-foreground mt-2">
             Monitor and manage your children's viewing experience 👨‍👩‍👧‍👦
