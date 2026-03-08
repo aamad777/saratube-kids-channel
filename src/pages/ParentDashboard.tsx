@@ -795,9 +795,19 @@ const ParentDashboard = () => {
                 </Card>
               </TabsContent>
 
+              {/* AI Advisor Tab */}
+              <TabsContent value="advisor" className="space-y-6">
+                <ParentAIAdvisor
+                  childInfo={
+                    selectedChildProfile
+                      ? { name: selectedChildProfile.display_name, age: selectedChildProfile.age }
+                      : null
+                  }
+                />
+              </TabsContent>
+
               {selectedChild && selectedChildProfile && (
                 <>
-
                 {/* Activity Tab */}
                 <TabsContent value="activity" className="space-y-6">
                   {/* Screen Time Chart */}
