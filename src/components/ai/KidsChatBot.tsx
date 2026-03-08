@@ -281,7 +281,7 @@ const KidsChatBot = () => {
                           <PetIcon size={28} />
                         </div>
                         <div className="bg-muted rounded-2xl rounded-tl-sm px-3 py-2 text-sm">
-                          Woof woof! 🐾 Hi there, friend! I'm Buddy! I can help you find super fun videos to watch! 🌟 What do you feel like watching today?
+                          Waddle waddle! 🐧 Hi there, friend! I'm Buddy the penguin! I can help you find super fun videos to watch! 🌟 What do you feel like watching today?
                         </div>
                       </div>
 
