@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, forwardRef } from "react";
 import { Sparkles, Star, Heart, Zap } from "lucide-react";
 
 interface Particle {
@@ -17,7 +17,7 @@ interface ThemeTransitionEffectProps {
 
 const emojis = ["✨", "⭐", "💫", "🌟", "💖", "🎉", "🦋", "🌈"];
 
-const ThemeTransitionEffect = ({ isActive, onComplete }: ThemeTransitionEffectProps) => {
+const ThemeTransitionEffect = forwardRef<HTMLDivElement, ThemeTransitionEffectProps>(({ isActive, onComplete }, ref) => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showOverlay, setShowOverlay] = useState(false);
 
