@@ -54,6 +54,7 @@ const themeBackgrounds: Record<AppTheme, string> = {
 const HeroSection = () => {
   const { theme, themeName } = useTheme();
   const { profile } = useAuth();
+  const { t } = useLanguage();
 
   // Get personalized app name based on child's display name
   const getAppName = () => {
