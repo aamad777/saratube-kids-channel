@@ -800,6 +800,14 @@ const ParentDashboard = () => {
                 </Card>
               </TabsContent>
 
+              {/* Photos Tab */}
+              <TabsContent value="photos" className="space-y-6">
+                <KidsPhotoGallery
+                  selectedChildId={selectedChild}
+                  childName={selectedChildProfile?.display_name}
+                />
+              </TabsContent>
+
               {/* AI Advisor Tab */}
               <TabsContent value="advisor" className="space-y-6">
                 <ParentAIAdvisor
