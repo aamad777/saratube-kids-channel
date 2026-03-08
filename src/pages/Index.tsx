@@ -1,15 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ThemedLayout from "@/components/layout/ThemedLayout";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
 import VideoGrid from "@/components/video/VideoGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme, themeCategoryMap } from "@/hooks/useTheme";
+import { useChildSession } from "@/contexts/ChildSessionContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 
 const Index = () => {
-  const [category, setCategory] = useState("all");
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
+  const { childSession, isChildActive } = useChildSession();
+  const { user } = useAuth();
+  const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
+
+  // Determine the default category based on theme
+  const themeCategory = themeCategoryMap[themeName] || null;
+  const [category, setCategory] = useState(themeCategory && isChildActive ? themeCategory : "all");
+
+  // Fetch blocked categories when child session is active
+  useEffect(() => {
+    if (!isChildActive || !childSession?.id || !user) {
+      setBlockedCategories([]);
+      return;
+    }
+
+    const fetchBlocked = async () => {
+      const { data } = await supabase
+        .from("blocked_categories")
+        .select("category")
+        .eq("child_user_id", childSession.id);
+
+      if (data) {
+        setBlockedCategories(data.map((d) => d.category));
+      }
+    };
+
+    fetchBlocked();
+  }, [isChildActive, childSession?.id, user]);
+
+  // Reset category when theme changes for child sessions
+  useEffect(() => {
+    if (isChildActive && themeCategory) {
+      setCategory(themeCategory);
+    } else if (!isChildActive) {
+      setCategory("all");
+    }
+  }, [themeName, isChildActive, themeCategory]);
 
   return (
     <ThemedLayout>
@@ -39,11 +78,18 @@ const Index = () => {
               {theme.emoji}
             </motion.span>
             <h2 className={`font-display text-3xl md:text-4xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
-              Trending Now ✨
+              {isChildActive && themeCategory
+                ? `${theme.emoji} ${themeConfigs[themeName]?.name || "Videos"} ✨`
+                : "Trending Now ✨"
+              }
             </h2>
           </motion.div>
           
-          <CategoryNav onCategoryChange={setCategory} />
+          <CategoryNav
+            onCategoryChange={setCategory}
+            blockedCategories={blockedCategories}
+            defaultCategory={isChildActive && themeCategory ? themeCategory : "all"}
+          />
           
           <motion.div 
             key={category}
@@ -52,7 +98,7 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <VideoGrid category={category} />
+            <VideoGrid category={category} blockedCategories={isChildActive ? blockedCategories : []} />
           </motion.div>
         </div>
       </section>
@@ -62,5 +108,8 @@ const Index = () => {
     </ThemedLayout>
   );
 };
+
+// Need to import themeConfigs for the section title
+import { themeConfigs } from "@/hooks/useTheme";
 
 export default Index;
