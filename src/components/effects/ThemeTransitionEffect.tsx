@@ -54,7 +54,7 @@ const ThemeTransitionEffect = forwardRef<HTMLDivElement, ThemeTransitionEffectPr
   if (!showOverlay) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
+    <div ref={ref} className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
       {/* Sparkle burst overlay */}
       <div className="absolute inset-0 bg-white/20 animate-theme-glow" />
       
@@ -85,6 +85,8 @@ const ThemeTransitionEffect = forwardRef<HTMLDivElement, ThemeTransitionEffectPr
       ))}
     </div>
   );
-};
+});
+
+ThemeTransitionEffect.displayName = "ThemeTransitionEffect";
 
 export default ThemeTransitionEffect;
