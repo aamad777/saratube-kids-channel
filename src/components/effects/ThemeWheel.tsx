@@ -4,6 +4,7 @@ import { X, Sparkles } from "lucide-react";
 import { AppTheme, themeConfigs } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import { toast } from "sonner";
 import ThemeTransitionEffect from "./ThemeTransitionEffect";
 
@@ -30,25 +31,33 @@ const THEME_GROUPS = [
 
 export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) => {
   const { user, refreshProfile } = useAuth();
+  const { isChildActive, updateChildTheme } = useChildSession();
   const [selectedTheme, setSelectedTheme] = useState<AppTheme>(currentTheme);
   const [isApplying, setIsApplying] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const handleThemeSelect = async (theme: AppTheme) => {
-    if (!user || isApplying) return;
+    if (isApplying) return;
 
     setSelectedTheme(theme);
     setIsApplying(true);
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ selected_theme: theme })
-        .eq("user_id", user.id);
+      if (isChildActive) {
+        // Update child session theme
+        await updateChildTheme(theme);
+      } else {
+        // Update parent profile theme
+        if (!user) return;
+        const { error } = await supabase
+          .from("profiles")
+          .update({ selected_theme: theme })
+          .eq("user_id", user.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        await refreshProfile();
+      }
 
-      await refreshProfile();
       setShowConfetti(true);
 
       toast.success(
