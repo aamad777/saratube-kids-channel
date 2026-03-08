@@ -236,13 +236,13 @@ const Header = () => {
                       <Link to="/profile">
                         <DropdownMenuItem className="gap-2">
                           <User className="w-4 h-4" />
-                          <span>My Profile</span>
+                          <span>{t("my.profile")}</span>
                         </DropdownMenuItem>
                       </Link>
                       <Link to="/parent">
                         <DropdownMenuItem className="gap-2">
                           <Shield className="w-4 h-4" />
-                          <span>Parent Dashboard</span>
+                          <span>{t("parent.dashboard")}</span>
                         </DropdownMenuItem>
                       </Link>
                       <DropdownMenuSeparator />
@@ -251,7 +251,7 @@ const Header = () => {
                         className="gap-2 text-destructive focus:text-destructive"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        <span>{t("sign.out")}</span>
                       </DropdownMenuItem>
                     </>
                   )}
