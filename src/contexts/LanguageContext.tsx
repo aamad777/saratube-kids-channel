@@ -46,6 +46,26 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.stat.videos": "Videos",
     "hero.stat.creators": "Creators",
     "hero.stat.happy.kids": "Happy Kids",
+    // Watch Page
+    "watch.back": "Back to Home",
+    "watch.views": "views",
+    "watch.ago": "2 days ago",
+    "watch.subscribers": "subscribers",
+    "watch.subscribe": "Subscribe",
+    "watch.share": "Share",
+    "watch.save": "Save",
+    "watch.next": "Watch Next",
+    // Child Select
+    "child.whos.watching": "Who's Watching? 👀",
+    "child.choose.profile": "Choose your profile to start watching!",
+    "child.no.profiles": "No profiles yet!",
+    "child.ask.parent": "Ask your parent to create your profile.",
+    "child.go.parent": "Go to Parent Dashboard",
+    "child.back": "Back",
+    "child.hi": "Hi,",
+    "child.enter.pin": "Enter your secret PIN 🔐",
+    "child.wrong.pin": "Oops! Wrong PIN. Try again! 🙈",
+    "child.loading": "Loading profiles...",
     // General
     "language": "Language",
     // Sign In
@@ -164,6 +184,26 @@ const translations: Record<Language, Record<string, string>> = {
     "hero.stat.videos": "فيديوهات",
     "hero.stat.creators": "مبدعين",
     "hero.stat.happy.kids": "أطفال سعداء",
+    // Watch Page
+    "watch.back": "العودة للرئيسية",
+    "watch.views": "مشاهدة",
+    "watch.ago": "منذ يومين",
+    "watch.subscribers": "مشترك",
+    "watch.subscribe": "اشتراك",
+    "watch.share": "مشاركة",
+    "watch.save": "حفظ",
+    "watch.next": "شاهد التالي",
+    // Child Select
+    "child.whos.watching": "من يشاهد؟ 👀",
+    "child.choose.profile": "اختر ملفك الشخصي لبدء المشاهدة!",
+    "child.no.profiles": "لا توجد ملفات بعد!",
+    "child.ask.parent": "اطلب من والديك إنشاء ملفك الشخصي.",
+    "child.go.parent": "الذهاب للوحة الوالدين",
+    "child.back": "رجوع",
+    "child.hi": "مرحباً،",
+    "child.enter.pin": "أدخل رمزك السري 🔐",
+    "child.wrong.pin": "عذراً! رمز خاطئ. حاول مرة أخرى! 🙈",
+    "child.loading": "جارٍ تحميل الملفات...",
     // General
     "language": "اللغة",
     // Sign In

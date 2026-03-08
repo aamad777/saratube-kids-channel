@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import VideoGrid from "@/components/video/VideoGrid";
 import { useTheme } from "@/hooks/useTheme";
 import { useScreenTimeTracker } from "@/hooks/useScreenTimeTracker";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getVideoById, sampleVideos } from "@/data/videoData";
 
 const WatchPage = () => {
@@ -16,8 +17,8 @@ const WatchPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(video.likes);
   const { theme } = useTheme();
+  const { t } = useLanguage();
 
-  // Track screen time for children
   useScreenTimeTracker({
     videoId: id || "1",
     videoTitle: video.title,
@@ -38,18 +39,15 @@ const WatchPage = () => {
   return (
     <ThemedLayout showFooter={false}>
       <div className="container px-4 py-6">
-        {/* Back button */}
         <Link to="/">
           <Button variant="ghost" className="mb-4 gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            {t("watch.back")}
           </Button>
         </Link>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Video player */}
             <div className="relative aspect-video bg-foreground/10 rounded-3xl overflow-hidden shadow-card">
               <iframe
                 src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1`}
@@ -60,7 +58,6 @@ const WatchPage = () => {
               />
             </div>
 
-            {/* Video info */}
             <div className={`${theme.cardBg} rounded-3xl shadow-card p-6`}>
               <h1 className={`font-display text-2xl md:text-3xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
                 {video.title}
@@ -69,29 +66,27 @@ const WatchPage = () => {
               <div className="flex flex-wrap items-center gap-4 mt-4 text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
-                  {formatViews(video.views)} views
+                  {formatViews(video.views)} {t("watch.views")}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  2 days ago
+                  {t("watch.ago")}
                 </span>
               </div>
 
-              {/* Creator */}
               <div className="flex items-center gap-3 mt-4 p-3 bg-muted/50 rounded-2xl">
                 <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center text-white font-bold text-lg`}>
                   {video.creator[0]}
                 </div>
                 <div>
                   <h3 className="font-display font-bold">{video.creator}</h3>
-                  <p className="text-sm text-muted-foreground">1.2K subscribers</p>
+                  <p className="text-sm text-muted-foreground">1.2K {t("watch.subscribers")}</p>
                 </div>
                 <Button className={`ml-auto bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`}>
-                  Subscribe
+                  {t("watch.subscribe")}
                 </Button>
               </div>
 
-              {/* Actions */}
               <div className="flex flex-wrap gap-3 mt-4">
                 <Button
                   variant={isLiked ? "coral" : "outline"}
@@ -103,34 +98,29 @@ const WatchPage = () => {
                 </Button>
                 <Button variant="outline" className="gap-2">
                   <Share2 className="h-5 w-5" />
-                  Share
+                  {t("watch.share")}
                 </Button>
                 <Button variant="outline" className="gap-2">
                   <Download className="h-5 w-5" />
-                  Save
+                  {t("watch.save")}
                 </Button>
               </div>
 
-              {/* Description */}
               <div className="mt-4 p-4 bg-muted/50 rounded-2xl">
                 <p className="text-sm">{video.description}</p>
               </div>
             </div>
 
-            {/* Comments */}
             <CommentSection />
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* AI Chat */}
             <AIChatBox videoTitle={video.title} />
 
-            {/* More videos */}
             <div className={`${theme.cardBg} rounded-3xl shadow-card p-4`}>
               <h3 className={`font-display text-lg font-bold flex items-center gap-2 mb-4 bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent`}>
                 <span>{theme.emoji}</span>
-                Watch Next
+                {t("watch.next")}
               </h3>
               <div className="space-y-4">
                 <VideoGrid />
