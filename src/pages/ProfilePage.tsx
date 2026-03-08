@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, themeConfigs, AppTheme } from "@/hooks/useTheme";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import ThemedLayout from "@/components/layout/ThemedLayout";
 import ThemeTransitionEffect from "@/components/effects/ThemeTransitionEffect";
+import KidsPhotoUpload from "@/components/kids/KidsPhotoUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ProfilePage = () => {
