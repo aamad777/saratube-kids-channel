@@ -204,7 +204,7 @@ const Header = () => {
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger className="gap-2">
                           <Palette className="w-4 h-4" />
-                          <span>Change Theme</span>
+                          <span>{t("change.theme")}</span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                           <DropdownMenuSubContent className="max-h-64 overflow-y-auto">
