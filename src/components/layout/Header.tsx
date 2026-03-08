@@ -1,5 +1,5 @@
- import { useState, useCallback } from "react";
- import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle, Sparkles } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle, Sparkles, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,11 +19,13 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/contexts/LanguageContext";
 const Header = () => {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
   const { childSession, clearChildSession, isChildActive, updateChildTheme } = useChildSession();
   const { theme, themeName, childName } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
    const [showSearch, setShowSearch] = useState(false);
  
@@ -89,7 +91,7 @@ const Header = () => {
                className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-9 sm:h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
              >
                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-               <span className="text-muted-foreground flex-1 text-left text-sm sm:text-base truncate">Search fun videos...</span>
+               <span className="text-muted-foreground flex-1 text-start text-sm sm:text-base truncate">{t("search.placeholder")}</span>
                <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-muted-foreground bg-background rounded border">
                  <span className="text-xs">⌘</span>K
                </kbd>
@@ -98,7 +100,18 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {user && (
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+              className="relative rounded-full hover:bg-muted transition-all h-8 w-8 sm:h-9 sm:w-9"
+              title={language === "en" ? "العربية" : "English"}
+            >
+              <span className="font-bold text-xs sm:text-sm">{language === "en" ? "ع" : "EN"}</span>
+            </Button>
+
+          {user && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -115,14 +128,14 @@ const Header = () => {
               <Link to="/kids" className="hidden sm:block">
                 <Button className={`gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
                   <Users className="h-5 w-5" />
-                  Kids Zone
-                </Button>
-              </Link>
+                   {t("kids.zone")}
+                 </Button>
+               </Link>
 
               <Link to="/upload" className="hidden sm:block">
                 <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <Upload className="h-5 w-5" />
-                  Upload
+                  {t("upload")}
                 </Button>
               </Link>
               
@@ -137,24 +150,24 @@ const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <div className="px-3 py-2 font-display font-bold text-sm text-foreground">
-                    Notifications
+                    {t("notifications")}
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                    <span className="font-medium text-sm">🎉 Welcome to KidsTube!</span>
-                    <span className="text-xs text-muted-foreground">Start exploring fun videos for kids.</span>
+                    <span className="font-medium text-sm">{t("welcome.notification")}</span>
+                    <span className="text-xs text-muted-foreground">{t("welcome.notification.desc")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                    <span className="font-medium text-sm">🎨 New themes available!</span>
-                    <span className="text-xs text-muted-foreground">Try out Robot, Fairy, and more themes.</span>
+                    <span className="font-medium text-sm">{t("themes.notification")}</span>
+                    <span className="text-xs text-muted-foreground">{t("themes.notification.desc")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                    <span className="font-medium text-sm">⏰ Screen time reminder</span>
-                    <span className="text-xs text-muted-foreground">Set up daily limits in Parent Dashboard.</span>
+                    <span className="font-medium text-sm">{t("screentime.notification")}</span>
+                    <span className="text-xs text-muted-foreground">{t("screentime.notification.desc")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="justify-center text-xs text-muted-foreground">
-                    No more notifications
+                    {t("no.more.notifications")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -168,16 +181,16 @@ const Header = () => {
                 <DropdownMenuContent align="end" className="w-48">
                   {/* Mobile-only nav links */}
                   <div className="sm:hidden">
-                    <Link to="/kids">
+                     <Link to="/kids">
                       <DropdownMenuItem className="gap-2">
                         <Users className="w-4 h-4" />
-                        <span>Kids Zone</span>
+                        <span>{t("kids.zone")}</span>
                       </DropdownMenuItem>
                     </Link>
                     <Link to="/upload">
                       <DropdownMenuItem className="gap-2">
                         <Upload className="w-4 h-4" />
-                        <span>Upload</span>
+                        <span>{t("upload")}</span>
                       </DropdownMenuItem>
                     </Link>
                     <DropdownMenuSeparator />
@@ -191,7 +204,7 @@ const Header = () => {
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger className="gap-2">
                           <Palette className="w-4 h-4" />
-                          <span>Change Theme</span>
+                          <span>{t("change.theme")}</span>
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                           <DropdownMenuSubContent className="max-h-64 overflow-y-auto">
@@ -213,7 +226,7 @@ const Header = () => {
                       </DropdownMenuSub>
                       <DropdownMenuItem onClick={handleSwitchProfile} className="gap-2">
                         <UserCircle className="w-4 h-4" />
-                        <span>Switch Profile</span>
+                        <span>{t("switch.profile")}</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
@@ -223,13 +236,13 @@ const Header = () => {
                       <Link to="/profile">
                         <DropdownMenuItem className="gap-2">
                           <User className="w-4 h-4" />
-                          <span>My Profile</span>
+                          <span>{t("my.profile")}</span>
                         </DropdownMenuItem>
                       </Link>
                       <Link to="/parent">
                         <DropdownMenuItem className="gap-2">
                           <Shield className="w-4 h-4" />
-                          <span>Parent Dashboard</span>
+                          <span>{t("parent.dashboard")}</span>
                         </DropdownMenuItem>
                       </Link>
                       <DropdownMenuSeparator />
@@ -238,7 +251,7 @@ const Header = () => {
                         className="gap-2 text-destructive focus:text-destructive"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        <span>{t("sign.out")}</span>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -249,14 +262,14 @@ const Header = () => {
             <>
               <Link to="/signin">
                 <Button variant="outline" size="lg" className="hidden sm:flex">
-                  Sign In
+                  {t("sign.in")}
                 </Button>
               </Link>
               <Link to="/signup">
                 <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <span>{theme.emoji}</span>
-                  <span className="hidden sm:inline">Join Free!</span>
-                  <span className="sm:hidden">Join</span>
+                  <span className="hidden sm:inline">{t("join.free")}</span>
+                  <span className="sm:hidden">{t("join")}</span>
                 </Button>
               </Link>
             </>

@@ -2,6 +2,7 @@ import { Home, Search, Upload, Users, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [showSearch, setShowSearch] = useState(false);
 
   const handleSearchOpen = useCallback(() => {
@@ -25,11 +27,11 @@ const MobileBottomNav = () => {
   if (!user) return null;
 
   const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: Search, label: "Search", path: "#search", onClick: handleSearchOpen },
-    { icon: Upload, label: "Upload", path: "/upload" },
-    { icon: Users, label: "Kids", path: "/kids" },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: Home, label: t("nav.home"), path: "/" },
+    { icon: Search, label: t("nav.search"), path: "#search", onClick: handleSearchOpen },
+    { icon: Upload, label: t("nav.upload"), path: "/upload" },
+    { icon: Users, label: t("nav.kids"), path: "/kids" },
+    { icon: User, label: t("nav.profile"), path: "/profile" },
   ];
 
   return (
