@@ -635,7 +635,7 @@ const ParentDashboard = () => {
                       <div className="text-left flex-1">
                         <p className="font-medium">{child.display_name}</p>
                         {child.age && (
-                          <p className="text-xs text-muted-foreground">{child.age} years old</p>
+                          <p className="text-xs text-muted-foreground">{child.age} {t("parent.years.old")}</p>
                         )}
                       </div>
                       <Button
