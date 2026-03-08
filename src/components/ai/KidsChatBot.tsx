@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -259,12 +259,42 @@ const KidsChatBot = () => {
               {/* Header */}
               <div className={`bg-gradient-to-r ${theme.primary} p-4 flex items-center justify-between`}>
                 <div className="flex items-center gap-3">
-                  <motion.div
-                    animate={isWaddling ? { rotate: [0, -8, 8, -8, 8, 0], y: [0, -2, 0, -2, 0] } : {}}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <PetIcon size={36} waving={isWaddling} />
-                  </motion.div>
+                  <div className="relative">
+                    <motion.div
+                      animate={isWaddling ? { rotate: [0, -8, 8, -8, 8, 0], y: [0, -2, 0, -2, 0] } : {}}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <PetIcon size={36} waving={isWaddling} />
+                    </motion.div>
+                    <AnimatePresence>
+                      {isWaddling && (
+                        <>
+                          {[...Array(8)].map((_, i) => {
+                            const angle = (i / 8) * Math.PI * 2;
+                            const radius = 24 + Math.random() * 10;
+                            return (
+                              <motion.span
+                                key={`particle-${i}`}
+                                className="absolute pointer-events-none text-[10px]"
+                                style={{ top: "50%", left: "50%" }}
+                                initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
+                                animate={{
+                                  x: Math.cos(angle) * radius,
+                                  y: Math.sin(angle) * radius,
+                                  opacity: 0,
+                                  scale: 1.2,
+                                }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.7, delay: i * 0.04, ease: "easeOut" }}
+                              >
+                                {["❄️", "💦", "✨", "⭐"][i % 4]}
+                              </motion.span>
+                            );
+                          })}
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   <div>
                     <h3 className="font-display font-bold text-white text-sm">
                       Buddy 🐧
