@@ -19,6 +19,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/contexts/LanguageContext";
 const Header = () => {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
