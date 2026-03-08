@@ -176,11 +176,12 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 text-lg px-8 py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
-            <Link to="/explore">
-              <Play className="h-6 w-6 fill-current" />
-              Start Watching
-            </Link>
+          <Button
+            className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 text-lg px-8 py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`}
+            onClick={() => document.getElementById("videos")?.scrollIntoView({ behavior: "smooth" })}
+          >
+            <Play className="h-6 w-6 fill-current" />
+            Start Watching
           </Button>
           <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-lg px-8 py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
             <Link to="/upload">
