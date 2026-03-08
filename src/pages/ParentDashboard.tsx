@@ -548,7 +548,7 @@ const ParentDashboard = () => {
             {t("parent.title")}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Monitor and manage your children's viewing experience 👨‍👩‍👧‍👦
+            {t("parent.subtitle")}
           </p>
         </div>
 
