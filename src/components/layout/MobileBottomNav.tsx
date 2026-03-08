@@ -4,7 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import SearchDialog from "@/components/search/SearchDialog";
+
+const tapAnimation = {
+  whileTap: { scale: 0.82, y: 2 },
+  transition: { type: "spring" as const, stiffness: 500, damping: 15, mass: 0.6 },
+};
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -34,45 +40,52 @@ const MobileBottomNav = () => {
           {navItems.map(({ icon: Icon, label, path, onClick }) => {
             const isActive = path !== "#search" && location.pathname === path;
 
-            if (onClick) {
-              return (
-                <button
-                  key={label}
-                  onClick={onClick}
-                  className="flex flex-col items-center justify-center gap-0.5 w-14 py-1 text-muted-foreground transition-colors"
+            const content = (
+              <>
+                <motion.div
+                  className={cn(
+                    "relative p-1.5 rounded-xl transition-colors",
+                    isActive && `bg-gradient-to-r ${theme.primary} text-white`
+                  )}
+                  layout
                 >
                   <Icon className="h-5 w-5" />
-                  <span className="text-[10px] font-medium">{label}</span>
-                </button>
+                </motion.div>
+                <span className={cn(
+                  "text-[10px] font-medium transition-colors",
+                  isActive ? "text-primary font-bold" : ""
+                )}>{label}</span>
+              </>
+            );
+
+            if (onClick) {
+              return (
+                <motion.button
+                  key={label}
+                  onClick={onClick}
+                  className="flex flex-col items-center justify-center gap-0.5 w-14 py-1 text-muted-foreground"
+                  {...tapAnimation}
+                >
+                  {content}
+                </motion.button>
               );
             }
 
             return (
-              <Link
-                key={label}
-                to={path}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 w-14 py-1 transition-colors",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                )}
-              >
-                <div className={cn(
-                  "relative p-1 rounded-xl transition-all",
-                  isActive && `bg-gradient-to-r ${theme.primary} text-white`
-                )}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <span className={cn(
-                  "text-[10px] font-medium",
-                  isActive && "text-primary font-bold"
-                )}>{label}</span>
-              </Link>
+              <motion.div key={label} {...tapAnimation}>
+                <Link
+                  to={path}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-0.5 w-14 py-1 transition-colors",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  {content}
+                </Link>
+              </motion.div>
             );
           })}
         </div>
-        {/* Safe area spacer for iOS */}
         <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </>
