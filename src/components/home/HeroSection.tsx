@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useTheme, AppTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 
 // Theme-based background images
@@ -53,6 +54,7 @@ const themeBackgrounds: Record<AppTheme, string> = {
 const HeroSection = () => {
   const { theme, themeName } = useTheme();
   const { profile } = useAuth();
+  const { t } = useLanguage();
 
   // Get personalized app name based on child's display name
   const getAppName = () => {
@@ -165,7 +167,7 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent drop-shadow-sm`}>Welcome to</span>
+          <span className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent drop-shadow-sm`}>{t("hero.welcome")}</span>
           <br />
           <motion.span 
             className={`bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent inline-block`}
@@ -182,8 +184,7 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          The most fun place for kids to watch, create, and share amazing videos!
-          Learn, play, and make new friends! {theme.emoji}
+          {t("hero.description")} {theme.emoji}
         </motion.p>
 
         <motion.div 
@@ -197,12 +198,12 @@ const HeroSection = () => {
             onClick={() => document.getElementById("videos")?.scrollIntoView({ behavior: "smooth" })}
           >
             <Play className="h-6 w-6 fill-current" />
-            Start Watching
+            {t("hero.start.watching")}
           </Button>
           <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
             <Link to="/upload">
               <Upload className="h-6 w-6" />
-              Upload Video
+              {t("hero.upload.video")}
             </Link>
           </Button>
         </motion.div>
@@ -215,9 +216,9 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.8 }}
         >
           {[
-            { label: "Videos", value: "10K+", icon: "🎬" },
-            { label: "Creators", value: "500+", icon: "⭐" },
-            { label: "Happy Kids", value: "50K+", icon: "😊" },
+            { label: t("hero.stat.videos"), value: "10K+", icon: "🎬" },
+            { label: t("hero.stat.creators"), value: "500+", icon: "⭐" },
+            { label: t("hero.stat.happy.kids"), value: "50K+", icon: "😊" },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}

@@ -39,6 +39,13 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.profile": "Profile",
     // Index / Hero
     "trending.now": "Trending Now ✨",
+    "hero.welcome": "Welcome to",
+    "hero.description": "The most fun place for kids to watch, create, and share amazing videos! Learn, play, and make new friends!",
+    "hero.start.watching": "Start Watching",
+    "hero.upload.video": "Upload Video",
+    "hero.stat.videos": "Videos",
+    "hero.stat.creators": "Creators",
+    "hero.stat.happy.kids": "Happy Kids",
     // General
     "language": "Language",
     // Sign In
@@ -150,6 +157,13 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.profile": "الملف",
     // Index / Hero
     "trending.now": "الأكثر رواجاً ✨",
+    "hero.welcome": "مرحباً بك في",
+    "hero.description": "أروع مكان للأطفال لمشاهدة وإنشاء ومشاركة فيديوهات رائعة! تعلم والعب وكوّن أصدقاء جدد!",
+    "hero.start.watching": "ابدأ المشاهدة",
+    "hero.upload.video": "رفع فيديو",
+    "hero.stat.videos": "فيديوهات",
+    "hero.stat.creators": "مبدعين",
+    "hero.stat.happy.kids": "أطفال سعداء",
     // General
     "language": "اللغة",
     // Sign In
