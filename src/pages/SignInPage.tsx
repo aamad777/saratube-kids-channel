@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Star, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const SignInPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,11 +87,11 @@ const SignInPage = () => {
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="w-8 h-8 text-primary-foreground animate-pulse" />
             <CardTitle className="text-3xl font-display text-primary-foreground">
-              Welcome Back!
+              {t("signin.welcome")}
             </CardTitle>
             <Star className="w-8 h-8 text-accent animate-bounce" />
           </div>
-          <p className="text-primary-foreground/80">Sign in to SARATUBE! ✨</p>
+          <p className="text-primary-foreground/80">{t("signin.subtitle")}</p>
         </CardHeader>
 
         <CardContent className="p-6">
@@ -97,26 +99,26 @@ const SignInPage = () => {
             resetSent ? (
               <div className="text-center space-y-4 py-4">
                 <div className="text-5xl">📬</div>
-                <h3 className="font-display text-xl font-bold">Check Your Email!</h3>
+                <h3 className="font-display text-xl font-bold">{t("signin.reset.title")}</h3>
                 <p className="text-muted-foreground text-sm">
-                  We sent a password reset link to <strong>{email}</strong>
+                  {t("signin.reset.desc")} <strong>{email}</strong>
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => { setResetMode(false); setResetSent(false); }}
                   className="rounded-2xl"
                 >
-                  Back to Sign In
+                  {t("signin.reset.back")}
                 </Button>
               </div>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <p className="text-muted-foreground text-sm text-center">
-                  Enter your email and we'll send you a reset link 🔗
+                  {t("signin.reset.prompt")}
                 </p>
                 <Input
                   type="email"
-                  placeholder="Your email 📧"
+                  placeholder={t("signin.email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
@@ -127,7 +129,7 @@ const SignInPage = () => {
                   variant="hero"
                   disabled={loading}
                 >
-                  {loading ? "Sending..." : "Send Reset Link 📧"}
+                  {loading ? t("signin.reset.sending") : t("signin.reset.button")}
                 </Button>
                 <Button
                   type="button"
@@ -135,7 +137,7 @@ const SignInPage = () => {
                   onClick={() => setResetMode(false)}
                   className="w-full text-muted-foreground"
                 >
-                  Back to Sign In
+                  {t("signin.reset.back")}
                 </Button>
               </form>
             )
@@ -145,14 +147,14 @@ const SignInPage = () => {
                 <div className="space-y-3">
                   <Input
                     type="email"
-                    placeholder="Your email 📧"
+                    placeholder={t("signin.email")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
                   />
                   <Input
                     type="password"
-                    placeholder="Your secret password 🔐"
+                    placeholder={t("signin.password")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="text-lg py-6 rounded-2xl border-2 border-primary/30 focus:border-primary"
@@ -168,10 +170,10 @@ const SignInPage = () => {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 animate-spin" />
-                      Signing in...
+                      {t("signin.signing.in")}
                     </span>
                   ) : (
-                    "Let's Play! 🎮"
+                    t("signin.button")
                   )}
                 </Button>
               </form>
@@ -181,12 +183,12 @@ const SignInPage = () => {
                   onClick={() => setResetMode(true)}
                   className="text-primary hover:underline text-sm font-medium"
                 >
-                  Forgot your password? 🔑
+                  {t("signin.forgot")}
                 </button>
                 <p className="text-muted-foreground text-sm">
-                  Don't have an account?{" "}
+                  {t("signin.no.account")}{" "}
                   <Link to="/signup" className="text-primary hover:underline font-medium">
-                    Join the fun! 🎉
+                    {t("signin.join")}
                   </Link>
                 </p>
               </div>
