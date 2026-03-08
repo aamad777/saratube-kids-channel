@@ -48,6 +48,14 @@ export const videoCategories: VideoCategory[] = [
   { id: "nature", name: "Nature", emoji: "🌿", description: "Explore the natural world", thumbnail: thumbNature, ageRange: "3-10" },
   { id: "cooking", name: "Cooking", emoji: "🍳", description: "Kid-friendly recipes & baking", thumbnail: thumbCooking, ageRange: "4-12" },
   { id: "yoga", name: "Yoga & Exercise", emoji: "🧘", description: "Stay active & healthy!", thumbnail: thumbYoga, ageRange: "3-10" },
+  { id: "quran_stories", name: "Quran Stories", emoji: "📖", description: "Beautiful stories from the Quran", thumbnail: thumbStories, ageRange: "3-12" },
+  { id: "nasheed", name: "Islamic Nasheed", emoji: "🎶", description: "Beautiful Islamic songs for kids", thumbnail: thumbMusic, ageRange: "2-12" },
+  { id: "ramadan", name: "Ramadan & Eid", emoji: "🌙", description: "Learn about Islamic celebrations", thumbnail: thumbEducation, ageRange: "3-12" },
+  { id: "dua_prayer", name: "Dua & Prayer", emoji: "🤲", description: "Learn duas and salah", thumbnail: thumbEducation, ageRange: "3-12" },
+  { id: "farm", name: "Farm & Animals", emoji: "🐄", description: "Fun farm life & animals", thumbnail: thumbAnimals, ageRange: "2-8" },
+  { id: "sports", name: "Sports", emoji: "⚽", description: "Sports fun for kids", thumbnail: thumbGames, ageRange: "4-12" },
+  { id: "cars", name: "Cars & Trucks", emoji: "🚗", description: "Vehicles, racing & machines", thumbnail: thumbGames, ageRange: "2-8" },
+  { id: "magic", name: "Magic & Wizards", emoji: "🪄", description: "Magical adventures & spells", thumbnail: thumbStories, ageRange: "4-10" },
 ];
 
 export const sampleVideos: VideoItem[] = [
