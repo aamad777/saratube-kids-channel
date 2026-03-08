@@ -3,6 +3,7 @@ import ThemedLayout from "@/components/layout/ThemedLayout";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
 import VideoGrid from "@/components/video/VideoGrid";
+import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
 import { useTheme } from "@/hooks/useTheme";
 import { motion } from "framer-motion";
 
@@ -55,6 +56,9 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Floating AI Quiz Bot */}
+      <GuidedQuizBot />
     </ThemedLayout>
   );
 };
