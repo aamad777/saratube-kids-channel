@@ -566,7 +566,7 @@ const ParentDashboard = () => {
               {createdChildren.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Kids with PIN 🔐
+                    {t("parent.kids.pin")}
                   </p>
                   {createdChildren.map((child) => (
                     <div
