@@ -147,7 +147,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container px-4 py-20 md:py-28 flex flex-col items-center text-center">
+      <div className="relative z-10 container px-4 py-12 md:py-28 flex flex-col items-center text-center">
         <motion.div 
           className="mb-6"
           animate={{ 
