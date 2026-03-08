@@ -91,7 +91,7 @@ const Header = () => {
                className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-9 sm:h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
              >
                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-               <span className="text-muted-foreground flex-1 text-left text-sm sm:text-base truncate">Search fun videos...</span>
+               <span className="text-muted-foreground flex-1 text-start text-sm sm:text-base truncate">{t("search.placeholder")}</span>
                <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-muted-foreground bg-background rounded border">
                  <span className="text-xs">⌘</span>K
                </kbd>
