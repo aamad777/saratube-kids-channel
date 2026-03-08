@@ -39,6 +39,13 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.profile": "Profile",
     // Index / Hero
     "trending.now": "Trending Now ✨",
+    "hero.welcome": "Welcome to",
+    "hero.description": "The most fun place for kids to watch, create, and share amazing videos! Learn, play, and make new friends!",
+    "hero.start.watching": "Start Watching",
+    "hero.upload.video": "Upload Video",
+    "hero.stat.videos": "Videos",
+    "hero.stat.creators": "Creators",
+    "hero.stat.happy.kids": "Happy Kids",
     // General
     "language": "Language",
     // Sign In
