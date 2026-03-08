@@ -31,7 +31,8 @@ const THEME_GROUPS = [
 
 export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) => {
   const { user, refreshProfile } = useAuth();
-  const { isChildActive, updateChildTheme } = useChildSession();
+  const { isChildActive, updateChildTheme, childSession } = useChildSession();
+  const childName = childSession?.name;
   const [selectedTheme, setSelectedTheme] = useState<AppTheme>(currentTheme);
   const [isApplying, setIsApplying] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
