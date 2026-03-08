@@ -698,7 +698,7 @@ const ParentDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-2" disabled={!selectedChild}>
                   <Activity className="w-4 h-4" />
-                  <span className="hidden sm:inline">Activity</span>
+                  <span className="hidden sm:inline">{t("parent.activity")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="limits" className="gap-2" disabled={!selectedChild}>
                   <Clock className="w-4 h-4" />
