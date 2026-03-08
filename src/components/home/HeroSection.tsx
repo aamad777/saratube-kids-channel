@@ -209,7 +209,7 @@ const HeroSection = () => {
 
         {/* Stats */}
         <motion.div 
-          className="flex flex-wrap justify-center gap-6 md:gap-8 mt-12"
+          className="flex flex-wrap justify-center gap-4 md:gap-8 mt-8 md:mt-12"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
