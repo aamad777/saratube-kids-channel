@@ -39,6 +39,7 @@ import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
 import AgeFilterInfo from "@/components/parent/AgeFilterInfo";
+import ParentAIAdvisor from "@/components/parent/ParentAIAdvisor";
 import { videoCategories } from "@/data/videoData";
 
 interface ChildProfile {
@@ -679,22 +680,26 @@ const ParentDashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="videos" className="space-y-6">
-              <TabsList className="grid grid-cols-4 w-full max-w-lg">
+              <TabsList className="grid grid-cols-5 w-full max-w-2xl">
                 <TabsTrigger value="videos" className="gap-2">
                   <Video className="w-4 h-4" />
-                  My Videos
+                  <span className="hidden sm:inline">My Videos</span>
+                </TabsTrigger>
+                <TabsTrigger value="advisor" className="gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden sm:inline">AI Advisor</span>
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-2" disabled={!selectedChild}>
                   <Activity className="w-4 h-4" />
-                  Activity
+                  <span className="hidden sm:inline">Activity</span>
                 </TabsTrigger>
                 <TabsTrigger value="limits" className="gap-2" disabled={!selectedChild}>
                   <Clock className="w-4 h-4" />
-                  Time Limits
+                  <span className="hidden sm:inline">Time Limits</span>
                 </TabsTrigger>
                 <TabsTrigger value="content" className="gap-2" disabled={!selectedChild}>
                   <Ban className="w-4 h-4" />
-                  Content
+                  <span className="hidden sm:inline">Content</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -790,9 +795,19 @@ const ParentDashboard = () => {
                 </Card>
               </TabsContent>
 
+              {/* AI Advisor Tab */}
+              <TabsContent value="advisor" className="space-y-6">
+                <ParentAIAdvisor
+                  childInfo={
+                    selectedChildProfile
+                      ? { name: selectedChildProfile.display_name, age: selectedChildProfile.age }
+                      : null
+                  }
+                />
+              </TabsContent>
+
               {selectedChild && selectedChildProfile && (
                 <>
-
                 {/* Activity Tab */}
                 <TabsContent value="activity" className="space-y-6">
                   {/* Screen Time Chart */}
