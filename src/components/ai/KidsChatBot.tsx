@@ -249,7 +249,7 @@ const KidsChatBot = () => {
                   <PetIcon size={36} waving />
                   <div>
                     <h3 className="font-display font-bold text-white text-sm">
-                      Buddy 🐾
+                      Buddy 🐧
                     </h3>
                     <p className="text-[11px] text-white/80">
                       Your video finding friend!
