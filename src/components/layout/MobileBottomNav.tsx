@@ -2,6 +2,7 @@ import { Home, Search, Upload, Users, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
