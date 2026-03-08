@@ -674,7 +674,7 @@ const ParentDashboard = () => {
                   variant="outline"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Link Existing Account
+                  {t("parent.link.account")}
                 </Button>
               </div>
             </CardContent>
