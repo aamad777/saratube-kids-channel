@@ -70,12 +70,12 @@ const Header = () => {
         currentTheme={themeName}
       />
        <header className={`sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg`}>
-        <div className="container flex h-16 items-center justify-between gap-4 px-4">
+        <div className="container flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <div className="relative">
-              <span className="text-3xl animate-sparkle">{theme.emoji}</span>
-              <div className={`absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
+              <span className="text-2xl sm:text-3xl animate-sparkle">{theme.emoji}</span>
+              <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
             </div>
             <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline transition-all duration-300`}>
               {getAppName()}
@@ -83,13 +83,13 @@ const Header = () => {
           </Link>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-xl">
+          <div className="flex-1 max-w-xl min-w-0">
              <button
                onClick={handleSearchOpen}
-               className={`w-full flex items-center gap-3 px-4 h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
+               className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-9 sm:h-11 rounded-full bg-muted/50 border-2 border-transparent hover:border-primary/50 hover:bg-muted transition-all group`}
              >
-               <Search className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-               <span className="text-muted-foreground flex-1 text-left">Search fun videos...</span>
+               <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+               <span className="text-muted-foreground flex-1 text-left text-sm sm:text-base truncate">Search fun videos...</span>
                <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-muted-foreground bg-background rounded border">
                  <span className="text-xs">⌘</span>K
                </kbd>
@@ -97,46 +97,40 @@ const Header = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {user && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowThemeWheel(true)}
-                className={`relative group rounded-full bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 transition-all`}
+                className={`relative group rounded-full bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 transition-all h-8 w-8 sm:h-9 sm:w-9`}
               >
-                <Palette className="h-5 w-5" />
-                <span className="absolute -bottom-1 -right-1 text-sm">{theme.emoji}</span>
+                <Palette className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="absolute -bottom-1 -right-1 text-xs sm:text-sm">{theme.emoji}</span>
               </Button>
             )}
           {user ? (
             <>
-              {/* Kids Zone Button */}
-              <Link to="/kids">
-                <Button className={`gap-2 hidden sm:flex bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
+              {/* Kids Zone Button - hidden on mobile, in dropdown instead */}
+              <Link to="/kids" className="hidden sm:block">
+                <Button className={`gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
                   <Users className="h-5 w-5" />
                   Kids Zone
                 </Button>
-                <Button className={`sm:hidden bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="icon">
-                  <Users className="h-5 w-5" />
-                </Button>
               </Link>
 
-              <Link to="/upload">
-                <Button className={`gap-2 hidden sm:flex bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
+              <Link to="/upload" className="hidden sm:block">
+                <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <Upload className="h-5 w-5" />
                   Upload
-                </Button>
-                <Button className={`sm:hidden bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="icon">
-                  <Upload className="h-5 w-5" />
                 </Button>
               </Link>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className={`absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r ${theme.primary} text-white text-xs rounded-full flex items-center justify-center font-bold`}>
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
+                    <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className={`absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-gradient-to-r ${theme.primary} text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-bold`}>
                       3
                     </span>
                   </Button>
@@ -167,11 +161,27 @@ const Header = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className={`w-9 h-9 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center text-white font-display font-bold shadow-button hover:scale-110 transition-transform`}>
+                  <button className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center text-white font-display font-bold text-sm sm:text-base shadow-button hover:scale-110 transition-transform`}>
                     {getInitial()}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  {/* Mobile-only nav links */}
+                  <div className="sm:hidden">
+                    <Link to="/kids">
+                      <DropdownMenuItem className="gap-2">
+                        <Users className="w-4 h-4" />
+                        <span>Kids Zone</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link to="/upload">
+                      <DropdownMenuItem className="gap-2">
+                        <Upload className="w-4 h-4" />
+                        <span>Upload</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <DropdownMenuSeparator />
+                  </div>
                 {isChildActive && (
                     <>
                       <DropdownMenuItem className="gap-2 font-semibold">

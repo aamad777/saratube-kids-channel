@@ -66,7 +66,7 @@ const HeroSection = () => {
   const currentBackground = themeBackgrounds[themeName as AppTheme] || heroBgRainbow;
 
   return (
-    <section className="relative overflow-hidden min-h-[650px]">
+    <section className="relative overflow-hidden min-h-[500px] md:min-h-[650px]">
       {/* Background */}
       <div className="absolute inset-0">
         <motion.img
@@ -147,7 +147,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container px-4 py-20 md:py-28 flex flex-col items-center text-center">
+      <div className="relative z-10 container px-4 py-12 md:py-28 flex flex-col items-center text-center">
         <motion.div 
           className="mb-6"
           animate={{ 
@@ -156,11 +156,11 @@ const HeroSection = () => {
           }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-7xl md:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter">{theme.emoji}</span>
+          <span className="text-5xl md:text-7xl lg:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter">{theme.emoji}</span>
         </motion.div>
 
         <motion.h1 
-          className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-6"
+          className="font-display text-3xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -177,7 +177,7 @@ const HeroSection = () => {
         </motion.h1>
 
         <motion.p 
-          className="text-lg md:text-xl text-foreground/90 max-w-2xl mb-10 leading-relaxed font-medium"
+          className="text-base md:text-xl text-foreground/90 max-w-2xl mb-8 md:mb-10 leading-relaxed font-medium px-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
@@ -193,13 +193,13 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.6 }}
         >
           <Button
-            className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 text-lg px-8 py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`}
+            className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`}
             onClick={() => document.getElementById("videos")?.scrollIntoView({ behavior: "smooth" })}
           >
             <Play className="h-6 w-6 fill-current" />
             Start Watching
           </Button>
-          <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-lg px-8 py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
+          <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
             <Link to="/upload">
               <Upload className="h-6 w-6" />
               Upload Video
@@ -209,7 +209,7 @@ const HeroSection = () => {
 
         {/* Stats */}
         <motion.div 
-          className="flex flex-wrap justify-center gap-6 md:gap-8 mt-12"
+          className="flex flex-wrap justify-center gap-4 md:gap-8 mt-8 md:mt-12"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
@@ -221,7 +221,7 @@ const HeroSection = () => {
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
-              className="flex flex-col items-center p-5 bg-background/70 backdrop-blur-md rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 min-w-[130px] hover:scale-110 transition-all duration-300"
+              className="flex flex-col items-center p-3 md:p-5 bg-background/70 backdrop-blur-md rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/20 min-w-[100px] md:min-w-[130px] hover:scale-110 transition-all duration-300"
               whileHover={{ y: -5 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
