@@ -1,5 +1,5 @@
- import { useState, useCallback } from "react";
- import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle, Sparkles } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle, Sparkles, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
