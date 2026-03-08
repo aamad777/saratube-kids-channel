@@ -216,9 +216,9 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.8 }}
         >
           {[
-            { label: "Videos", value: "10K+", icon: "🎬" },
-            { label: "Creators", value: "500+", icon: "⭐" },
-            { label: "Happy Kids", value: "50K+", icon: "😊" },
+            { label: t("hero.stat.videos"), value: "10K+", icon: "🎬" },
+            { label: t("hero.stat.creators"), value: "500+", icon: "⭐" },
+            { label: t("hero.stat.happy.kids"), value: "50K+", icon: "😊" },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
