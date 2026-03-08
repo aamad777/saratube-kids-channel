@@ -4,6 +4,7 @@ import { X, Sparkles } from "lucide-react";
 import { AppTheme, themeConfigs } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChildSession } from "@/contexts/ChildSessionContext";
 import { toast } from "sonner";
 import ThemeTransitionEffect from "./ThemeTransitionEffect";
 
