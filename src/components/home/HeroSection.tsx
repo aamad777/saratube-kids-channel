@@ -66,7 +66,7 @@ const HeroSection = () => {
   const currentBackground = themeBackgrounds[themeName as AppTheme] || heroBgRainbow;
 
   return (
-    <section className="relative overflow-hidden min-h-[650px]">
+    <section className="relative overflow-hidden min-h-[500px] md:min-h-[650px]">
       {/* Background */}
       <div className="absolute inset-0">
         <motion.img
