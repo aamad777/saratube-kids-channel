@@ -103,40 +103,34 @@ const Header = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowThemeWheel(true)}
-                className={`relative group rounded-full bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 transition-all`}
+                className={`relative group rounded-full bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 transition-all h-8 w-8 sm:h-9 sm:w-9`}
               >
-                <Palette className="h-5 w-5" />
-                <span className="absolute -bottom-1 -right-1 text-sm">{theme.emoji}</span>
+                <Palette className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="absolute -bottom-1 -right-1 text-xs sm:text-sm">{theme.emoji}</span>
               </Button>
             )}
           {user ? (
             <>
-              {/* Kids Zone Button */}
-              <Link to="/kids">
-                <Button className={`gap-2 hidden sm:flex bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
+              {/* Kids Zone Button - hidden on mobile, in dropdown instead */}
+              <Link to="/kids" className="hidden sm:block">
+                <Button className={`gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="lg">
                   <Users className="h-5 w-5" />
                   Kids Zone
                 </Button>
-                <Button className={`sm:hidden bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90`} size="icon">
-                  <Users className="h-5 w-5" />
-                </Button>
               </Link>
 
-              <Link to="/upload">
-                <Button className={`gap-2 hidden sm:flex bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
+              <Link to="/upload" className="hidden sm:block">
+                <Button className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="lg">
                   <Upload className="h-5 w-5" />
                   Upload
-                </Button>
-                <Button className={`sm:hidden bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`} size="icon">
-                  <Upload className="h-5 w-5" />
                 </Button>
               </Link>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className={`absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r ${theme.primary} text-white text-xs rounded-full flex items-center justify-center font-bold`}>
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
+                    <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className={`absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-gradient-to-r ${theme.primary} text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-bold`}>
                       3
                     </span>
                   </Button>
