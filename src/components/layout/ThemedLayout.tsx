@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useTimeLimitChecker } from "@/hooks/useTimeLimitChecker";
 import Header from "./Header";
+import MobileBottomNav from "./MobileBottomNav";
 import InteractiveFloatingElements from "@/components/effects/InteractiveFloatingElements";
 import ScreenLockOverlay from "@/components/effects/ScreenLockOverlay";
 import TimeRemainingBanner from "@/components/effects/TimeRemainingBanner";
