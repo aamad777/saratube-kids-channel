@@ -217,6 +217,7 @@ const ParentAIAdvisor = ({ childInfo }: ParentAIAdvisorProps) => {
               )}
             </div>
           )}
+          </div>
         </ScrollArea>
 
         {/* Input */}

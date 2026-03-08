@@ -360,6 +360,7 @@ const GuidedQuizBot = () => {
                     </motion.div>
                   )}
                 </div>
+                </div>
               </ScrollArea>
             </Card>
           </motion.div>
