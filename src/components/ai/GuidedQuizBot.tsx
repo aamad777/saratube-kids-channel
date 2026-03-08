@@ -251,7 +251,8 @@ const GuidedQuizBot = () => {
               </div>
 
               {/* Chat content */}
-              <ScrollArea className="h-[420px] p-4" ref={scrollRef}>
+              <ScrollArea className="h-[420px] p-4">
+                <div ref={scrollRef}>
                 <div className="space-y-4">
                   {/* Welcome message */}
                   <div className="flex gap-2">
