@@ -150,7 +150,8 @@ const ParentAIAdvisor = ({ childInfo }: ParentAIAdvisorProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Chat area */}
-        <ScrollArea className="h-[400px] rounded-xl border bg-muted/20 p-4" ref={scrollRef}>
+        <ScrollArea className="h-[400px] rounded-xl border bg-muted/20 p-4">
+          <div ref={scrollRef}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
               <Bot className="w-12 h-12 text-primary/40" />
