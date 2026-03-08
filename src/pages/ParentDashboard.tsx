@@ -39,6 +39,7 @@ import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
 import AgeFilterInfo from "@/components/parent/AgeFilterInfo";
+import ParentAIAdvisor from "@/components/parent/ParentAIAdvisor";
 import { videoCategories } from "@/data/videoData";
 
 interface ChildProfile {
