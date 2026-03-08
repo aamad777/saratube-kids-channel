@@ -168,6 +168,18 @@ const themeConfigs: Record<AppTheme, ThemeConfig> = {
   },
 };
 
+// Maps themes to their default video category (themes without a matching category return null)
+export const themeCategoryMap: Partial<Record<AppTheme, string>> = {
+  quran_stories: "quran_stories",
+  nasheed: "nasheed",
+  ramadan: "ramadan",
+  dua_prayer: "dua_prayer",
+  farm: "farm",
+  sports: "sports",
+  cars: "cars",
+  magic: "magic",
+};
+
 export const useTheme = () => {
   const { profile } = useAuth();
   const { childSession, isChildActive } = useChildSession();
