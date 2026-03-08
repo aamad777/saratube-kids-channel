@@ -97,6 +97,7 @@ const CATEGORY_OPTIONS = videoCategories.map(c => c.name);
 const ParentDashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
