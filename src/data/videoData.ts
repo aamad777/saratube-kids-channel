@@ -418,6 +418,134 @@ export const sampleVideos: VideoItem[] = [
     youtubeId: "ymigWt5TOV8",
     ageRecommendation: "3-10",
   },
+
+  // Quran Stories
+  {
+    id: "qs1", title: "📖 Story of Prophet Nuh (Noah) for Kids",
+    thumbnail: thumbStories, creator: "FreeQuranEducation", views: 5200000,
+    likes: 340000, comments: 18000, duration: "12:30", category: "quran_stories",
+    description: "Learn the beautiful story of Prophet Nuh and the great flood! 🌊",
+    youtubeId: "JFJUCNiJDaA", ageRecommendation: "3-12",
+  },
+  {
+    id: "qs2", title: "📖 Story of Prophet Yusuf for Children",
+    thumbnail: thumbStories, creator: "IslamicCartoons", views: 3800000,
+    likes: 250000, comments: 12000, duration: "15:00", category: "quran_stories",
+    description: "The amazing story of Prophet Yusuf told for kids! ⭐",
+    youtubeId: "gkS_-WWkIoU", ageRecommendation: "4-12",
+  },
+
+  // Islamic Nasheed
+  {
+    id: "ns1", title: "🎶 Bismillah - Islamic Song for Kids",
+    thumbnail: thumbMusic, creator: "OnePath Network", views: 8500000,
+    likes: 520000, comments: 25000, duration: "3:45", category: "nasheed",
+    description: "A beautiful nasheed about saying Bismillah! 🌟",
+    youtubeId: "bE8fOXHc9gY", ageRecommendation: "2-10",
+  },
+  {
+    id: "ns2", title: "🎶 Allah Made Everything - Kids Nasheed",
+    thumbnail: thumbMusic, creator: "ZainBhikha", views: 4200000,
+    likes: 280000, comments: 15000, duration: "4:20", category: "nasheed",
+    description: "Beautiful song about Allah's creation! 🌸",
+    youtubeId: "GxUaNZ0MhfA", ageRecommendation: "2-10",
+  },
+
+  // Ramadan & Eid
+  {
+    id: "rm1", title: "🌙 Ramadan Song for Kids - Welcome Ramadan!",
+    thumbnail: thumbEducation, creator: "IslamicSongsForKids", views: 6100000,
+    likes: 380000, comments: 20000, duration: "4:00", category: "ramadan",
+    description: "Get excited about Ramadan with this fun song! 🎉",
+    youtubeId: "FHFJ8K5L4s8", ageRecommendation: "3-10",
+  },
+  {
+    id: "rm2", title: "🌙 Eid Mubarak - Celebration Song",
+    thumbnail: thumbEducation, creator: "OmarAndHana", views: 4500000,
+    likes: 290000, comments: 16000, duration: "3:30", category: "ramadan",
+    description: "Celebrate Eid with this joyful song! 🎊",
+    youtubeId: "gT2fntJuELY", ageRecommendation: "2-10",
+  },
+
+  // Dua & Prayer
+  {
+    id: "dp1", title: "🤲 Learn How to Pray Salah for Kids",
+    thumbnail: thumbEducation, creator: "IslamicKids", views: 7200000,
+    likes: 450000, comments: 22000, duration: "8:00", category: "dua_prayer",
+    description: "Step by step guide to learn salah! 🕌",
+    youtubeId: "T4auGhmeBlw", ageRecommendation: "4-12",
+  },
+  {
+    id: "dp2", title: "🤲 Daily Duas for Muslim Kids",
+    thumbnail: thumbEducation, creator: "LearnWithAdam", views: 3600000,
+    likes: 220000, comments: 11000, duration: "6:30", category: "dua_prayer",
+    description: "Learn important daily duas with fun animations! ✨",
+    youtubeId: "bbiRfDq8jHE", ageRecommendation: "3-10",
+  },
+
+  // Farm & Animals
+  {
+    id: "fm1", title: "🐄 Old MacDonald Had a Farm - Animals!",
+    thumbnail: thumbAnimals, creator: "SuperSimpleSongs", views: 12000000,
+    likes: 780000, comments: 35000, duration: "3:30", category: "farm",
+    description: "Sing along and learn about farm animals! 🐓",
+    youtubeId: "5oYKonYBujg", ageRecommendation: "1-5",
+  },
+  {
+    id: "fm2", title: "🐄 Farm Animal Sounds for Kids",
+    thumbnail: thumbAnimals, creator: "KidsLearningTube", views: 8500000,
+    likes: 520000, comments: 28000, duration: "5:00", category: "farm",
+    description: "Learn what sounds different farm animals make! 🐴",
+    youtubeId: "LGtYpl3s15k", ageRecommendation: "1-6",
+  },
+
+  // Sports
+  {
+    id: "sp1", title: "⚽ Learn Soccer Skills for Kids!",
+    thumbnail: thumbGames, creator: "KidsSportsAcademy", views: 4100000,
+    likes: 260000, comments: 14000, duration: "7:00", category: "sports",
+    description: "Fun soccer drills and skills for beginners! 🏆",
+    youtubeId: "z8jFuBmUGqY", ageRecommendation: "4-12",
+  },
+  {
+    id: "sp2", title: "⚽ Kids Workout & Sports Fun",
+    thumbnail: thumbYoga, creator: "CosmicKidsYoga", views: 5500000,
+    likes: 340000, comments: 18000, duration: "10:00", category: "sports",
+    description: "Get active with this fun sports workout! 💪",
+    youtubeId: "L_A_HjHd2C8", ageRecommendation: "4-10",
+  },
+
+  // Cars & Trucks
+  {
+    id: "cr1", title: "🚗 Monster Trucks for Kids - Big Machines!",
+    thumbnail: thumbGames, creator: "GeckoGarage", views: 9800000,
+    likes: 600000, comments: 30000, duration: "12:00", category: "cars",
+    description: "Amazing monster trucks and big vehicles! 🚛",
+    youtubeId: "s1LUXQWzCno", ageRecommendation: "2-8",
+  },
+  {
+    id: "cr2", title: "🚗 Construction Vehicles for Children",
+    thumbnail: thumbGames, creator: "BlippiToys", views: 7200000,
+    likes: 440000, comments: 22000, duration: "8:00", category: "cars",
+    description: "Learn about excavators, bulldozers and more! 🏗️",
+    youtubeId: "bUQXHPDxMFI", ageRecommendation: "2-7",
+  },
+
+  // Magic & Wizards
+  {
+    id: "mg1", title: "🪄 Easy Magic Tricks for Kids!",
+    thumbnail: thumbScience, creator: "KidsMagicShow", views: 6300000,
+    likes: 390000, comments: 20000, duration: "8:30", category: "magic",
+    description: "Learn amazing magic tricks to impress your friends! ✨",
+    youtubeId: "VaWQm5J0abU", ageRecommendation: "5-12",
+  },
+  {
+    id: "mg2", title: "🪄 The Wizard's Adventure - Animated Story",
+    thumbnail: thumbStories, creator: "FairyTalesKids", views: 4800000,
+    likes: 300000, comments: 16000, duration: "10:00", category: "magic",
+    description: "Join the little wizard on a magical adventure! 🏰",
+    youtubeId: "s2R0C8mGAsk", ageRecommendation: "4-10",
+  },
 ];
 
 // Helper to get video by ID
