@@ -356,7 +356,7 @@ const KidsChatBot = () => {
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask Buddy anything! 🐾"
+                    placeholder="Ask Buddy anything! 🐧"
                     className="flex-1 rounded-full text-sm"
                     disabled={isLoading}
                   />
