@@ -2,16 +2,33 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Image as ImageIcon, X, ChevronLeft, ChevronRight, Play, Pause, Maximize2 } from "lucide-react";
+import { Loader2, Image as ImageIcon, X, ChevronLeft, ChevronRight, Play, Pause, Maximize2, Trash2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const KidsPhotoFeed = () => {
   const { childSession, isChildActive } = useChildSession();
+  const { profile } = useAuth();
   const [photos, setPhotos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isParent = profile?.is_parent === true;
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -141,6 +158,21 @@ const KidsPhotoFeed = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <Maximize2 className="text-white opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 transition-all duration-300" />
                 </div>
+                
+                {isParent && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setPhotoToDelete(photo);
+                    }}
+                    className="absolute top-2 right-2 p-2 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                    title="Remove Photo"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+
                 {photo.caption && (
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
                     <p className="text-white text-xs font-medium drop-shadow-sm truncate">
@@ -263,6 +295,59 @@ const KidsPhotoFeed = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AlertDialog 
+        open={photoToDelete !== null} 
+        onOpenChange={(open) => !open && setPhotoToDelete(null)}
+      >
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-2xl">
+              <AlertTriangle className="text-destructive h-6 w-6" />
+              Remove Photo?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base py-2">
+              Are you sure you want to remove this photo? This will delete this specific memory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!photoToDelete) return;
+                setIsDeleting(true);
+                try {
+                  const { error } = await supabase
+                    .from("kids_photos")
+                    .delete()
+                    .eq("id", photoToDelete.id);
+
+                  if (error) throw error;
+
+                  toast.success("Photo removed successfully");
+                  setPhotos(prev => prev.filter(p => p.id !== photoToDelete.id));
+                } catch (error: any) {
+                  console.error("Error deleting photo:", error);
+                  toast.error(error.message || "Failed to delete photo");
+                } finally {
+                  setIsDeleting(false);
+                  setPhotoToDelete(null);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full gap-2"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isDeleting ? "Removing..." : "Remove Memory"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

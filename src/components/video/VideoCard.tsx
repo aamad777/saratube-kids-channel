@@ -1,9 +1,22 @@
-import { Heart, MessageCircle, Play } from "lucide-react";
+import { Heart, MessageCircle, Play, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { getAgeSuitability, getAgeBadgeStyle } from "@/utils/ageFilter";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface VideoCardProps {
   id: string;
@@ -30,8 +43,14 @@ const VideoCard = ({
 }: VideoCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { theme } = useTheme();
   const { childSession } = useChildSession();
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+
+  const isParent = profile?.is_parent === true;
 
   const suitability = ageRecommendation 
     ? getAgeSuitability(childSession?.age ?? null, ageRecommendation) 
@@ -49,6 +68,36 @@ const VideoCard = ({
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      // Direct deletion of the video record
+      // In a real app, we might want to check ownership or permissions more strictly
+      const { error } = await supabase
+        .from("videos")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Video removed successfully");
+      // Refresh the page to reflect changes
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Error deleting video:", error);
+      toast.error(error.message || "Failed to delete video");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
   };
 
   return (
@@ -95,6 +144,17 @@ const VideoCard = ({
               }`}
             />
           </button>
+
+          {/* Delete button (Parents only) */}
+          {isParent && (
+            <button
+              onClick={handleDelete}
+              className="absolute top-2 right-12 p-2 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive backdrop-blur-sm transition-all hover:scale-110"
+              title="Remove Video"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -128,6 +188,38 @@ const VideoCard = ({
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-2xl">
+              <AlertTriangle className="text-destructive h-6 w-6" />
+              Remove Video?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base py-2">
+              Are you sure you want to remove "<strong>{title}</strong>"? This will delete it for everyone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full gap-2"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isDeleting ? "Removing..." : "Remove Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Link>
   );
 };

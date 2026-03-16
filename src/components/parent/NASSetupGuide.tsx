@@ -62,14 +62,14 @@ const NASSetupGuide = () => {
                 Create Your Media Folder
               </h3>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Using <strong>File Station</strong>, go to the <code>/web</code> folder and create a folder named <code>kids-media</code>.
+                Using <strong>File Station</strong>, go to the <code>/web</code> folder and create a folder named <code>family-media</code>.
                 Upload your photos and videos into this folder.
               </p>
               <div className="space-y-2">
                 <p className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Example structure:</p>
                 <div className="bg-black/5 p-3 rounded-xl font-mono text-xs">
-                  /web/kids-media/family-vacation.jpg <br/>
-                  /web/kids-media/baby-steps.mp4
+                  /web/family-media/vacation.jpg <br/>
+                  /web/family-media/kids-video.mp4
                 </div>
               </div>
             </div>
@@ -86,13 +86,13 @@ const NASSetupGuide = () => {
               </p>
               <div className="bg-sara-blue/5 p-4 rounded-2xl border border-sara-blue/20">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-sara-blue">Your Template Link:</span>
-                  <Button variant="ghost" size="icon" onClick={() => copyToClipboard("http://[YOUR-NAS-IP]/kids-media/filename.jpg")}>
+                  <span className="text-xs font-bold text-sara-blue">Your QuickConnect Link:</span>
+                  <Button variant="ghost" size="icon" onClick={() => copyToClipboard("http://QuickConnect.to/aamad777/family-media/[filename]")}>
                     <Copy className="w-3 h-3" />
                   </Button>
                 </div>
                 <p className="text-xs font-mono break-all text-sara-blue">
-                  http://[YOUR-NAS-IP]/kids-media/filename.jpg
+                  http://QuickConnect.to/aamad777/family-media/[filename]
                 </p>
               </div>
               <div className="mt-4 flex items-center gap-2 text-xs text-green-600 font-medium">
