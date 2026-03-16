@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Share2, Download, Eye, Clock } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Heart, Share2, Download, Eye, Clock, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import ThemedLayout from "@/components/layout/ThemedLayout";
 import AIChatBox from "@/components/ai/AIChatBox";
 import CommentSection from "@/components/video/CommentSection";
@@ -9,20 +9,76 @@ import VideoGrid from "@/components/video/VideoGrid";
 import { useTheme } from "@/hooks/useTheme";
 import { useScreenTimeTracker } from "@/hooks/useScreenTimeTracker";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getVideoById, sampleVideos } from "@/data/videoData";
+import { getVideoById, sampleVideos, VideoItem } from "@/data/videoData";
+import { supabase } from "@/integrations/supabase/client";
 
 const WatchPage = () => {
   const { id } = useParams<{ id: string }>();
-  const video = getVideoById(id || "1") || sampleVideos[0];
+  const [video, setVideo] = useState<VideoItem | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [likes, setLikes] = useState(video.likes);
+  const [likes, setLikes] = useState(0);
   const { theme } = useTheme();
   const { t } = useLanguage();
 
+  useEffect(() => {
+    const fetchVideo = async () => {
+      if (!id) return;
+
+      // Check if it's a sample video first
+      const sampleVideo = getVideoById(id);
+      if (sampleVideo) {
+        setVideo(sampleVideo);
+        setLikes(sampleVideo.likes);
+        setLoading(false);
+        return;
+      }
+
+      // If not sample, try fetching from Supabase
+      try {
+        const { data, error } = await supabase
+          .from("videos")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          const mappedVideo: VideoItem = {
+            id: data.id,
+            title: data.title,
+            thumbnail: data.thumbnail_url || "/placeholder.svg",
+            creator: "Parent Upload",
+            views: 0,
+            likes: 0,
+            comments: 0,
+            duration: "Video",
+            category: data.category,
+            description: data.description || "",
+            youtubeId: data.video_url.includes("youtube.com") || data.video_url.includes("youtu.be") 
+              ? (data.video_url.split("v=")[1]?.split("&")[0] || data.video_url.split("/").pop() || "")
+              : "",
+            // Store the direct URL for non-youtube videos
+            ...({ videoUrl: data.video_url } as any)
+          };
+          setVideo(mappedVideo);
+          setLikes(0);
+        }
+      } catch (error) {
+        console.error("Error fetching video:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideo();
+  }, [id]);
+
   useScreenTimeTracker({
     videoId: id || "1",
-    videoTitle: video.title,
-    category: video.category,
+    videoTitle: video?.title || "Loading...",
+    category: video?.category || "all",
   });
 
   const handleLike = () => {
@@ -35,6 +91,31 @@ const WatchPage = () => {
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
+
+  if (loading) {
+    return (
+      <ThemedLayout showFooter={false}>
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
+      </ThemedLayout>
+    );
+  }
+
+  if (!video) {
+    return (
+      <ThemedLayout showFooter={false}>
+        <div className="container px-4 py-12 text-center">
+          <h1 className="text-2xl font-bold">Video not found</h1>
+          <Link to="/">
+            <Button className="mt-4">Go Back Home</Button>
+          </Link>
+        </div>
+      </ThemedLayout>
+    );
+  }
+
+  const isYoutube = !!video.youtubeId;
 
   return (
     <ThemedLayout showFooter={false}>
@@ -49,13 +130,22 @@ const WatchPage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="relative aspect-video bg-foreground/10 rounded-3xl overflow-hidden shadow-card">
-              <iframe
-                src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1`}
-                title={video.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
+              {isYoutube ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1&autoplay=1`}
+                  title={video.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              ) : (
+                <video 
+                  src={(video as any).videoUrl} 
+                  controls 
+                  autoPlay 
+                  className="w-full h-full object-contain bg-black"
+                />
+              )}
             </div>
 
             <div className={`${theme.cardBg} rounded-3xl shadow-card p-6`}>
@@ -80,11 +170,8 @@ const WatchPage = () => {
                 </div>
                 <div>
                   <h3 className="font-display font-bold">{video.creator}</h3>
-                  <p className="text-sm text-muted-foreground">1.2K {t("watch.subscribers")}</p>
+                  <p className="text-sm text-muted-foreground">Parent Content</p>
                 </div>
-                <Button className={`ml-auto bg-gradient-to-r ${theme.primary} text-white hover:opacity-90`}>
-                  {t("watch.subscribe")}
-                </Button>
               </div>
 
               <div className="flex flex-wrap gap-3 mt-4">
@@ -123,7 +210,7 @@ const WatchPage = () => {
                 {t("watch.next")}
               </h3>
               <div className="space-y-4">
-                <VideoGrid />
+                <VideoGrid category={video.category} />
               </div>
             </div>
           </div>
@@ -133,4 +220,4 @@ const WatchPage = () => {
   );
 };
 
-export default WatchPage;
+export default WatchPage;

@@ -42,6 +42,7 @@ import CategoryManager from "@/components/parent/CategoryManager";
 import AgeFilterInfo from "@/components/parent/AgeFilterInfo";
 import ParentAIAdvisor from "@/components/parent/ParentAIAdvisor";
 import KidsPhotoGallery from "@/components/parent/KidsPhotoGallery";
+import NASSetupGuide from "@/components/parent/NASSetupGuide";
 import { videoCategories } from "@/data/videoData";
 
 interface ChildProfile {
@@ -1022,6 +1023,11 @@ const ParentDashboard = () => {
                 </>
               )}
             </Tabs>
+
+            {/* NAS Setup Guide Section */}
+            <div className="mt-12 mb-8">
+              <NASSetupGuide />
+            </div>
           </div>
         </div>
       </main>

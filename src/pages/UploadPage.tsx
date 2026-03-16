@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, Video, Image, Sparkles, X, Check, Clock, Users, Calendar, Loader2, Link as LinkIcon } from "lucide-react";
+import { Upload, Video, Image as ImageIcon, Sparkles, X, Check, Clock, Users, Calendar, Loader2, Link as LinkIcon, AlertCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,23 +24,31 @@ const UploadPage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
+  const [mediaType, setMediaType] = useState<"video" | "photo">("video");
   const [isDragging, setIsDragging] = useState(false);
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  
+  const [files, setFiles] = useState<File[]>([]);
   const [videoUrl, setVideoUrl] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [urlConfirmed, setUrlConfirmed] = useState(false);
+  
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [caption, setCaption] = useState("");
+  
   const [availableFrom, setAvailableFrom] = useState("");
   const [availableUntil, setAvailableUntil] = useState("");
+  
   const [linkedChildren, setLinkedChildren] = useState<LinkedChild[]>([]);
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const [urlConfirmed, setUrlConfirmed] = useState(false);
-  const hasVideo = videoFile !== null || (uploadMode === "url" && urlConfirmed && videoUrl.trim() !== "");
+  const hasMedia = files.length > 0 || (uploadMode === "url" && urlConfirmed && (mediaType === "video" ? videoUrl.trim() !== "" : photoUrl.trim() !== ""));
 
   // Fetch linked children for parent
   useEffect(() => {
@@ -80,7 +88,7 @@ const UploadPage = () => {
 
   useEffect(() => {
     if (profile && !profile.is_parent) {
-      toast.error("Only parents can upload videos");
+      toast.error("Only parents can upload media");
       navigate("/");
     }
   }, [profile, navigate]);
@@ -88,20 +96,32 @@ const UploadPage = () => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith("video/")) {
-        setVideoFile(file);
-      }
-    }
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    addFiles(droppedFiles);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith("video/")) {
-      setVideoFile(file);
+    if (e.target.files) {
+      addFiles(Array.from(e.target.files));
     }
+  };
+
+  const addFiles = (newFiles: File[]) => {
+    const validFiles = newFiles.filter(file => {
+      if (mediaType === "video") return file.type.startsWith("video/") || file.name.endsWith(".mkv");
+      if (mediaType === "photo") return file.type.startsWith("image/");
+      return false;
+    });
+
+    if (validFiles.length !== newFiles.length) {
+      toast.error(`Some files were ignored because they are not ${mediaType}s.`);
+    }
+
+    setFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,27 +139,31 @@ const UploadPage = () => {
     );
   };
 
-  const clearVideo = () => {
-    setVideoFile(null);
+  const clearAll = () => {
+    setFiles([]);
     setVideoUrl("");
+    setPhotoUrl("");
     setUrlConfirmed(false);
+    setThumbnailFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !title || !category) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
+    if (!user) return;
 
-    if (!hasVideo) {
-      toast.error("Please upload a video file or enter a video URL");
+    if (!hasMedia) {
+      toast.error("Please select files before uploading");
       return;
     }
 
     if (selectedChildren.length === 0) {
-      toast.error("Please select at least one child who can watch this video");
+      toast.error("Please select at least one child who can view this");
+      return;
+    }
+
+    if (mediaType === "video" && !category) {
+      toast.error("Please select a category for the video(s)");
       return;
     }
 
@@ -147,84 +171,156 @@ const UploadPage = () => {
     setUploadProgress(0);
 
     try {
-      let finalVideoUrl = videoUrl.trim();
+      if (mediaType === "photo") {
+        if (uploadMode === "url") {
+          const photoRecords = selectedChildren.map(childId => ({
+            child_profile_id: childId,
+            parent_user_id: user.id,
+            photo_url: photoUrl,
+            caption: caption || null
+          }));
 
-      // Upload video file if using file mode
-      if (uploadMode === "file" && videoFile) {
-        const videoPath = `${user.id}/${Date.now()}-${videoFile.name}`;
-        setUploadProgress(20);
-        
-        const { error: videoError } = await supabase.storage
-          .from("videos")
-          .upload(videoPath, videoFile);
+          const { error: insertError } = await supabase.from("kids_photos").insert(photoRecords);
+          if (insertError) throw insertError;
+          setUploadProgress(100);
+        } else {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const ext = file.name.split('.').pop() || 'jpg';
+            const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from("kids-photos")
+              .upload(filePath, file);
 
-        if (videoError) throw videoError;
-        setUploadProgress(60);
+            if (uploadError) throw uploadError;
 
-        const { data: videoUrlData } = supabase.storage
-          .from("videos")
-          .getPublicUrl(videoPath);
+            const { data: urlData } = supabase.storage
+              .from("kids-photos")
+              .getPublicUrl(filePath);
 
-        finalVideoUrl = videoUrlData.publicUrl;
-      } else {
-        setUploadProgress(60);
-      }
+            const photoRecords = selectedChildren.map(childId => ({
+              child_profile_id: childId,
+              parent_user_id: user.id,
+              photo_url: urlData.publicUrl,
+              caption: caption || null
+            }));
 
-      // Upload thumbnail if provided
-      let thumbnailUrl = null;
-      if (thumbnailFile) {
-        const thumbPath = `${user.id}/thumbs/${Date.now()}-${thumbnailFile.name}`;
-        const { error: thumbError } = await supabase.storage
-          .from("videos")
-          .upload(thumbPath, thumbnailFile);
+            const { error: insertError } = await supabase.from("kids_photos").insert(photoRecords);
+            if (insertError) throw insertError;
 
-        if (!thumbError) {
-          const { data: thumbUrlData } = supabase.storage
-            .from("videos")
-            .getPublicUrl(thumbPath);
-          thumbnailUrl = thumbUrlData.publicUrl;
+            setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+          }
         }
+        toast.success(`Successfully added photo(s)! 🎉`);
+        
+      } else if (mediaType === "video") {
+        if (uploadMode === "url") {
+            const { data: video, error: insertError } = await supabase
+                .from("videos")
+                .insert({
+                  title: title || "Linked Video",
+                  description,
+                  category,
+                  video_url: videoUrl,
+                  thumbnail_url: null,
+                  uploaded_by: user.id,
+                  available_from: availableFrom || null,
+                  available_until: availableUntil || null,
+                  is_public: false
+                })
+                .select()
+                .single();
+    
+            if (insertError) throw insertError;
+    
+            const accessRecords = selectedChildren.map(childId => ({
+              video_id: video.id,
+              child_user_id: childId,
+              granted_by: user.id
+            }));
+    
+            const { error: accessError } = await supabase
+              .from("video_child_access")
+              .insert(accessRecords);
+    
+            if (accessError) throw accessError;
+            setUploadProgress(100);
+            
+        } else {
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+              const filePath = `${user.id}/${Date.now()}-${safeName}`;
+              
+              const { error: uploadError } = await supabase.storage
+                .from("videos")
+                .upload(filePath, file);
+    
+              if (uploadError) throw uploadError;
+    
+              const { data: urlData } = supabase.storage
+                .from("videos")
+                .getPublicUrl(filePath);
+    
+              let thumbnailUrl = null;
+              if (files.length === 1 && thumbnailFile) {
+                const thumbSafeName = thumbnailFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                const thumbPath = `${user.id}/thumbs/${Date.now()}-${thumbSafeName}`;
+                const { error: thumbError } = await supabase.storage
+                  .from("videos")
+                  .upload(thumbPath, thumbnailFile);
+    
+                if (!thumbError) {
+                  const { data: thumbUrlData } = supabase.storage
+                    .from("videos")
+                    .getPublicUrl(thumbPath);
+                  thumbnailUrl = thumbUrlData.publicUrl;
+                }
+              }
+    
+              const finalTitle = files.length === 1 && title ? title : (title ? `${title} - ${file.name}` : file.name.split('.')[0]);
+    
+              const { data: video, error: insertError } = await supabase
+                .from("videos")
+                .insert({
+                  title: finalTitle,
+                  description,
+                  category,
+                  video_url: urlData.publicUrl,
+                  thumbnail_url: thumbnailUrl,
+                  uploaded_by: user.id,
+                  available_from: availableFrom || null,
+                  available_until: availableUntil || null,
+                  is_public: false
+                })
+                .select()
+                .single();
+    
+              if (insertError) throw insertError;
+    
+              const accessRecords = selectedChildren.map(childId => ({
+                video_id: video.id,
+                child_user_id: childId,
+                granted_by: user.id
+              }));
+    
+              const { error: accessError } = await supabase
+                .from("video_child_access")
+                .insert(accessRecords);
+    
+              if (accessError) throw accessError;
+              
+              setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+            }
+        }
+        toast.success(`Successfully added video(s)! 🎉`);
       }
-      setUploadProgress(80);
 
-      // Insert video record
-      const { data: video, error: insertError } = await supabase
-        .from("videos")
-        .insert({
-          title,
-          description,
-          category,
-          video_url: finalVideoUrl,
-          thumbnail_url: thumbnailUrl,
-          uploaded_by: user.id,
-          available_from: availableFrom || null,
-          available_until: availableUntil || null,
-          is_public: false
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      // Grant access to selected children
-      const accessRecords = selectedChildren.map(childId => ({
-        video_id: video.id,
-        child_user_id: childId,
-        granted_by: user.id
-      }));
-
-      const { error: accessError } = await supabase
-        .from("video_child_access")
-        .insert(accessRecords);
-
-      if (accessError) throw accessError;
-
-      setUploadProgress(100);
-      toast.success("Video added successfully! 🎉");
       navigate("/parent");
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.error(error.message || "Failed to add video");
+      toast.error(error.message || "Failed to upload");
     } finally {
       setIsUploading(false);
     }
@@ -249,42 +345,59 @@ const UploadPage = () => {
       <Header />
 
       <main className="container px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-button mb-4">
               <Upload className="h-8 w-8 text-primary-foreground" />
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-              {t("upload.title")}
+              Parent Upload
             </h1>
             <p className="text-muted-foreground">
-              {t("upload.subtitle")}
+              Add new videos or photos for your kids to enjoy
             </p>
           </div>
 
-          {!hasVideo ? (
+          <div className="flex justify-center gap-4 mb-8">
+            <Button 
+                variant={mediaType === "video" ? "default" : "outline"} 
+                onClick={() => { setMediaType("video"); clearAll(); }}
+                className="w-32 rounded-full"
+            >
+                <Video className="w-4 h-4 mr-2" /> Videos
+            </Button>
+             <Button 
+                variant={mediaType === "photo" ? "default" : "outline"} 
+                onClick={() => { setMediaType("photo"); clearAll(); }}
+                className="w-32 rounded-full"
+            >
+                <ImageIcon className="w-4 h-4 mr-2" /> Photos
+            </Button>
+          </div>
+
+          {!hasMedia ? (
             /* Upload mode selection and input */
             <div className="space-y-6">
               {/* Mode toggle */}
               <div className="flex gap-2 justify-center">
                 <Button
-                  type="button"
-                  variant={uploadMode === "file" ? "default" : "outline"}
-                  onClick={() => setUploadMode("file")}
-                  className="rounded-full"
+                type="button"
+                variant={uploadMode === "file" ? "default" : "outline"}
+                onClick={() => setUploadMode("file")}
+                className="rounded-full"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {t("upload.file")}
+                <Upload className="h-4 w-4 mr-2" />
+                {t("upload.file")}
                 </Button>
                 <Button
-                  type="button"
-                  variant={uploadMode === "url" ? "default" : "outline"}
-                  onClick={() => setUploadMode("url")}
-                  className="rounded-full"
+                type="button"
+                variant={uploadMode === "url" ? "default" : "outline"}
+                onClick={() => setUploadMode("url")}
+                className="rounded-full"
                 >
-                  <LinkIcon className="h-4 w-4 mr-2" />
-                  {t("upload.paste.url")}
+                <LinkIcon className="h-4 w-4 mr-2" />
+                {t("upload.paste.url")}
                 </Button>
               </div>
 
@@ -302,35 +415,36 @@ const UploadPage = () => {
                       ? "border-primary bg-primary/10 scale-[1.02]"
                       : "border-border hover:border-primary/50 hover:bg-muted/50"
                   }`}
-                  onClick={() => document.getElementById("video-input")?.click()}
+                  onClick={() => document.getElementById("media-input")?.click()}
                 >
                   <input
-                    id="video-input"
+                    id="media-input"
                     type="file"
-                    accept="video/*"
+                    accept={mediaType === "video" ? "video/*,.mkv,.webm" : "image/*"}
+                    multiple
                     className="hidden"
                     onChange={handleFileSelect}
                   />
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-sara-pink-light flex items-center justify-center">
-                      <Video className="h-10 w-10 text-sara-pink" />
+                    <div className="w-20 h-20 rounded-full bg-sara-blue-light flex items-center justify-center">
+                      {mediaType === "video" ? (
+                          <Video className="h-10 w-10 text-sara-blue" />
+                      ) : (
+                          <ImageIcon className="h-10 w-10 text-sara-blue" />
+                      )}
                     </div>
                     <div>
                       <p className="font-display text-xl font-bold mb-2">
-                        {t("upload.drag")}
+                        {t("upload.drag")} {mediaType}s
                       </p>
                       <p className="text-muted-foreground">
-                        {t("upload.browse")}
+                        {t("upload.browse")} (multiple allowed)
                       </p>
                     </div>
-                    <div className="flex gap-4 text-sm text-muted-foreground">
+                    <div className="flex gap-4 text-sm text-muted-foreground justify-center">
                       <span className="flex items-center gap-1">
-                        <Video className="h-4 w-4" />
-                        MP4, MOV
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Image className="h-4 w-4" />
-                        Max 500MB
+                        {mediaType === "video" ? <Video className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
+                        {mediaType === "video" ? "MP4, MOV, MKV" : "JPG, PNG"}
                       </span>
                     </div>
                   </div>
@@ -352,39 +466,31 @@ const UploadPage = () => {
                     </div>
                     <div>
                       <p className="font-display text-xl font-bold mb-2">
-                        {t("upload.paste.title")}
+                        {mediaType === "video" ? t("upload.paste.title") : "Paste Photo URL"}
                       </p>
                       <p className="text-muted-foreground mb-4">
-                        {t("upload.paste.desc")}
+                        {mediaType === "video" ? t("upload.paste.desc") : "Paste a link to a photo from your NAS or the web"}
                       </p>
                     </div>
                     <Input
                       type="url"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      placeholder="https://www.youtube.com/watch?v=..."
+                      value={mediaType === "video" ? videoUrl : photoUrl}
+                      onChange={(e) => mediaType === "video" ? setVideoUrl(e.target.value) : setPhotoUrl(e.target.value)}
+                      placeholder={mediaType === "video" ? "https://your-nas-ip/videos/movie.mp4" : "https://your-nas-ip/photos/family.jpg"}
                       className="max-w-md rounded-2xl text-center"
                     />
                     <Button
                       type="button"
                       onClick={() => {
-                        if (videoUrl.trim()) {
+                        if ((mediaType === "video" && videoUrl.trim()) || (mediaType === "photo" && photoUrl.trim())) {
                           setUrlConfirmed(true);
                         }
                       }}
-                      disabled={!videoUrl.trim()}
+                      disabled={(mediaType === "video" && !videoUrl.trim()) || (mediaType === "photo" && !photoUrl.trim())}
                       className="rounded-full"
                     >
                       {t("upload.continue.url")}
                     </Button>
-                  </div>
-
-                  {/* Floating decorations */}
-                  <div className="absolute top-4 right-4 animate-float">
-                    <Sparkles className="h-6 w-6 text-sara-yellow" />
-                  </div>
-                  <div className="absolute bottom-4 left-4 animate-float" style={{ animationDelay: "1s" }}>
-                    <Sparkles className="h-5 w-5 text-sara-purple" />
                   </div>
                 </div>
               )}
@@ -392,140 +498,169 @@ const UploadPage = () => {
           ) : (
             /* Upload form */
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Video preview */}
-              <div className="relative bg-card rounded-3xl p-4 shadow-card">
-                <div className="flex items-center gap-4">
-                  <div className="w-32 h-20 rounded-xl bg-gradient-hero flex items-center justify-center">
-                    {uploadMode === "url" ? (
-                      <LinkIcon className="h-8 w-8 text-primary-foreground" />
-                    ) : (
-                      <Video className="h-8 w-8 text-primary-foreground" />
-                    )}
+              {/* Selected Files Preview */}
+              <div className="bg-card rounded-3xl p-6 shadow-card">
+                  <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold">Selected Files ({files.length || 1})</h3>
+                      <Button type="button" variant="ghost" size="sm" onClick={clearAll} disabled={isUploading}>
+                          Clear All
+                      </Button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    {videoFile ? (
-                      <>
-                        <p className="font-display font-bold truncate">{videoFile.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(videoFile.size / (1024 * 1024)).toFixed(1)} MB
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-display font-bold text-sm">{t("upload.video.url")}</p>
-                        <p className="text-sm text-muted-foreground truncate">{videoUrl}</p>
-                      </>
-                    )}
-                    {isUploading && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-button rounded-full transition-all"
-                            style={{ width: `${uploadProgress}%` }}
-                          />
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                      {files.map((file, i) => (
+                           <div key={i} className="flex items-center gap-4 bg-muted p-2 rounded-lg">
+                                <div className="w-12 h-12 rounded bg-background flex items-center justify-center overflow-hidden shrink-0">
+                                     {file.type.startsWith('image/') ? (
+                                         <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
+                                     ) : (
+                                         <Video className="text-muted-foreground w-6 h-6" />
+                                     )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{file.name}</p>
+                                    <p className="text-xs text-muted-foreground">{(file.size / (1024*1024)).toFixed(1)} MB</p>
+                                </div>
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removeFile(i)} disabled={isUploading}>
+                                    <X className="w-4 h-4" />
+                                </Button>
+                           </div>
+                      ))}
+                      {uploadMode === "url" && urlConfirmed && (
+                           <div className="flex items-center gap-4 bg-muted p-2 rounded-lg">
+                                <div className="w-12 h-12 rounded bg-background flex items-center justify-center overflow-hidden shrink-0">
+                                     <LinkIcon className="text-muted-foreground" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{mediaType === "video" ? videoUrl : photoUrl}</p>
+                                    <p className="text-xs text-muted-foreground">External URL</p>
+                                </div>
+                           </div>
+                      )}
+                  </div>
+                  
+                  {isUploading && (
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                            <span>Uploading...</span>
+                            <span>{uploadProgress}%</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">{uploadProgress}%</span>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-button transition-all" style={{width: `${uploadProgress}%`}} />
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={clearVideo}
-                    className="p-2 hover:bg-muted rounded-full transition-colors"
-                    disabled={isUploading}
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Thumbnail */}
-              <div>
-                <label className="font-display font-bold text-sm mb-2 block">
-                  {t("upload.thumbnail")}
-                </label>
-                <div className="flex items-center gap-4">
-                  {thumbnailFile ? (
-                    <div className="relative">
-                      <img 
-                        src={URL.createObjectURL(thumbnailFile)} 
-                        alt="Thumbnail preview"
-                        className="w-24 h-16 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setThumbnailFile(null)}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleThumbnailSelect}
-                      />
-                      <div className="w-24 h-16 border-2 border-dashed border-border rounded-lg flex items-center justify-center hover:border-primary transition-colors">
-                        <Image className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    </label>
                   )}
-                  <span className="text-sm text-muted-foreground">
-                    {t("upload.thumbnail.add")}
-                  </span>
+              </div>
+
+              {/* Title & Description for Videos */}
+              {mediaType === "video" && (
+                <div className="space-y-6">
+                    <div>
+                        <label className="font-display font-bold text-sm mb-2 flex items-center gap-2">
+                        {t("upload.video.title")}
+                        {files.length > 1 && <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-normal">Optional for bulk</span>}
+                        </label>
+                        <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder={files.length > 1 ? "Prefix title (e.g. My Trip) or leave blank to use filenames" : t("upload.title.placeholder")}
+                        className="rounded-2xl"
+                        required={files.length === 1 && uploadMode !== "url"}
+                        />
+                    </div>
+    
+                    <div>
+                        <label className="font-display font-bold text-sm mb-2 block">
+                        {t("upload.description")}
+                        </label>
+                        <Textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Description for all selected videos"
+                        className="rounded-2xl min-h-[100px]"
+                        />
+                    </div>
                 </div>
-              </div>
+              )}
+              
+              {/* Caption for Photos */}
+              {mediaType === "photo" && (
+                   <div>
+                        <label className="font-display font-bold text-sm mb-2 block">
+                        Photo Caption
+                        </label>
+                        <Textarea
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder={files.length > 1 ? "Caption for all selected photos" : "Add a caption..."}
+                        className="rounded-2xl min-h-[100px]"
+                        />
+                    </div>
+              )}
 
-              {/* Title */}
-              <div>
-                <label className="font-display font-bold text-sm mb-2 block">
-                  {t("upload.video.title")}
-                </label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={t("upload.title.placeholder")}
-                  className="rounded-2xl"
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="font-display font-bold text-sm mb-2 block">
-                  {t("upload.description")}
-                </label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t("upload.desc.placeholder")}
-                  className="rounded-2xl min-h-[100px]"
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="font-display font-bold text-sm mb-2 block">
-                  {t("upload.category")}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => (
-                    <Button
-                      key={cat}
-                      type="button"
-                      variant={category === cat ? "default" : "outline"}
-                      size="sm"
-                      className="rounded-full"
-                      onClick={() => setCategory(cat)}
-                    >
-                      {cat}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              {/* Category (Videos only) */}
+              {mediaType === "video" && (
+                  <div>
+                    <label className="font-display font-bold text-sm mb-2 block">
+                      {t("upload.category")}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {CATEGORIES.map((cat) => (
+                        <Button
+                          key={cat}
+                          type="button"
+                          variant={category === cat ? "default" : "outline"}
+                          size="sm"
+                          className="rounded-full"
+                          onClick={() => setCategory(cat)}
+                        >
+                          {cat}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+              )}
+              
+              {/* Thumbnail (Single Video only) */}
+              {mediaType === "video" && files.length === 1 && uploadMode === "file" && (
+                  <div>
+                    <label className="font-display font-bold text-sm mb-2 block">
+                      {t("upload.thumbnail")}
+                    </label>
+                    <div className="flex items-center gap-4">
+                      {thumbnailFile ? (
+                        <div className="relative">
+                          <img 
+                            src={URL.createObjectURL(thumbnailFile)} 
+                            alt="Thumbnail preview"
+                            className="w-24 h-16 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setThumbnailFile(null)}
+                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleThumbnailSelect}
+                          />
+                          <div className="w-24 h-16 border-2 border-dashed border-border rounded-lg flex items-center justify-center hover:border-primary transition-colors">
+                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        </label>
+                      )}
+                      <span className="text-sm text-muted-foreground">
+                        {t("upload.thumbnail.add")}
+                      </span>
+                    </div>
+                  </div>
+              )}
 
               {/* Who can watch */}
               <div className="bg-card rounded-3xl p-6 shadow-card">
@@ -569,54 +704,57 @@ const UploadPage = () => {
                 )}
               </div>
 
-              {/* Scheduling */}
-              <div className="bg-card rounded-3xl p-6 shadow-card">
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="h-5 w-5 text-primary" />
-                  <label className="font-display font-bold text-sm">
-                    {t("upload.when.watch")}
-                  </label>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="available-from" className="text-sm text-muted-foreground">
-                      {t("upload.available.from")}
-                    </Label>
-                    <Input
-                      id="available-from"
-                      type="datetime-local"
-                      value={availableFrom}
-                      onChange={(e) => setAvailableFrom(e.target.value)}
-                      className="mt-1 rounded-xl"
-                    />
+              {/* Scheduling (Videos only) */}
+              {mediaType === "video" && (
+                  <div className="bg-card rounded-3xl p-6 shadow-card">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <label className="font-display font-bold text-sm">
+                        {t("upload.when.watch")}
+                      </label>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label htmlFor="available-from" className="text-sm text-muted-foreground">
+                          {t("upload.available.from")}
+                        </Label>
+                        <Input
+                          id="available-from"
+                          type="datetime-local"
+                          value={availableFrom}
+                          onChange={(e) => setAvailableFrom(e.target.value)}
+                          className="mt-1 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="available-until" className="text-sm text-muted-foreground">
+                          {t("upload.available.until")}
+                        </Label>
+                        <Input
+                          id="available-until"
+                          type="datetime-local"
+                          value={availableUntil}
+                          onChange={(e) => setAvailableUntil(e.target.value)}
+                          className="mt-1 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("upload.no.restrict")}
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="available-until" className="text-sm text-muted-foreground">
-                      {t("upload.available.until")}
-                    </Label>
-                    <Input
-                      id="available-until"
-                      type="datetime-local"
-                      value={availableUntil}
-                      onChange={(e) => setAvailableUntil(e.target.value)}
-                      className="mt-1 rounded-xl"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {t("upload.no.restrict")}
-                </p>
-              </div>
+              )}
 
               {/* Submit */}
               <div className="flex gap-4">
-                <Button variant="outline" className="flex-1" asChild disabled={isUploading}>
-                  <Link to="/">{t("upload.cancel")}</Link>
+                <Button type="button" variant="outline" className="flex-1" onClick={clearAll} disabled={isUploading}>
+                  {t("upload.cancel")}
                 </Button>
                 <Button 
+                  type="submit"
                   variant="hero" 
                   className="flex-1 gap-2"
-                  disabled={isUploading || !category || selectedChildren.length === 0 || !hasVideo}
+                  disabled={isUploading || (mediaType === "video" && !category) || selectedChildren.length === 0 || !hasMedia}
                 >
                   {isUploading ? (
                     <>
@@ -626,7 +764,7 @@ const UploadPage = () => {
                   ) : (
                     <>
                       <Upload className="h-5 w-5" />
-                      {uploadMode === "url" ? t("upload.add.video") : t("upload.publish")}
+                      {uploadMode === "url" ? t("upload.add.video") : "Upload " + (files.length > 1 ? `${files.length} ` : "") + (mediaType === "video" ? "Video(s)" : "Photo(s)")}
                     </>
                   )}
                 </Button>

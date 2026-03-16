@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ChildSession {
   id: string;
+  userId: string;
   name: string;
   theme: AppTheme;
   age: number | null;
@@ -39,13 +40,15 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Load from localStorage on mount
   useEffect(() => {
     const storedId = localStorage.getItem("activeChildId");
+    const storedUserId = localStorage.getItem("activeChildUserId");
     const storedName = localStorage.getItem("activeChildName");
     const storedTheme = localStorage.getItem("activeChildTheme") as AppTheme;
     const storedAge = localStorage.getItem("activeChildAge");
 
-    if (storedId && storedName) {
+    if (storedId && storedUserId && storedName) {
       setChildSessionState({
         id: storedId,
+        userId: storedUserId,
         name: storedName,
         theme: storedTheme || "rainbow",
         age: storedAge ? parseInt(storedAge) : null,
@@ -56,6 +59,7 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const setChildSession = (session: ChildSession | null) => {
     if (session) {
       localStorage.setItem("activeChildId", session.id);
+      localStorage.setItem("activeChildUserId", session.userId);
       localStorage.setItem("activeChildName", session.name);
       localStorage.setItem("activeChildTheme", session.theme);
       if (session.age !== null) {
@@ -71,6 +75,7 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const clearChildSession = () => {
     localStorage.removeItem("activeChildId");
+    localStorage.removeItem("activeChildUserId");
     localStorage.removeItem("activeChildName");
     localStorage.removeItem("activeChildTheme");
     localStorage.removeItem("activeChildAge");

@@ -71,6 +71,7 @@ const ChildSelectPage = () => {
     if (selectedChild.pin_hash === pinToCheck) {
       setChildSession({
         id: selectedChild.id,
+        userId: selectedChild.user_id,
         name: selectedChild.display_name,
         theme: selectedChild.selected_theme || "rainbow",
         age: selectedChild.age,
