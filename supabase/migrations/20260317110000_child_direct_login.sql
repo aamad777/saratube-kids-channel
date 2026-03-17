@@ -8,8 +8,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_child_login_id ON public.profiles
 CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_dummy_email ON public.profiles(dummy_email);
 CREATE INDEX IF NOT EXISTS idx_profiles_parent_email ON public.profiles(parent_email);
 
--- RPC: Fetch child profile by child_login_id
-CREATE OR REPLACE FUNCTION get_child_by_login_id(p_login_id TEXT)
+-- RPC: Fetch child profiles by name
+CREATE OR REPLACE FUNCTION get_children_by_name(p_name TEXT)
 RETURNS TABLE (
   id UUID,
   display_name TEXT,
@@ -24,7 +24,7 @@ BEGIN
   RETURN QUERY
   SELECT p.id, p.display_name, p.avatar_url, p.selected_theme, p.dummy_email
   FROM public.profiles p
-  WHERE p.child_login_id = p_login_id
+  WHERE LOWER(p.display_name) = LOWER(p_name)
   AND p.is_parent = false;
 END;
 $$;

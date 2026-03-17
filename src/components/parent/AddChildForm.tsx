@@ -42,7 +42,6 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
-  const [childLoginId, setChildLoginId] = useState("");
   const [age, setAge] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -74,8 +73,8 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
       return;
     }
 
-    if (!childLoginId.trim()) {
-      toast.error("Please enter a Login ID");
+    if (!name.trim()) {
+      toast.error("Please enter a name");
       return;
     }
 
@@ -89,7 +88,6 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
         id: childUserId, // Set the primary key
         user_id: childUserId, // Link to the auth user we will create
         display_name: name.trim(),
-        child_login_id: childLoginId.trim().toLowerCase(),
         age: age ? parseInt(age) : null,
         pin_hash: pin,
         selected_theme: selectedTheme,
@@ -220,20 +218,6 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter name..."
-              className="rounded-xl"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="loginId" className="flex items-center gap-2 mb-2">
-              <Lock className="w-4 h-4" />
-              Login ID (for child)
-            </Label>
-            <Input
-              id="loginId"
-              value={childLoginId}
-              onChange={(e) => setChildLoginId(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
-              placeholder="e.g. sara123"
               className="rounded-xl"
             />
           </div>

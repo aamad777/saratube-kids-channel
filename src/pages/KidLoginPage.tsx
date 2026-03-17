@@ -24,39 +24,44 @@ const KidLoginPage = () => {
   const { t } = useLanguage();
   const { setChildSession } = useChildSession();
   
-  const [step, setStep] = useState(1); // 1: Child ID, 2: PIN
-  const [childId, setChildId] = useState("");
+  const [step, setStep] = useState(1); // 1: Name, 2: Child Select (if multiple), 3: PIN
+  const [childName, setChildName] = useState("");
+  const [children, setChildren] = useState<ChildProfile[]>([]);
   const [selectedChild, setSelectedChild] = useState<ChildProfile | null>(null);
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [pinError, setPinError] = useState(false);
 
-  // Auto-load child id from localStorage if available
+  // Auto-load name from localStorage if available
   useEffect(() => {
-    const savedId = localStorage.getItem("last_child_login_id");
-    if (savedId) setChildId(savedId);
+    const savedName = localStorage.getItem("last_child_name_lookup");
+    if (savedName) setChildName(savedName);
   }, []);
 
-  const handleFetchChild = async () => {
-    if (!childId.trim()) {
-      toast.error("Please enter your Child ID");
+  const handleFetchChildren = async () => {
+    if (!childName.trim()) {
+      toast.error("Please enter your name");
       return;
     }
 
     setLoading(true);
     try {
-      const { data, error } = await (supabase.rpc as any)("get_child_by_login_id", {
-        p_login_id: childId.trim().toLowerCase(),
+      const { data, error } = await (supabase.rpc as any)("get_children_by_name", {
+        p_name: childName.trim(),
       });
 
       if (error) throw error;
 
       if (!data || (data as any[]).length === 0) {
-        toast.error("Profile not found. Ask your parent for your Login ID!");
-      } else {
+        toast.error("Profile not found. Ask your parent for help!");
+      } else if ((data as any[]).length === 1) {
         const childData = (data as any[])[0] as ChildProfile;
         setSelectedChild(childData);
-        localStorage.setItem("last_child_login_id", childId.trim());
+        localStorage.setItem("last_child_name_lookup", childName.trim());
+        setStep(3);
+      } else {
+        setChildren(data as any as ChildProfile[]);
+        localStorage.setItem("last_child_name_lookup", childName.trim());
         setStep(2);
       }
     } catch (error: any) {
@@ -164,23 +169,23 @@ const KidLoginPage = () => {
                     <UserCircle className="w-10 h-10 text-primary" />
                   </div>
                   <h3 className="text-xl font-bold">Hello Friend! 👋</h3>
-                  <p className="text-muted-foreground">Enter your Child ID to start</p>
+                  <p className="text-muted-foreground">Type your name to start</p>
                 </div>
 
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder="e.g. sara123"
-                    value={childId}
-                    onChange={(e) => setChildId(e.target.value)}
+                    placeholder="Your Name (e.g. Sara)"
+                    value={childName}
+                    onChange={(e) => setChildName(e.target.value)}
                     className="text-lg py-7 px-12 rounded-3xl border-2 border-primary/20 focus:border-primary shadow-sm"
                   />
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 </div>
 
                 <Button
-                  onClick={handleFetchChild}
-                  disabled={loading || !childId}
+                  onClick={handleFetchChildren}
+                  disabled={loading || !childName}
                   className="w-full py-8 text-xl rounded-3xl group shadow-lg"
                   variant="hero"
                 >
@@ -198,9 +203,38 @@ const KidLoginPage = () => {
               </motion.div>
             )}
 
-            {step === 2 && selectedChild && (
+            {step === 2 && (
               <motion.div
                 key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <h3 className="text-2xl font-bold text-center mb-6">Which {childName} are you?</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {children.map((child) => {
+                    const theme = themeConfigs[child.selected_theme || "rainbow"];
+                    return (
+                      <motion.button
+                        key={child.id}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleChildSelect(child)}
+                        className={`p-6 rounded-3xl bg-gradient-to-br ${theme.primary} flex flex-col items-center gap-3 shadow-lg text-white border-4 border-white`}
+                      >
+                        <span className="text-5xl">{theme.emoji}</span>
+                        <span className="text-xl font-bold">{child.display_name}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {step === 3 && selectedChild && (
+              <motion.div
+                key="step3"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
