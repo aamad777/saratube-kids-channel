@@ -4,6 +4,7 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
 import VideoGrid from "@/components/video/VideoGrid";
 import KidsPhotoFeed from "@/components/kids/KidsPhotoFeed";
+import UnifiedMediaGrid from "@/components/home/UnifiedMediaGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
 import KidsChatBot from "@/components/ai/KidsChatBot";
 import { useTheme, themeCategoryMap, themeConfigs } from "@/hooks/useTheme";
@@ -19,7 +20,8 @@ const Index = () => {
   const { childSession, isChildActive } = useChildSession();
   const { user } = useAuth();
   const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
-  const [mediaType, setMediaType] = useState<"videos" | "photos">("videos");
+  const [blockedMediaIds, setBlockedMediaIds] = useState<string[]>([]);
+  const [mediaType, setMediaType] = useState<"home" | "videos" | "photos">("home");
 
   // Determine the default category based on theme
   const themeCategory = themeCategoryMap[themeName] || null;
@@ -33,13 +35,22 @@ const Index = () => {
     }
 
     const fetchBlocked = async () => {
-      const { data } = await supabase
+      const { data: catData } = await supabase
         .from("blocked_categories")
         .select("category")
         .eq("child_user_id", childSession.userId);
 
-      if (data) {
-        setBlockedCategories(data.map((d) => d.category));
+      if (catData) {
+        setBlockedCategories(catData.map((d) => d.category));
+      }
+
+      // Fetch blocked media IDs for this parent/child context
+      const { data: mediaData } = await (supabase as any)
+        .from("blocked_media")
+        .select("media_id");
+      
+      if (mediaData) {
+        setBlockedMediaIds((mediaData as any[]).map(m => m.media_id));
       }
     };
 
@@ -94,6 +105,14 @@ const Index = () => {
             {isChildActive && (
               <div className="flex bg-muted/50 p-1 rounded-2xl backdrop-blur-sm self-start md:self-center">
                 <Button
+                  variant={mediaType === "home" ? "default" : "ghost"}
+                  onClick={() => setMediaType("home")}
+                  className={`rounded-xl gap-2 ${mediaType === "home" ? `bg-gradient-to-r ${theme.primary} text-white` : ""}`}
+                >
+                  <span className="w-4 h-4 flex items-center justify-center">🏠</span>
+                  Home
+                </Button>
+                <Button
                   variant={mediaType === "videos" ? "default" : "ghost"}
                   onClick={() => setMediaType("videos")}
                   className={`rounded-xl gap-2 ${mediaType === "videos" ? `bg-gradient-to-r ${theme.primary} text-white` : ""}`}
@@ -128,10 +147,16 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            {mediaType === "videos" ? (
-              <VideoGrid category={category} blockedCategories={isChildActive ? blockedCategories : []} />
+            {mediaType === "home" ? (
+              <UnifiedMediaGrid blockedMediaIds={blockedMediaIds} />
+            ) : mediaType === "videos" ? (
+              <VideoGrid 
+                category={category} 
+                blockedCategories={isChildActive ? blockedCategories : []} 
+                blockedMediaIds={blockedMediaIds}
+              />
             ) : (
-              <KidsPhotoFeed />
+              <KidsPhotoFeed blockedMediaIds={blockedMediaIds} />
             )}
           </motion.div>
         </div>

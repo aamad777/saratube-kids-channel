@@ -28,6 +28,7 @@ interface VideoCardProps {
   comments: number;
   duration: string;
   ageRecommendation?: string;
+  videoUrl?: string;
 }
 
 const VideoCard = ({
@@ -40,7 +41,9 @@ const VideoCard = ({
   comments,
   duration,
   ageRecommendation,
+  videoUrl,
 }: VideoCardProps) => {
+  const [isHovering, setIsHovering] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -76,34 +79,46 @@ const VideoCard = ({
     setShowDeleteDialog(true);
   };
 
-  const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
   const confirmDelete = async () => {
-    if (!isUUID(id)) {
-      toast.error("This is a sample video and cannot be deleted");
-      setShowDeleteDialog(false);
-      return;
-    }
     setIsDeleting(true);
     try {
-      // Delete child access records first
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", id);
+      // Check if this is a database video (uploaded) or a sample video (default)
+      // Usually default videos have string IDs like "n1", "c1", "1", etc.
+      // Uploaded videos have UUIDs.
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-      const { error } = await supabase
-        .from("videos")
-        .delete()
-        .eq("id", id);
+      if (isUuid) {
+        // Delete child access records first
+        await supabase
+          .from("video_child_access")
+          .delete()
+          .eq("video_id", id);
+        // Direct deletion of the uploaded video record
+        const { error } = await supabase
+          .from("videos")
+          .delete()
+          .eq("id", id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Video removed successfully");
+      } else {
+        // Default video - hide it by adding to blocked_media
+        const { error } = await (supabase as any)
+          .from("blocked_media")
+          .insert({
+            media_id: id,
+            parent_user_id: profile?.id
+          });
 
-      toast.success("Video removed successfully");
+        if (error) throw error;
+        toast.success("Video hidden from feed");
+      }
+      
+      // Refresh the page to reflect changes
       window.location.reload();
     } catch (error: any) {
-      console.error("Error deleting video:", error);
-      toast.error(error.message || "Failed to delete video");
+      console.error("Error managing video:", error);
+      toast.error(error.message || "Failed to remove video");
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
@@ -113,16 +128,43 @@ const VideoCard = ({
   return (
     <Link to={`/watch/${id}`}>
       <div className={`group relative ${theme.cardBg} rounded-3xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1`}>
-        {/* Thumbnail */}
-        <div className="relative aspect-video overflow-hidden">
-          <img
-            src={thumbnail}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+        {/* Media Container */}
+        <div 
+          className="relative aspect-video overflow-hidden"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          {thumbnail && thumbnail !== "/placeholder.svg" ? (
+            <img
+              src={thumbnail}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : videoUrl ? (
+            <video
+              src={videoUrl}
+              className="w-full h-full object-cover"
+              muted
+              playsInline
+              preload="metadata"
+              autoPlay={isHovering}
+              onMouseOver={(e) => (e.target as HTMLVideoElement).play()}
+              onMouseOut={(e) => {
+                const video = e.target as HTMLVideoElement;
+                video.pause();
+                video.currentTime = 0;
+              }}
+            />
+          ) : (
+            <img
+              src="/placeholder.svg"
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+          )}
           
           {/* Play overlay */}
-          <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <div className={`absolute inset-0 bg-foreground/20 transition-opacity flex items-center justify-center ${isHovering ? 'opacity-100' : 'opacity-0'}`}>
             <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${theme.primary} flex items-center justify-center shadow-button animate-pulse-glow`}>
               <Play className="h-8 w-8 text-white fill-current ml-1" />
             </div>

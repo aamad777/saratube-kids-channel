@@ -18,7 +18,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const KidsPhotoFeed = () => {
+interface KidsPhotoFeedProps {
+  blockedMediaIds?: string[];
+}
+
+const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
   const { childSession, isChildActive } = useChildSession();
   const { profile } = useAuth();
   const [photos, setPhotos] = useState<any[]>([]);
@@ -29,6 +33,10 @@ const KidsPhotoFeed = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isParent = profile?.is_parent === true;
+
+  const displayedPhotos = blockedMediaIds.length > 0
+    ? photos.filter(p => !blockedMediaIds.includes(p.id))
+    : photos;
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -58,14 +66,14 @@ const KidsPhotoFeed = () => {
   }, [childSession?.userId, isChildActive]);
 
   const nextPhoto = useCallback(() => {
-    if (currentIndex === null || photos.length === 0) return;
-    setCurrentIndex((prev) => (prev! + 1) % photos.length);
-  }, [currentIndex, photos.length]);
+    if (currentIndex === null || displayedPhotos.length === 0) return;
+    setCurrentIndex((prev) => (prev! + 1) % displayedPhotos.length);
+  }, [currentIndex, displayedPhotos.length]);
 
   const prevPhoto = useCallback(() => {
-    if (currentIndex === null || photos.length === 0) return;
-    setCurrentIndex((prev) => (prev! - 1 + photos.length) % photos.length);
-  }, [currentIndex, photos.length]);
+    if (currentIndex === null || displayedPhotos.length === 0) return;
+    setCurrentIndex((prev) => (prev! - 1 + displayedPhotos.length) % displayedPhotos.length);
+  }, [currentIndex, displayedPhotos.length]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -107,7 +115,7 @@ const KidsPhotoFeed = () => {
     );
   }
 
-  if (photos.length === 0) {
+  if (displayedPhotos.length === 0) {
     return (
       <div className="text-center py-16 px-4">
         <div className="text-6xl mb-4">📸</div>
@@ -126,7 +134,7 @@ const KidsPhotoFeed = () => {
       {/* Header with Slideshow Button */}
       <div className="flex justify-between items-center mb-8 bg-white/40 backdrop-blur-md p-4 rounded-3xl shadow-sm border border-white/20">
         <p className="text-muted-foreground font-medium">
-          {photos.length} wonderful memory{photos.length > 1 ? "ies" : ""} shared with you ✨
+          {displayedPhotos.length} wonderful memory{displayedPhotos.length > 1 ? "ies" : ""} shared with you ✨
         </p>
         <Button 
           onClick={() => startSlideshow(0)}
@@ -138,7 +146,7 @@ const KidsPhotoFeed = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {photos.map((photo, index) => (
+        {displayedPhotos.map((photo, index) => (
           <motion.div
             key={photo.id}
             initial={{ opacity: 0, scale: 0.9 }}
@@ -199,13 +207,13 @@ const KidsPhotoFeed = () => {
             <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center text-white bg-gradient-to-b from-black/50 to-transparent">
               <div className="flex items-center gap-4">
                 <p className="font-display font-medium text-lg">
-                  {currentIndex + 1} / {photos.length}
+                  {currentIndex + 1} / {displayedPhotos.length}
                 </p>
-                {photos[currentIndex].caption && (
+                {displayedPhotos[currentIndex].caption && (
                   <span className="hidden md:inline text-white/70">|</span>
                 )}
                 <p className="hidden md:inline text-white/90">
-                  {photos[currentIndex].caption}
+                  {displayedPhotos[currentIndex].caption}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -232,7 +240,7 @@ const KidsPhotoFeed = () => {
             <div className="relative w-full h-full flex items-center justify-center px-4 md:px-20 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={photos[currentIndex].id}
+                  key={displayedPhotos[currentIndex].id}
                   initial={{ opacity: 0, x: 20, scale: 0.9 }}
                   animate={{ 
                     opacity: 1, 
@@ -247,14 +255,14 @@ const KidsPhotoFeed = () => {
                   className="relative max-w-5xl max-h-[80vh] w-full h-full flex items-center justify-center"
                 >
                   <img
-                    src={photos[currentIndex].photo_url}
-                    alt={photos[currentIndex].caption || "Photo"}
+                    src={displayedPhotos[currentIndex].photo_url}
+                    alt={displayedPhotos[currentIndex].caption || "Photo"}
                     className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                   />
-                  {photos[currentIndex].caption && (
+                  {displayedPhotos[currentIndex].caption && (
                     <div className="absolute -bottom-16 left-0 right-0 text-center px-4 md:hidden">
                       <p className="text-white text-lg font-medium">
-                        {photos[currentIndex].caption}
+                        {displayedPhotos[currentIndex].caption}
                       </p>
                     </div>
                   )}
@@ -281,14 +289,14 @@ const KidsPhotoFeed = () => {
             </div>
 
             {/* Subtitles / Caption for Slideshow */}
-            {isSlideshowActive && photos[currentIndex].caption && (
+            {isSlideshowActive && displayedPhotos[currentIndex].caption && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="absolute bottom-12 px-6 py-3 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10"
               >
                 <p className="text-white text-xl font-medium">
-                  {photos[currentIndex].caption}
+                  {displayedPhotos[currentIndex].caption}
                 </p>
               </motion.div>
             )}

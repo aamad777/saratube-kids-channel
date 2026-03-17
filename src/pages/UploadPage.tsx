@@ -24,9 +24,9 @@ const UploadPage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   
-  const [mediaType, setMediaType] = useState<"video" | "photo">("video");
+  const [mediaType, setMediaType] = useState<"video" | "photo" | "mixed">("video");
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [uploadMode, setUploadMode] = useState<"file" | "url" | "bulk">("file");
   
   const [files, setFiles] = useState<File[]>([]);
   const [videoUrl, setVideoUrl] = useState("");
@@ -42,13 +42,21 @@ const UploadPage = () => {
   const [availableFrom, setAvailableFrom] = useState("");
   const [availableUntil, setAvailableUntil] = useState("");
   
+  // Bulk Scan state
+  const [bulkBaseUrl, setBulkBaseUrl] = useState("");
+  const [bulkContent, setBulkContent] = useState("");
+  const [detectedItems, setDetectedItems] = useState<{url: string, type: 'video' | 'photo', name: string}[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  
   const [linkedChildren, setLinkedChildren] = useState<LinkedChild[]>([]);
   const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
   
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const hasMedia = files.length > 0 || (uploadMode === "url" && urlConfirmed && (mediaType === "video" ? videoUrl.trim() !== "" : photoUrl.trim() !== ""));
+  const hasMedia = files.length > 0 || 
+    (uploadMode === "url" && urlConfirmed && (mediaType === "video" ? videoUrl.trim() !== "" : photoUrl.trim() !== "")) ||
+    (uploadMode === "bulk" && urlConfirmed && detectedItems.length > 0);
 
   // Fetch linked children for parent
   useEffect(() => {
@@ -145,6 +153,48 @@ const UploadPage = () => {
     setPhotoUrl("");
     setUrlConfirmed(false);
     setThumbnailFile(null);
+    setBulkBaseUrl("");
+    setBulkContent("");
+    setDetectedItems([]);
+  };
+
+  const handleScanLinks = async () => {
+    if (!bulkBaseUrl.trim()) return;
+    setIsScanning(true);
+    
+    try {
+        // Since we can't truly scan a private NAS folder via CORS, 
+        // we'll provide a way for the user to paste text and we'll extract URLs/filenames
+        const lines = bulkContent.split('\n').map(l => l.trim()).filter(l => l);
+        const baseUrl = bulkBaseUrl.endsWith('/') ? bulkBaseUrl : bulkBaseUrl + '/';
+        
+        const items = lines.map(line => {
+            const isVideo = line.match(/\.(mp4|mkv|mov|webm)$/i);
+            const isPhoto = line.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+            
+            let url = line;
+            if (!line.startsWith('http')) {
+                url = baseUrl + line;
+            }
+            
+            return {
+                url,
+                type: isVideo ? 'video' : 'photo' as 'video' | 'photo',
+                name: line.split('/').pop() || 'Media Item'
+            };
+        }).filter(item => item.type);
+
+        if (items.length === 0) {
+            toast.error("No media files detected in the text below. Make sure to list filenames with extensions (like .mp4 or .jpg)");
+        } else {
+            setDetectedItems(items);
+            toast.success(`Detected ${items.length} media items!`);
+        }
+    } catch (error) {
+        toast.error("Failed to scan links");
+    } finally {
+        setIsScanning(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,7 +221,76 @@ const UploadPage = () => {
     setUploadProgress(0);
 
     try {
-      if (mediaType === "photo") {
+      if (uploadMode === "bulk" || mediaType === "mixed") {
+          // Handle both files and links in mixed/bulk mode
+          const allItems = [
+              ...files.map(f => ({ file: f, url: null, type: f.type.startsWith('image/') ? 'photo' : 'video' })),
+              ...detectedItems.map(d => ({ file: null, url: d.url, type: d.type }))
+          ];
+
+          for (let i = 0; i < allItems.length; i++) {
+              const item = allItems[i];
+              let finalUrl = item.url;
+              
+              if (item.file) {
+                  const ext = item.file.name.split('.').pop() || 'tmp';
+                  const storageBucket = item.type === 'photo' ? 'kids-photos' : 'videos';
+                  const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+                  
+                  const { error: uploadError } = await supabase.storage
+                    .from(storageBucket)
+                    .upload(filePath, item.file);
+                    
+                  if (uploadError) throw uploadError;
+                  
+                  const { data: urlData } = supabase.storage
+                    .from(storageBucket)
+                    .getPublicUrl(filePath);
+                    
+                  finalUrl = urlData.publicUrl;
+              }
+
+              if (!finalUrl) continue;
+
+              if (item.type === 'photo') {
+                  const photoRecords = selectedChildren.map(childId => ({
+                    child_profile_id: childId,
+                    parent_user_id: user.id,
+                    photo_url: finalUrl as string,
+                    caption: caption || null
+                  }));
+                  const { error } = await supabase.from("kids_photos").insert(photoRecords);
+                  if (error) throw error;
+              } else {
+                  const itemTitle = item.file ? item.file.name.split('.')[0] : (item.url ? item.url.split('/').pop()?.split('.')[0] : 'Video');
+                  const { data: video, error } = await (supabase as any)
+                    .from("videos")
+                    .insert({
+                      title: title || itemTitle,
+                      description,
+                      category: category || CATEGORIES[0],
+                      video_url: finalUrl,
+                      uploaded_by: user.id,
+                      available_from: availableFrom || null,
+                      available_until: availableUntil || null,
+                      is_public: false
+                    })
+                    .select()
+                    .single();
+                  if (error) throw error;
+                  
+                  const accessRecords = selectedChildren.map(childId => ({
+                    video_id: video.id,
+                    child_user_id: childId,
+                    granted_by: user.id
+                  }));
+                  await supabase.from("video_child_access").insert(accessRecords);
+              }
+              setUploadProgress(Math.round(((i + 1) / allItems.length) * 100));
+          }
+          toast.success(`Successfully added ${allItems.length} media items! 🎉`);
+      } 
+      else if (mediaType === "photo") {
         if (uploadMode === "url") {
           const photoRecords = selectedChildren.map(childId => ({
             child_profile_id: childId,
@@ -374,6 +493,13 @@ const UploadPage = () => {
             >
                 <ImageIcon className="w-4 h-4 mr-2" /> Photos
             </Button>
+            <Button 
+                variant={mediaType === "mixed" ? "default" : "outline"} 
+                onClick={() => { setMediaType("mixed"); clearAll(); }}
+                className="w-32 rounded-full"
+            >
+                <Sparkles className="w-4 h-4 mr-2" /> Mixed
+            </Button>
           </div>
 
           {!hasMedia ? (
@@ -398,6 +524,15 @@ const UploadPage = () => {
                 >
                 <LinkIcon className="h-4 w-4 mr-2" />
                 {t("upload.paste.url")}
+                </Button>
+                <Button
+                type="button"
+                variant={uploadMode === "bulk" ? "default" : "outline"}
+                onClick={() => setUploadMode("bulk")}
+                className="rounded-full"
+                >
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Import
                 </Button>
               </div>
 
@@ -457,7 +592,7 @@ const UploadPage = () => {
                     <Sparkles className="h-5 w-5 text-sara-purple" />
                   </div>
                 </div>
-              ) : (
+              ) : uploadMode === "url" ? (
                 /* URL input area */
                 <div className="relative border-4 border-dashed rounded-3xl p-8 text-center transition-all border-border hover:border-primary/50 hover:bg-muted/50">
                   <div className="flex flex-col items-center gap-4">
@@ -491,6 +626,68 @@ const UploadPage = () => {
                     >
                       {t("upload.continue.url")}
                     </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Bulk Import area */
+                <div className="relative border-4 border-dashed rounded-3xl p-8 text-center transition-all border-border hover:border-primary/50 hover:bg-muted/50">
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="w-20 h-20 rounded-full bg-sara-purple-light flex items-center justify-center">
+                      <Sparkles className="h-10 w-10 text-sara-purple" />
+                    </div>
+                    <div className="max-w-md w-full text-center">
+                      <p className="font-display text-xl font-bold mb-2">Bulk NAS Scanner</p>
+                      <p className="text-muted-foreground mb-6">
+                        Paste your folder link and list the filenames you want to import.
+                      </p>
+                      
+                      <div className="space-y-4 text-left">
+                        <div>
+                          <Label className="text-xs ml-2 mb-1">Base URL (Folder Path)</Label>
+                          <Input
+                            value={bulkBaseUrl}
+                            onChange={(e) => setBulkBaseUrl(e.target.value)}
+                            placeholder="http://QuickConnect.to/aamad777/family-media/"
+                            className="rounded-2xl"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs ml-2 mb-1">Filenames (One per line)</Label>
+                          <Textarea
+                            value={bulkContent}
+                            onChange={(e) => setBulkContent(e.target.value)}
+                            placeholder="video1.mp4&#10;photo1.jpg&#10;movie2.mkv"
+                            className="rounded-2xl min-h-[150px] font-mono text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      onClick={handleScanLinks}
+                      disabled={!bulkBaseUrl.trim() || !bulkContent.trim() || isScanning}
+                      className="rounded-full w-full max-w-xs gap-2"
+                    >
+                      {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      Scan and Detect Media
+                    </Button>
+                    
+                    {detectedItems.length > 0 && (
+                        <div className="w-full mt-4 p-4 bg-muted/50 rounded-2xl border border-border">
+                            <p className="font-bold text-sm mb-2 flex items-center justify-center gap-2">
+                                <Check className="w-4 h-4 text-green-500" />
+                                {detectedItems.length} items ready to import
+                            </p>
+                            <Button 
+                                variant="hero" 
+                                className="w-full rounded-full"
+                                onClick={() => setUrlConfirmed(true)}
+                            >
+                                Continue with {detectedItems.length} Items
+                            </Button>
+                        </div>
+                    )}
                   </div>
                 </div>
               )}

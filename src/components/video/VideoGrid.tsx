@@ -9,9 +9,16 @@ import { Loader2 } from "lucide-react";
 interface VideoGridProps {
   category?: string;
   blockedCategories?: string[];
+  blockedMediaIds?: string[];
+  limit?: number;
 }
 
-const VideoGrid = ({ category = "all", blockedCategories = [] }: VideoGridProps) => {
+const VideoGrid = ({ 
+  category = "all", 
+  blockedCategories = [], 
+  blockedMediaIds = [],
+  limit 
+}: VideoGridProps) => {
   const { childSession, isChildActive } = useChildSession();
   const [dbVideos, setDbVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -96,9 +103,19 @@ const VideoGrid = ({ category = "all", blockedCategories = [] }: VideoGridProps)
   }
 
   // Filter by child's age when a child session is active
-  const filteredVideos = childSession?.age
+  let filteredVideos = childSession?.age
     ? filterVideosByAge(allVideos, childSession.age)
     : allVideos;
+
+  // Filter out blocked media IDs
+  if (blockedMediaIds.length > 0) {
+    filteredVideos = filteredVideos.filter(v => !blockedMediaIds.includes(v.id));
+  }
+
+  // Apply limit if specified
+  if (limit) {
+    filteredVideos = filteredVideos.slice(0, limit);
+  }
 
   if (loading) {
     return (
