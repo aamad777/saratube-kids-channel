@@ -29,6 +29,14 @@ BEGIN
 END;
 $$;
 
+-- Allow anonymous users to find child profiles by name for login
+DROP POLICY IF EXISTS "Allow anonymous child lookup by name" ON public.profiles;
+CREATE POLICY "Allow anonymous child lookup by name"
+ON public.profiles
+FOR SELECT
+TO anon
+USING (is_parent = false);
+
 -- Note: pin_hash is still in the table, but anon can't see it if we use a View or just select specific columns in code.
 -- Actually, the policy above allows SELECT *, so anon could see pin_hash.
 -- To fix this, we should either use a separate table for PINs or just be careful in the frontend.

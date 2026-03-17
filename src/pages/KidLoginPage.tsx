@@ -46,16 +46,19 @@ const KidLoginPage = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await (supabase.rpc as any)("get_children_by_name", {
-        p_name: childName.trim(),
-      });
+      // Direct select from profiles instead of RPC to avoid schema cache issues
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, selected_theme, dummy_email")
+        .ilike("display_name", childName.trim())
+        .eq("is_parent", false);
 
       if (error) throw error;
 
-      if (!data || (data as any[]).length === 0) {
+      if (!data || data.length === 0) {
         toast.error("Profile not found. Ask your parent for help!");
-      } else if ((data as any[]).length === 1) {
-        const childData = (data as any[])[0] as ChildProfile;
+      } else if (data.length === 1) {
+        const childData = data[0] as any as ChildProfile;
         setSelectedChild(childData);
         localStorage.setItem("last_child_name_lookup", childName.trim());
         setStep(3);
