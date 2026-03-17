@@ -58,9 +58,14 @@ const Header = () => {
     return "KIDSTUBE";
   };
 
-  const handleSwitchProfile = () => {
+  const handleSwitchProfile = async () => {
     clearChildSession();
-    navigate("/kids");
+    if (profile && !profile.is_parent) {
+      await signOut();
+      navigate("/kid-login");
+    } else {
+      navigate("/kids");
+    }
   };
 
   return (
@@ -228,6 +233,12 @@ const Header = () => {
                         <UserCircle className="w-4 h-4" />
                         <span>{t("switch.profile")}</span>
                       </DropdownMenuItem>
+                      {profile && !profile.is_parent && (
+                        <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive">
+                          <LogOut className="w-4 h-4 text-destructive" />
+                          <span>{t("sign.out")}</span>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                     </>
                   )}

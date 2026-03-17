@@ -14,6 +14,7 @@ import SignInPage from "./pages/SignInPage";
 import ParentDashboard from "./pages/ParentDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import ChildSelectPage from "./pages/ChildSelectPage";
+import KidLoginPage from "./pages/KidLoginPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/parent" element={<ParentDashboard />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/kids" element={<ChildSelectPage />} />
+                <Route path="/kid-login" element={<KidLoginPage />} />
                 <Route path="/explore" element={<Index />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

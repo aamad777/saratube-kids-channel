@@ -42,6 +42,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [childLoginId, setChildLoginId] = useState("");
   const [age, setAge] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -73,21 +74,42 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
       return;
     }
 
+    if (!childLoginId.trim()) {
+      toast.error("Please enter a Login ID");
+      return;
+    }
+
     setLoading(true);
     
     try {
       const childUserId = crypto.randomUUID();
+      const dummyEmail = `child-${childUserId}@kids.saratube`;
+      
       const { error } = await supabase.from("profiles").insert({
-        user_id: childUserId,
+        id: childUserId, // Set the primary key
+        user_id: childUserId, // Link to the auth user we will create
         display_name: name.trim(),
+        child_login_id: childLoginId.trim().toLowerCase(),
         age: age ? parseInt(age) : null,
         pin_hash: pin,
         selected_theme: selectedTheme,
         is_parent: false,
         created_by_parent: user.id,
+        parent_email: user.email,
+        dummy_email: dummyEmail
       });
 
       if (error) throw error;
+
+      // Create a real Supabase Auth user via RPC (Security Definer)
+      const { error: authError } = await (supabase.rpc as any)("create_child_auth_user", {
+        p_id: childUserId,
+        p_email: dummyEmail,
+        p_password: pin, // PIN is the password for the child account
+        p_display_name: name.trim()
+      });
+
+      if (authError) throw authError;
 
       // Create parent-child link
       const { error: linkError } = await supabase.from("parent_child_links").insert({
@@ -198,6 +220,20 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter name..."
+              className="rounded-xl"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="loginId" className="flex items-center gap-2 mb-2">
+              <Lock className="w-4 h-4" />
+              Login ID (for child)
+            </Label>
+            <Input
+              id="loginId"
+              value={childLoginId}
+              onChange={(e) => setChildLoginId(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
+              placeholder="e.g. sara123"
               className="rounded-xl"
             />
           </div>

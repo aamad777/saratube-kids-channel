@@ -143,6 +143,26 @@ const SignInPage = () => {
             )
           ) : (
             <>
+              <div className="mb-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full py-8 text-xl rounded-3xl border-2 border-primary/30 hover:bg-primary/5 group"
+                  onClick={() => navigate("/kid-login")}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-2xl group-hover:animate-bounce">🧸</span>
+                    Kid's Corner
+                    <Sparkles className="w-5 h-5 text-accent" />
+                  </span>
+                </Button>
+                <div className="flex items-center gap-2 my-4">
+                  <div className="flex-1 h-[1px] bg-muted" />
+                  <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Or Parent Login</span>
+                  <div className="flex-1 h-[1px] bg-muted" />
+                </div>
+              </div>
+
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-3">
                   <Input
