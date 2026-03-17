@@ -53,7 +53,7 @@ export const useTimeLimitChecker = () => {
     extensionActive: false,
     extensionMinutes: 0,
   });
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const checkTimeLimit = useCallback(async () => {
     if (!isChildActive || !childSession?.id) {
