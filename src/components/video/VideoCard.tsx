@@ -76,11 +76,22 @@ const VideoCard = ({
     setShowDeleteDialog(true);
   };
 
+  const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
   const confirmDelete = async () => {
+    if (!isUUID(id)) {
+      toast.error("This is a sample video and cannot be deleted");
+      setShowDeleteDialog(false);
+      return;
+    }
     setIsDeleting(true);
     try {
-      // Direct deletion of the video record
-      // In a real app, we might want to check ownership or permissions more strictly
+      // Delete child access records first
+      await supabase
+        .from("video_child_access")
+        .delete()
+        .eq("video_id", id);
+
       const { error } = await supabase
         .from("videos")
         .delete()
@@ -89,7 +100,6 @@ const VideoCard = ({
       if (error) throw error;
 
       toast.success("Video removed successfully");
-      // Refresh the page to reflect changes
       window.location.reload();
     } catch (error: any) {
       console.error("Error deleting video:", error);

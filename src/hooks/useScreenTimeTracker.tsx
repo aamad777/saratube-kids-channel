@@ -11,7 +11,7 @@ interface UseScreenTimeTrackerOptions {
 export const useScreenTimeTracker = ({ videoId, videoTitle, category }: UseScreenTimeTrackerOptions) => {
   const { childSession, isChildActive } = useChildSession();
   const startTimeRef = useRef<Date | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const accumulatedSecondsRef = useRef<number>(0);
 
   const logActivity = useCallback(async (durationSeconds: number) => {

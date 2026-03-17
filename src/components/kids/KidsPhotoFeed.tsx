@@ -68,7 +68,7 @@ const KidsPhotoFeed = () => {
   }, [currentIndex, photos.length]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isSlideshowActive && currentIndex !== null) {
       interval = setInterval(() => {
         nextPhoto();
