@@ -49,6 +49,7 @@ const themeBackgrounds: Record<AppTheme, string> = {
   sports: heroBgSports,
   cars: heroBgCars,
   magic: heroBgMagic,
+  bunny: heroBgRainbow, // Fallback background for bunny theme
 };
 
 const HeroSection = () => {
@@ -193,6 +194,17 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
+          {!profile?.is_parent && (
+            <Button
+              className={`gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full animate-bounce-slow`}
+              asChild
+            >
+              <Link to="/kid-login">
+                <span className="text-2xl">🧸</span>
+                Kid's Magic Corner
+              </Link>
+            </Button>
+          )}
           <Button
             className={`gap-2 bg-gradient-to-r ${theme.primary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`}
             onClick={() => document.getElementById("videos")?.scrollIntoView({ behavior: "smooth" })}
@@ -200,12 +212,14 @@ const HeroSection = () => {
             <Play className="h-6 w-6 fill-current" />
             {t("hero.start.watching")}
           </Button>
-          <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
-            <Link to="/upload">
-              <Upload className="h-6 w-6" />
-              {t("hero.upload.video")}
-            </Link>
-          </Button>
+          {(profile?.is_parent || !profile) && (
+            <Button className={`gap-2 bg-gradient-to-r ${theme.secondary} text-white hover:opacity-90 hover:scale-110 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 rounded-full`} asChild>
+              <Link to="/upload">
+                <Upload className="h-6 w-6" />
+                {t("hero.upload.video")}
+              </Link>
+            </Button>
+          )}
         </motion.div>
 
         {/* Stats */}

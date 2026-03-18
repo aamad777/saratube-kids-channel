@@ -271,6 +271,12 @@ const Header = () => {
             </>
           ) : (
             <>
+              <Link to="/kid-login">
+                <Button variant="ghost" size="lg" className="hidden sm:flex gap-2 text-primary font-bold hover:bg-primary/5">
+                  <span className="text-xl">🧸</span>
+                  Kid Mode
+                </Button>
+              </Link>
               <Link to="/signin">
                 <Button variant="outline" size="lg" className="hidden sm:flex">
                   {t("sign.in")}

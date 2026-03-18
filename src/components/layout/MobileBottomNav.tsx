@@ -24,15 +24,19 @@ const MobileBottomNav = () => {
     setShowSearch(true);
   }, []);
 
-  if (!user) return null;
-
-  const navItems = [
-    { icon: Home, label: t("nav.home"), path: "/" },
-    { icon: Search, label: t("nav.search"), path: "#search", onClick: handleSearchOpen },
-    { icon: Upload, label: t("nav.upload"), path: "/upload" },
-    { icon: Users, label: t("nav.kids"), path: "/kids" },
-    { icon: User, label: t("nav.profile"), path: "/profile" },
-  ];
+  const navItems = user 
+    ? [
+        { icon: Home, label: t("nav.home"), path: "/" },
+        { icon: Search, label: t("nav.search"), path: "#search", onClick: handleSearchOpen },
+        { icon: Upload, label: t("nav.upload"), path: "/upload" },
+        { icon: Users, label: t("nav.kids"), path: "/kids" },
+        { icon: User, label: t("nav.profile"), path: "/profile" },
+      ]
+    : [
+        { icon: Home, label: t("nav.home"), path: "/" },
+        { icon: Search, label: t("nav.search"), path: "#search", onClick: handleSearchOpen },
+        { icon: Users, label: t("nav.kids"), path: "/kid-login" },
+      ];
 
   return (
     <>
