@@ -119,6 +119,7 @@ const ParentDashboard = () => {
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [editingVideo, setEditingVideo] = useState<ParentVideo | null>(null);
   const [deleteVideoId, setDeleteVideoId] = useState<string | null>(null);
+  const [deleteChildId, setDeleteChildId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -290,6 +291,27 @@ const ParentDashboard = () => {
       fetchMyVideos();
     } catch (error: any) {
       toast.error(error.message || "Failed to delete video");
+    }
+  };
+
+  const handleDeleteChild = async () => {
+    if (!deleteChildId) return;
+    
+    try {
+      const { error } = await (supabase as any).rpc('delete_child_profile', { p_child_id: deleteChildId });
+      
+      if (error) throw error;
+      
+      toast.success("Child profile deleted successfully! 🗑️");
+      setDeleteChildId(null);
+      fetchCreatedChildren();
+      fetchChildren();
+      if (selectedChild === deleteChildId) {
+        setSelectedChild(null);
+      }
+    } catch (error: any) {
+      console.error("Error deleting profile:", error);
+      toast.error(error.message || "Failed to delete profile");
     }
   };
 
@@ -586,6 +608,7 @@ const ParentDashboard = () => {
                          child.selected_theme === "ocean" ? "🌊" :
                          child.selected_theme === "space" ? "🚀" :
                          child.selected_theme === "jungle" ? "🌴" :
+                         child.selected_theme === "bunny" ? "🐰" :
                          child.selected_theme === "candy" ? "🍭" : "🌈"}
                       </div>
                       <div className="text-left flex-1">
@@ -598,13 +621,9 @@ const ParentDashboard = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm("Delete this profile?")) {
-                            await supabase.from("profiles").delete().eq("id", child.id);
-                            toast.success("Profile deleted");
-                            fetchCreatedChildren();
-                          }
+                          setDeleteChildId(child.id);
                         }}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1041,86 +1060,97 @@ const ParentDashboard = () => {
               Update video details and access permissions
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="edit-title">Title</Label>
-              <Input
-                id="edit-title"
-                value={editForm.title}
-                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={editForm.description}
-                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Category</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {CATEGORY_OPTIONS.map((cat) => (
-                  <Button
-                    key={cat}
-                    type="button"
-                    variant={editForm.category === cat ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setEditForm({ ...editForm, category: cat })}
-                  >
-                    {cat}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            {/* Left Column: Access Control */}
+            <div className="space-y-4">
+              <Label className="flex items-center gap-2 text-lg font-bold">
+                <Users className="w-5 h-5 text-primary" />
                 Who can watch?
               </Label>
-              <div className="space-y-2 mt-2">
+              <div className="space-y-3 p-4 bg-muted/50 rounded-2xl border border-border/50">
                 {children.map((child) => (
-                  <div key={child.user_id} className="flex items-center gap-2">
+                  <div key={child.user_id} className="flex items-center gap-3 p-2 hover:bg-background/50 rounded-xl transition-colors">
                     <Checkbox
                       id={`edit-child-${child.user_id}`}
                       checked={editForm.selectedChildren.includes(child.user_id)}
                       onCheckedChange={() => toggleEditChildSelection(child.user_id)}
+                      className="h-5 w-5 rounded-md"
                     />
-                    <Label htmlFor={`edit-child-${child.user_id}`} className="cursor-pointer">
+                    <Label htmlFor={`edit-child-${child.user_id}`} className="cursor-pointer font-medium">
                       {child.display_name}
                     </Label>
                   </div>
                 ))}
                 {children.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No linked children</p>
+                  <p className="text-sm text-muted-foreground italic p-2">No linked children found</p>
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Right Column: Video Details */}
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-from" className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Available from
-                </Label>
+                <Label htmlFor="edit-title" className="font-bold">Title</Label>
                 <Input
-                  id="edit-from"
-                  type="datetime-local"
-                  value={editForm.availableFrom}
-                  onChange={(e) => setEditForm({ ...editForm, availableFrom: e.target.value })}
+                  id="edit-title"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="rounded-xl mt-1.5"
                 />
               </div>
               <div>
-                <Label htmlFor="edit-until" className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Available until
-                </Label>
-                <Input
-                  id="edit-until"
-                  type="datetime-local"
-                  value={editForm.availableUntil}
-                  onChange={(e) => setEditForm({ ...editForm, availableUntil: e.target.value })}
+                <Label htmlFor="edit-description" className="font-bold">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="rounded-xl mt-1.5 min-h-[100px]"
                 />
+              </div>
+              <div>
+                <Label className="font-bold">Category</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {CATEGORY_OPTIONS.map((cat) => (
+                    <Button
+                      key={cat}
+                      type="button"
+                      variant={editForm.category === cat ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setEditForm({ ...editForm, category: cat })}
+                      className="rounded-full h-8 text-xs"
+                    >
+                      {cat}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 pt-2">
+                <div>
+                  <Label htmlFor="edit-from" className="flex items-center gap-2 font-bold mb-1.5">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    Available from
+                  </Label>
+                  <Input
+                    id="edit-from"
+                    type="datetime-local"
+                    value={editForm.availableFrom}
+                    onChange={(e) => setEditForm({ ...editForm, availableFrom: e.target.value })}
+                    className="rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-until" className="flex items-center gap-2 font-bold mb-1.5">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    Available until
+                  </Label>
+                  <Input
+                    id="edit-until"
+                    type="datetime-local"
+                    value={editForm.availableUntil}
+                    onChange={(e) => setEditForm({ ...editForm, availableUntil: e.target.value })}
+                    className="rounded-xl"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1151,6 +1181,28 @@ const ParentDashboard = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Child Dialog */}
+      <AlertDialog open={!!deleteChildId} onOpenChange={(open) => !open && setDeleteChildId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Child Profile?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the child's profile, including their watch history, 
+              settings, and their login access. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteChild}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Profile
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

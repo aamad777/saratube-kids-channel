@@ -20,7 +20,7 @@ const themeOptions: AppTheme[] = [
   "jungle", "candy", "superhero", "dinosaur",
   "unicorn", "fairy", "robot", "pirate",
   "quran_stories", "nasheed", "ramadan", "dua_prayer",
-  "farm", "sports", "cars", "magic",
+  "farm", "sports", "cars", "magic", "bunny",
 ];
 
 const INTEREST_OPTIONS = [

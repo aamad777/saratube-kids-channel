@@ -233,7 +233,7 @@ const Header = () => {
                         <UserCircle className="w-4 h-4" />
                         <span>{t("switch.profile")}</span>
                       </DropdownMenuItem>
-                      {profile && !profile.is_parent && (
+                      {(isChildActive || (profile && !profile.is_parent)) && (
                         <DropdownMenuItem onClick={signOut} className="gap-2 text-destructive">
                           <LogOut className="w-4 h-4 text-destructive" />
                           <span>{t("sign.out")}</span>

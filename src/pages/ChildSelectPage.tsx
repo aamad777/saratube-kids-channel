@@ -6,7 +6,7 @@ import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Lock, Star, Sparkles } from "lucide-react";
+import { ArrowLeft, Lock, Star, Sparkles, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { themeConfigs, AppTheme } from "@/hooks/useTheme";
 
@@ -22,7 +22,7 @@ interface ChildProfile {
 
 const ChildSelectPage = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { setChildSession } = useChildSession();
   const { t } = useLanguage();
   const [children, setChildren] = useState<ChildProfile[]>([]);
@@ -123,14 +123,24 @@ const ChildSelectPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 p-6">
-      <Button
-        variant="ghost"
-        onClick={() => selectedChild ? setSelectedChild(null) : navigate("/parent")}
-        className="mb-6"
-      >
-        <ArrowLeft className="w-5 h-5 mr-2" />
-        {t("child.back")}
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => selectedChild ? setSelectedChild(null) : navigate("/parent")}
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          {t("child.back")}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => signOut()}
+          className="text-muted-foreground hover:text-destructive transition-colors"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          {t("sign.out")}
+        </Button>
+      </div>
 
       <AnimatePresence mode="wait">
         {!selectedChild ? (

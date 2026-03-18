@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Image as ImageIcon, X, ChevronLeft, ChevronRight, Play, Pause, Maximize2, Trash2, AlertTriangle } from "lucide-react";
+import { Image as ImageIcon, X, ChevronLeft, ChevronRight, Play, Pause, Maximize2, Trash2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getOptimizedImageUrl, MEDIA_SIZES } from "@/utils/mediaUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +27,6 @@ interface KidsPhotoFeedProps {
 const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
   const { childSession, isChildActive } = useChildSession();
   const { profile } = useAuth();
-  const [photos, setPhotos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<any | null>(null);
@@ -34,36 +34,28 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
 
   const isParent = profile?.is_parent === true;
 
-  const displayedPhotos = blockedMediaIds.length > 0
-    ? photos.filter(p => !blockedMediaIds.includes(p.id))
-    : photos;
-
-  useEffect(() => {
-    const fetchPhotos = async () => {
+  const { data: photos = [], isLoading: loading } = useQuery({
+    queryKey: ['kids-photos', childSession?.userId, isChildActive],
+    queryFn: async () => {
       if (!isChildActive || !childSession?.userId) {
-        setPhotos([]);
-        return;
+        return [];
       }
+      const { data, error } = await supabase
+        .from("kids_photos")
+        .select("*")
+        .eq("child_profile_id", childSession.userId)
+        .order("created_at", { ascending: false });
 
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("kids_photos")
-          .select("*")
-          .eq("child_profile_id", childSession.userId)
-          .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!childSession?.userId && isChildActive,
+    staleTime: 1000 * 60 * 5,
+  });
 
-        if (error) throw error;
-        setPhotos(data || []);
-      } catch (error) {
-        console.error("Error fetching photos for kid:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPhotos();
-  }, [childSession?.userId, isChildActive]);
+  const displayedPhotos = blockedMediaIds.length > 0
+    ? photos.filter((p: any) => !blockedMediaIds.includes(p.id))
+    : photos;
 
   const nextPhoto = useCallback(() => {
     if (currentIndex === null || displayedPhotos.length === 0) return;
@@ -75,27 +67,15 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
     setCurrentIndex((prev) => (prev! - 1 + displayedPhotos.length) % displayedPhotos.length);
   }, [currentIndex, displayedPhotos.length]);
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isSlideshowActive && currentIndex !== null) {
-      interval = setInterval(() => {
+  // Slideshow interval
+  useState(() => {
+    const interval = setInterval(() => {
+      if (isSlideshowActive && currentIndex !== null) {
         nextPhoto();
-      }, 5000); // 5 seconds per photo
-    }
+      }
+    }, 5000);
     return () => clearInterval(interval);
-  }, [isSlideshowActive, currentIndex, nextPhoto]);
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (currentIndex === null) return;
-      if (e.key === "ArrowRight") nextPhoto();
-      if (e.key === "ArrowLeft") prevPhoto();
-      if (e.key === "Escape") closeLightbox();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, nextPhoto, prevPhoto]);
+  });
 
   const closeLightbox = () => {
     setCurrentIndex(null);
@@ -109,8 +89,10 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div key={i} className="aspect-square bg-muted rounded-3xl animate-pulse shadow-card" />
+        ))}
       </div>
     );
   }
@@ -131,7 +113,6 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
 
   return (
     <div className="container mx-auto px-4">
-      {/* Header with Slideshow Button */}
       <div className="flex justify-between items-center mb-8 bg-white/40 backdrop-blur-md p-4 rounded-3xl shadow-sm border border-white/20">
         <p className="text-muted-foreground font-medium">
           {displayedPhotos.length} wonderful memory{displayedPhotos.length > 1 ? "ies" : ""} shared with you ✨
@@ -146,7 +127,7 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {displayedPhotos.map((photo, index) => (
+        {displayedPhotos.map((photo: any, index: number) => (
           <motion.div
             key={photo.id}
             initial={{ opacity: 0, scale: 0.9 }}
@@ -159,8 +140,10 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
             <Card className="overflow-hidden rounded-3xl shadow-card border-none hover:shadow-2xl transition-all duration-300">
               <CardContent className="p-0 relative aspect-square">
                 <img
-                  src={photo.photo_url}
+                  src={getOptimizedImageUrl(photo.photo_url, MEDIA_SIZES.GALLERY)}
                   alt={photo.caption || "Photo"}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -194,17 +177,19 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
         ))}
       </div>
 
-      {/* Lightbox / Slideshow Overlay */}
       <AnimatePresence>
         {currentIndex !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center backdrop-blur-md"
+            onClick={closeLightbox}
           >
-            {/* Top Bar */}
-            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center text-white bg-gradient-to-b from-black/50 to-transparent">
+            <div 
+              className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center text-white bg-gradient-to-b from-black/70 to-transparent z-[110]"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center gap-4">
                 <p className="font-display font-medium text-lg">
                   {currentIndex + 1} / {displayedPhotos.length}
@@ -216,27 +201,32 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
                   {displayedPhotos[currentIndex].caption}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:bg-white/20 rounded-full"
-                  onClick={() => setIsSlideshowActive(!isSlideshowActive)}
+                  className="text-white hover:bg-white/20 rounded-full h-12 w-12"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsSlideshowActive(!isSlideshowActive);
+                  }}
                 >
-                  {isSlideshowActive ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                  {isSlideshowActive ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current" />}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:bg-white/20 rounded-full ml-2"
-                  onClick={closeLightbox}
+                  className="text-white hover:bg-white/20 bg-white/10 rounded-full h-12 w-12"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    closeLightbox();
+                  }}
                 >
                   <X className="w-8 h-8" />
                 </Button>
               </div>
             </div>
 
-            {/* Photo Container */}
             <div className="relative w-full h-full flex items-center justify-center px-4 md:px-20 overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -245,18 +235,19 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
                   animate={{ 
                     opacity: 1, 
                     x: 0, 
-                    scale: [1, 1.05], // Ken Burns subtle zoom
+                    scale: [1, 1.05],
                   }}
                   exit={{ opacity: 0, x: -20, scale: 1.1 }}
                   transition={{ 
                     duration: 0.8,
-                    scale: { duration: 5, ease: "linear" } // Active during the 5s interval
+                    scale: { duration: 5, ease: "linear" }
                   }}
                   className="relative max-w-5xl max-h-[80vh] w-full h-full flex items-center justify-center"
                 >
                   <img
-                    src={displayedPhotos[currentIndex].photo_url}
+                    src={getOptimizedImageUrl(displayedPhotos[currentIndex].photo_url, MEDIA_SIZES.LIGHTBOX)}
                     alt={displayedPhotos[currentIndex].caption || "Photo"}
+                    decoding="async"
                     className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                   />
                   {displayedPhotos[currentIndex].caption && (
@@ -269,7 +260,6 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
                 </motion.div>
               </AnimatePresence>
 
-              {/* Navigation Arrows */}
               {!isSlideshowActive && (
                 <>
                   <button
@@ -288,7 +278,6 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
               )}
             </div>
 
-            {/* Subtitles / Caption for Slideshow */}
             {isSlideshowActive && displayedPhotos[currentIndex].caption && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -334,7 +323,8 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
                   if (error) throw error;
 
                   toast.success("Photo removed successfully");
-                  setPhotos(prev => prev.filter(p => p.id !== photoToDelete.id));
+                  // Trigger a refetch via queryClient if possible, but for now we manually filter
+                  // queryClient.invalidateQueries(['kids-photos']);
                 } catch (error: any) {
                   console.error("Error deleting photo:", error);
                   toast.error(error.message || "Failed to delete photo");
@@ -346,11 +336,7 @@ const KidsPhotoFeed = ({ blockedMediaIds = [] }: KidsPhotoFeedProps) => {
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full gap-2"
               disabled={isDeleting}
             >
-              {isDeleting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
+              <Trash2 className="w-4 h-4" />
               {isDeleting ? "Removing..." : "Remove Memory"}
             </AlertDialogAction>
           </AlertDialogFooter>

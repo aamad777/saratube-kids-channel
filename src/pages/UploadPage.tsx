@@ -118,6 +118,7 @@ const UploadPage = () => {
     const validFiles = newFiles.filter(file => {
       if (mediaType === "video") return file.type.startsWith("video/") || file.name.endsWith(".mkv");
       if (mediaType === "photo") return file.type.startsWith("image/");
+      if (mediaType === "mixed") return file.type.startsWith("video/") || file.type.startsWith("image/") || file.name.endsWith(".mkv");
       return false;
     });
 
@@ -169,8 +170,8 @@ const UploadPage = () => {
         const baseUrl = bulkBaseUrl.endsWith('/') ? bulkBaseUrl : bulkBaseUrl + '/';
         
         const items = lines.map(line => {
-            const isVideo = line.match(/\.(mp4|mkv|mov|webm)$/i);
-            const isPhoto = line.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+            const isVideo = line.match(/\.(mp4|mkv|mov|webm|avi|m4v)$/i);
+            const isPhoto = line.match(/\.(jpg|jpeg|png|webp|gif|bmp|heic|tiff)$/i);
             
             let url = line;
             if (!line.startsWith('http')) {
@@ -179,10 +180,10 @@ const UploadPage = () => {
             
             return {
                 url,
-                type: isVideo ? 'video' : 'photo' as 'video' | 'photo',
+                type: (isVideo ? 'video' : (isPhoto ? 'photo' : 'photo')) as 'video' | 'photo',
                 name: line.split('/').pop() || 'Media Item'
             };
-        }).filter(item => item.type);
+        }).filter(item => item.url && item.url.length > 5);
 
         if (items.length === 0) {
             toast.error("No media files detected in the text below. Make sure to list filenames with extensions (like .mp4 or .jpg)");
@@ -222,73 +223,97 @@ const UploadPage = () => {
 
     try {
       if (uploadMode === "bulk" || mediaType === "mixed") {
-          // Handle both files and links in mixed/bulk mode
+          let successCount = 0;
+          let failCount = 0;
+          const errors: string[] = [];
+
           const allItems = [
               ...files.map(f => ({ file: f, url: null, type: f.type.startsWith('image/') ? 'photo' : 'video' })),
               ...detectedItems.map(d => ({ file: null, url: d.url, type: d.type }))
           ];
 
           for (let i = 0; i < allItems.length; i++) {
-              const item = allItems[i];
-              let finalUrl = item.url;
-              
-              if (item.file) {
-                  const ext = item.file.name.split('.').pop() || 'tmp';
-                  const storageBucket = item.type === 'photo' ? 'kids-photos' : 'videos';
-                  const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-                  
-                  const { error: uploadError } = await supabase.storage
-                    .from(storageBucket)
-                    .upload(filePath, item.file);
+              try {
+                const item = allItems[i];
+                let finalUrl = item.url;
+                
+                if (item.file) {
+                    const ext = item.file.name.split('.').pop() || 'tmp';
+                    const storageBucket = item.type === 'photo' ? 'kids-photos' : 'videos';
+                    const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
                     
-                  if (uploadError) throw uploadError;
-                  
-                  const { data: urlData } = supabase.storage
-                    .from(storageBucket)
-                    .getPublicUrl(filePath);
+                    const { error: uploadError } = await supabase.storage
+                      .from(storageBucket)
+                      .upload(filePath, item.file);
+                      
+                    if (uploadError) throw uploadError;
                     
-                  finalUrl = urlData.publicUrl;
-              }
+                    const { data: urlData } = supabase.storage
+                      .from(storageBucket)
+                      .getPublicUrl(filePath);
+                      
+                    finalUrl = urlData.publicUrl;
+                }
 
-              if (!finalUrl) continue;
+                if (!finalUrl) {
+                    failCount++;
+                    continue;
+                }
 
-              if (item.type === 'photo') {
-                  const photoRecords = selectedChildren.map(childId => ({
-                    child_profile_id: childId,
-                    parent_user_id: user.id,
-                    photo_url: finalUrl as string,
-                    caption: caption || null
-                  }));
-                  const { error } = await supabase.from("kids_photos").insert(photoRecords);
-                  if (error) throw error;
-              } else {
-                  const itemTitle = item.file ? item.file.name.split('.')[0] : (item.url ? item.url.split('/').pop()?.split('.')[0] : 'Video');
-                  const { data: video, error } = await (supabase as any)
-                    .from("videos")
-                    .insert({
-                      title: title || itemTitle,
-                      description,
-                      category: category || CATEGORIES[0],
-                      video_url: finalUrl,
-                      uploaded_by: user.id,
-                      available_from: availableFrom || null,
-                      available_until: availableUntil || null,
-                      is_public: false
-                    })
-                    .select()
-                    .single();
-                  if (error) throw error;
-                  
-                  const accessRecords = selectedChildren.map(childId => ({
-                    video_id: video.id,
-                    child_user_id: childId,
-                    granted_by: user.id
-                  }));
-                  await supabase.from("video_child_access").insert(accessRecords);
+                if (item.type === 'photo') {
+                    const photoRecords = selectedChildren.map(childId => ({
+                      child_profile_id: childId,
+                      parent_user_id: user.id,
+                      photo_url: finalUrl as string,
+                      caption: caption || null
+                    }));
+                    const { error } = await supabase.from("kids_photos").insert(photoRecords);
+                    if (error) throw error;
+                } else {
+                    const itemTitle = item.file ? item.file.name.split('.')[0] : (item.url ? item.url.split('/').pop()?.split('.')[0] : 'Video');
+                    const { data: video, error } = await (supabase as any)
+                      .from("videos")
+                      .insert({
+                        title: title || itemTitle,
+                        description,
+                        category: category || CATEGORIES[0],
+                        video_url: finalUrl,
+                        uploaded_by: user.id,
+                        available_from: availableFrom || null,
+                        available_until: availableUntil || null,
+                        is_public: false
+                      })
+                      .select()
+                      .single();
+                    if (error) throw error;
+                    
+                    const accessRecords = selectedChildren.map(childId => ({
+                      video_id: video.id,
+                      child_user_id: childId,
+                      granted_by: user.id
+                    }));
+                    const { error: accessError } = await supabase.from("video_child_access").insert(accessRecords);
+                    if (accessError) {
+                        console.error(`Error granting access for ${itemTitle}:`, accessError);
+                        errors.push(`Access denied for "${itemTitle}" (${accessError.message})`);
+                    }
+                }
+                successCount++;
+              } catch (err: any) {
+                console.error(`Error processing item ${i}:`, err);
+                failCount++;
+                errors.push(err.message || 'Unknown error');
               }
               setUploadProgress(Math.round(((i + 1) / allItems.length) * 100));
           }
-          toast.success(`Successfully added ${allItems.length} media items! 🎉`);
+
+          if (failCount === 0 && errors.length === 0) {
+            toast.success(`Successfully added ${successCount} media items! 🎉`);
+          } else if (successCount > 0) {
+            toast.warning(`Added ${successCount} items, but ${failCount} failed. Check console for details.`);
+          } else {
+            toast.error(`Failed to add any items. ${errors[0]}`);
+          }
       } 
       else if (mediaType === "photo") {
         if (uploadMode === "url") {

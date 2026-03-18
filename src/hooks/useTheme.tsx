@@ -6,7 +6,7 @@ export type AppTheme =
   | "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy"
   | "superhero" | "dinosaur" | "unicorn" | "pirate" | "fairy" | "robot"
   | "quran_stories" | "nasheed" | "ramadan" | "dua_prayer"
-  | "farm" | "sports" | "cars" | "magic";
+  | "farm" | "sports" | "cars" | "magic" | "bunny";
 
 interface ThemeConfig {
   name: string;
@@ -165,6 +165,13 @@ const themeConfigs: Record<AppTheme, ThemeConfig> = {
     background: "bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50",
     gradient: "bg-gradient-to-r from-indigo-500 to-violet-600",
     cardBg: "bg-white/80 backdrop-blur-sm border-indigo-200", emoji: "🪄", group: "adventure",
+  },
+  bunny: {
+    name: "Bunny", primary: "from-pink-300 to-orange-300",
+    secondary: "from-white to-pink-100", accent: "text-pink-400",
+    background: "bg-gradient-to-br from-pink-50 via-white to-orange-50",
+    gradient: "bg-gradient-to-r from-pink-300 to-orange-300",
+    cardBg: "bg-white/90 backdrop-blur-md border-pink-100", emoji: "🐰", group: "general",
   },
 };
 

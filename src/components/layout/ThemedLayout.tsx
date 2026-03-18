@@ -8,7 +8,10 @@ import MobileBottomNav from "./MobileBottomNav";
 import InteractiveFloatingElements from "@/components/effects/InteractiveFloatingElements";
 import ScreenLockOverlay from "@/components/effects/ScreenLockOverlay";
 import TimeRemainingBanner from "@/components/effects/TimeRemainingBanner";
-import { Sparkles, Star, Heart, Zap } from "lucide-react";
+import { Sparkles, Star, Heart, Zap, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 interface ThemedLayoutProps {
   children: ReactNode;
@@ -75,6 +78,15 @@ const FloatingElements = ({ themeName }: { themeName: string }) => {
             <div className="absolute bottom-40 left-20 w-5 h-5 animate-sparkle opacity-60">🌋</div>
           </>
         );
+      case "bunny":
+        return (
+          <>
+            <div className="absolute top-20 left-10 w-6 h-6 animate-float opacity-60 text-2xl">🐰</div>
+            <div className="absolute top-40 right-20 w-4 h-4 animate-bounce-slow opacity-50 text-xl">🥕</div>
+            <div className="absolute bottom-40 left-20 w-5 h-5 animate-sparkle opacity-60 text-xl">🌸</div>
+            <div className="absolute bottom-20 right-10 w-4 h-4 animate-float opacity-40 text-lg">🥕</div>
+          </>
+        );
       default: // rainbow
         return (
           <>
@@ -96,8 +108,20 @@ const FloatingElements = ({ themeName }: { themeName: string }) => {
 const ThemedLayout = ({ children, showHeader = true, showFooter = true }: ThemedLayoutProps) => {
   const { theme, themeName, isChildActive, childName } = useTheme();
   const { profile } = useAuth();
-  const { childSession } = useChildSession();
+  const { childSession, clearChildSession } = useChildSession();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const timeLimits = useTimeLimitChecker();
+
+  const handleExit = async () => {
+    clearChildSession();
+    if (profile && !profile.is_parent) {
+      await signOut();
+      navigate("/kid-login");
+    } else {
+      navigate("/kids");
+    }
+  };
 
   // Get personalized app name based on active child or parent's display name
   const getAppName = () => {
@@ -163,6 +187,26 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
         childName={childSession?.name || "Kiddo"}
         onExtend={timeLimits.grantExtension}
       />
+
+      {/* Persistent Exit Button for Child Mode */}
+      {isChildActive && (
+        <motion.div 
+          className="fixed bottom-20 sm:bottom-6 left-6 z-[60]"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Button
+            onClick={handleExit}
+            className={`h-14 w-14 rounded-full shadow-2xl bg-gradient-to-br ${theme.primary} border-4 border-white text-white group relative overflow-hidden`}
+            title="Exit Kid Mode"
+          >
+            <LogOut className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
+            <span className="absolute -bottom-1 text-[8px] font-bold uppercase transition-opacity opacity-0 group-hover:opacity-100">Exit</span>
+          </Button>
+        </motion.div>
+      )}
     </div>
   );
 };
