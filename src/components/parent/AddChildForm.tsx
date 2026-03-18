@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { themeConfigs, AppTheme, themeCategoryMap } from "@/hooks/useTheme";
 import { videoCategories } from "@/data/videoData";
-import { User, Lock, Palette, Check, X, Heart } from "lucide-react";
+import { User, Lock, Palette, Check, X, Heart, Sparkles } from "lucide-react";
 
 interface AddChildFormProps {
   onSuccess: () => void;
@@ -45,9 +45,19 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
   const [age, setAge] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [selectedTheme, setSelectedTheme] = useState<AppTheme>("rainbow");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const generateNewId = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setLoginId(result);
+  };
 
   const toggleInterest = (id: string) => {
     setSelectedInterests((prev) =>
@@ -109,6 +119,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
         p_selected_theme: selectedTheme,
         p_created_by_parent: user.id,
         p_parent_email: user.email,
+        p_child_login_id: loginId || null,
         p_blocked_categories: blockedCategories,
         p_interests: interestsToSave
       });
@@ -196,6 +207,36 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
               placeholder="Enter age..."
               className="rounded-xl"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="loginId" className="flex items-center gap-2 mb-2">
+              <Lock className="w-4 h-4" />
+              Login ID (optional)
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="loginId"
+                value={loginId}
+                onChange={(e) => setLoginId(e.target.value.toUpperCase().slice(0, 6))}
+                placeholder="ABCDEF"
+                maxLength={6}
+                className="rounded-xl uppercase font-mono"
+              />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={generateNewId}
+                type="button"
+                title="Generate new ID"
+                className="rounded-xl border-dashed border-gray-300"
+              >
+                <Sparkles className="w-4 h-4 text-purple-500" />
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Short code for quick login. Leave empty to auto-generate.
+            </p>
           </div>
 
           <Button

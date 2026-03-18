@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Sparkles, Heart, ArrowLeft, Lock, Mail, ChevronRight, UserCircle } from "lucide-react";
+import { Star, Sparkles, Heart, ArrowLeft, Lock, Mail, ChevronRight, UserCircle, Search } from "lucide-react";
 import { toast } from "sonner";
 import { themeConfigs, AppTheme } from "@/hooks/useTheme";
 
@@ -17,6 +17,7 @@ interface ChildProfile {
   avatar_url: string | null;
   selected_theme: AppTheme;
   dummy_email: string;
+  child_login_id?: string;
 }
 
 const KidLoginPage = () => {
@@ -24,6 +25,8 @@ const KidLoginPage = () => {
   const { t } = useLanguage();
   const { setChildSession } = useChildSession();
   
+  const [loginMethod, setLoginMethod] = useState<"name" | "id">("name");
+  const [loginId, setLoginId] = useState("");
   const [step, setStep] = useState(1); // 1: Name, 2: Child Select (if multiple), 3: PIN
   const [childName, setChildName] = useState("");
   const [children, setChildren] = useState<ChildProfile[]>([]);
@@ -80,10 +83,38 @@ const KidLoginPage = () => {
     setPin("");
   };
 
+  const handleIdSubmit = async () => {
+    if (!loginId.trim()) return;
+    setLoading(true);
+    try {
+      const { data, error } = await (supabase.from("profiles") as any)
+        .select("id, display_name, avatar_url, selected_theme, dummy_email, child_login_id")
+        .eq("child_login_id", loginId.trim().toUpperCase())
+        .eq("is_parent", false)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        toast.error("Login ID not found. Check with your parent! 🔍");
+        return;
+      }
+
+      setSelectedChild(data as any);
+      setStep(3); // Go straight to PIN
+    } catch (error) {
+      console.error("Error fetching child by ID:", error);
+      toast.error("Something went wrong. Try again!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePinSubmit = async (p: string) => {
     if (!selectedChild) return;
     
     setLoading(true);
+    console.log("Attempting login for:", selectedChild.dummy_email, "with PIN:", p);
+    
     try {
       // Direct sign-in using the dummy email and PIN as password
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -92,11 +123,14 @@ const KidLoginPage = () => {
       });
 
       if (error) {
+        console.error("Supabase Auth Error:", error);
         setPinError(true);
         setPin("");
-        toast.error("Oops! Wrong PIN. Try again! 🤫");
+        toast.error(`Error: ${error.message}`);
         throw error;
       }
+
+      console.log("Login successful! User data:", data.user);
 
       // Success! Set the child session
       setChildSession({
@@ -109,8 +143,8 @@ const KidLoginPage = () => {
 
       toast.success(`Welcome back, ${selectedChild.display_name}! 🌈✨`);
       navigate("/");
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      console.error("Login catch block:", error);
     } finally {
       setLoading(false);
     }
@@ -167,34 +201,89 @@ const KidLoginPage = () => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="text-center space-y-2 mb-6">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                    <UserCircle className="w-10 h-10 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold">Hello Friend! 👋</h3>
-                  <p className="text-muted-foreground">Type your name to start</p>
+                <div className="flex bg-primary/5 p-1 rounded-2xl mb-4 border border-primary/10">
+                  <button
+                    onClick={() => setLoginMethod("name")}
+                    className={`flex-1 py-2.5 rounded-xl font-bold transition-all ${
+                      loginMethod === "name" ? "bg-white text-primary shadow-sm scale-102" : "text-muted-foreground hover:text-primary"
+                    }`}
+                  >
+                    By Name
+                  </button>
+                  <button
+                    onClick={() => setLoginMethod("id")}
+                    className={`flex-1 py-2.5 rounded-xl font-bold transition-all ${
+                      loginMethod === "id" ? "bg-white text-primary shadow-sm scale-102" : "text-muted-foreground hover:text-primary"
+                    }`}
+                  >
+                    By Login ID
+                  </button>
                 </div>
 
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Your Name (e.g. Sara)"
-                    value={childName}
-                    onChange={(e) => setChildName(e.target.value)}
-                    className="text-lg py-7 px-12 rounded-3xl border-2 border-primary/20 focus:border-primary shadow-sm"
-                  />
-                  <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                </div>
+                {loginMethod === "name" ? (
+                  <>
+                    <div className="text-center space-y-2 mb-6">
+                      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                        <UserCircle className="w-10 h-10 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold">Hello Friend! 👋</h3>
+                      <p className="text-muted-foreground">Type your name to start</p>
+                    </div>
 
-                <Button
-                  onClick={handleFetchChildren}
-                  disabled={loading || !childName}
-                  className="w-full py-8 text-xl rounded-3xl group shadow-lg"
-                  variant="hero"
-                >
-                  {loading ? "Finding You..." : "Go to My Videos!"}
-                  <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Your Name (e.g. Sara)"
+                        value={childName}
+                        onChange={(e) => setChildName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleFetchChildren()}
+                        className="text-lg py-7 px-12 rounded-3xl border-2 border-primary/20 focus:border-primary shadow-sm"
+                      />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    </div>
+
+                    <Button
+                      onClick={handleFetchChildren}
+                      disabled={loading || !childName}
+                      className="w-full py-8 text-xl rounded-3xl group shadow-lg"
+                      variant="hero"
+                    >
+                      {loading ? "Finding You..." : "Go to My Videos!"}
+                      <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center space-y-2 mb-6">
+                      <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto">
+                        <Lock className="w-10 h-10 text-accent" />
+                      </div>
+                      <h3 className="text-xl font-bold">Magic Code! 🪄</h3>
+                      <p className="text-muted-foreground">Enter your 6-digit Login ID</p>
+                    </div>
+
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="ABCDEF"
+                        maxLength={6}
+                        value={loginId}
+                        onChange={(e) => setLoginId(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === "Enter" && handleIdSubmit()}
+                        className="text-2xl py-8 px-4 rounded-3xl border-2 border-accent/20 focus:border-accent shadow-sm text-center uppercase tracking-widest font-mono"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleIdSubmit}
+                      disabled={loading || loginId.length < 6}
+                      className="w-full py-8 text-xl rounded-3xl group shadow-lg bg-accent hover:bg-accent/90"
+                    >
+                      {loading ? "Checking..." : "Let's Go! 🚀"}
+                      <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </>
+                )}
                 
                 <Button 
                   variant="ghost" 

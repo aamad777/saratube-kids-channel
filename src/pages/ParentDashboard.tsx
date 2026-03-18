@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
@@ -32,7 +33,8 @@ import {
 import { 
   Shield, Clock, Activity, Users, Plus, Trash2, 
   Eye, Ban, ChevronRight, Sparkles, AlertTriangle,
-  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby, Image
+  Video, Pencil, Calendar, Upload, Search, UserPlus, Unlink, Baby, Image,
+  Play, Edit2, X
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -54,6 +56,7 @@ interface ChildProfile {
   pin_hash: string | null;
   created_by_parent: string | null;
   selected_theme: string | null;
+  child_login_id?: string | null;
 }
 
 interface ActivityLog {
@@ -129,6 +132,10 @@ const ParentDashboard = () => {
     selectedChildren: [] as string[],
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+  const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
+  const [bulkTargetChildren, setBulkTargetChildren] = useState<string[]>([]);
+  const [isBulkLinking, setIsBulkLinking] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -265,6 +272,41 @@ const ParentDashboard = () => {
       toast.error(error.message || "Failed to update video");
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  const handleBulkAssign = async () => {
+    if (selectedVideos.length === 0 || bulkTargetChildren.length === 0 || !user) return;
+    
+    setIsBulkLinking(true);
+    try {
+      const accessRecords = [];
+      for (const videoId of selectedVideos) {
+        for (const childId of bulkTargetChildren) {
+          accessRecords.push({
+            video_id: videoId,
+            child_user_id: childId,
+            granted_by: user.id
+          });
+        }
+      }
+
+      const { error } = await supabase
+        .from("video_child_access")
+        .upsert(accessRecords, { onConflict: 'video_id,child_user_id' });
+
+      if (error) throw error;
+
+      toast.success(`Successfully linked ${selectedVideos.length} videos to children! ✨`);
+      setSelectedVideos([]);
+      setBulkTargetChildren([]);
+      setShowBulkAssignDialog(false);
+      fetchMyVideos();
+    } catch (error: any) {
+      console.error("Error in bulk assignment:", error);
+      toast.error(error.message || "Failed to assign videos");
+    } finally {
+      setIsBulkLinking(false);
     }
   };
 
@@ -611,11 +653,20 @@ const ParentDashboard = () => {
                          child.selected_theme === "bunny" ? "🐰" :
                          child.selected_theme === "candy" ? "🍭" : "🌈"}
                       </div>
-                      <div className="text-left flex-1">
-                        <p className="font-medium">{child.display_name}</p>
-                        {child.age && (
-                          <p className="text-xs text-muted-foreground">{child.age} {t("parent.years.old")}</p>
-                        )}
+                      <div className="text-left flex-1 min-w-0">
+                        <p className="font-medium truncate">{child.display_name}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-0.5">
+                          {child.age && (
+                            <span className="text-[10px] bg-muted-foreground/10 px-1.5 py-0.5 rounded text-muted-foreground whitespace-nowrap">
+                              {child.age} yrs
+                            </span>
+                          )}
+                          {child.child_login_id && (
+                            <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded font-mono border border-accent/20 whitespace-nowrap">
+                              ID: {child.child_login_id}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Button
                         variant="ghost"
@@ -735,13 +786,40 @@ const ParentDashboard = () => {
                 <Card className="shadow-card">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Video className="w-5 h-5" />
-                        My Uploaded Videos
-                      </span>
-                      <Button asChild size="sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="flex items-center gap-2">
+                          <Video className="w-5 h-5 text-primary" />
+                          My Uploaded Videos
+                        </span>
+                        {selectedVideos.length > 0 && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center gap-2 mt-2 bg-primary/5 p-1.5 rounded-lg border border-primary/10"
+                          >
+                            <span className="text-xs font-bold text-primary pl-1">{selectedVideos.length} Selected</span>
+                            <Button 
+                              size="sm" 
+                              onClick={() => setShowBulkAssignDialog(true)}
+                              className="h-7 px-3 text-xs bg-primary hover:bg-primary/90"
+                            >
+                              <Users className="w-3 h-3 mr-1" />
+                              Link to Kids
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setSelectedVideos([])}
+                              className="h-7 w-7 text-muted-foreground"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </motion.div>
+                        )}
+                      </div>
+                      <Button asChild size="sm" className="rounded-xl">
                         <Link to="/upload">
-                          <Upload className="w-4 h-4 mr-2" />
+                          <Plus className="w-4 h-4 mr-2" />
                           Upload New
                         </Link>
                       </Button>
@@ -754,12 +832,38 @@ const ParentDashboard = () => {
                       </div>
                     ) : myVideos.length > 0 ? (
                       <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/20">
+                          <Checkbox 
+                            id="selectAll"
+                            checked={selectedVideos.length === myVideos.length && myVideos.length > 0}
+                            onCheckedChange={(checked) => {
+                              if (checked) setSelectedVideos(myVideos.map(v => v.id));
+                              else setSelectedVideos([]);
+                            }}
+                          />
+                          <Label htmlFor="selectAll" className="text-sm font-medium text-muted-foreground cursor-pointer">
+                            Select All Videos
+                          </Label>
+                        </div>
                         {myVideos.map((video) => (
                           <div
                             key={video.id}
-                            className="flex items-start gap-4 p-4 bg-muted rounded-xl"
+                            className={`flex items-start gap-4 p-4 rounded-xl transition-all border-2 ${
+                              selectedVideos.includes(video.id)
+                                ? "bg-primary/5 border-primary/20 shadow-sm"
+                                : "bg-muted border-transparent"
+                            }`}
                           >
-                            <div className="w-24 h-16 rounded-lg bg-gradient-hero flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <div className="pt-5 mr-1">
+                              <Checkbox 
+                                checked={selectedVideos.includes(video.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) setSelectedVideos([...selectedVideos, video.id]);
+                                  else setSelectedVideos(selectedVideos.filter(id => id !== video.id));
+                                }}
+                              />
+                            </div>
+                            <div className="w-24 h-16 rounded-lg bg-gradient-hero flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
                               {video.thumbnail_url ? (
                                 <img
                                   src={video.thumbnail_url}
@@ -769,38 +873,42 @@ const ParentDashboard = () => {
                               ) : (
                                 <Video className="w-8 h-8 text-primary-foreground" />
                               )}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                <Play className="w-6 h-6 text-white fill-white" />
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium truncate">{video.title}</h4>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <h4 className="font-bold truncate text-base">{video.title}</h4>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                                 {video.category} • {new Date(video.created_at).toLocaleDateString()}
                               </p>
                               <div className="flex flex-wrap gap-1 mt-2">
                                 {video.child_access.map((child) => (
                                   <span
                                     key={child.child_user_id}
-                                    className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
+                                    className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded-full border border-primary/10"
                                   >
                                     {child.display_name}
                                   </span>
                                 ))}
                                 {video.child_access.length === 0 && (
-                                  <span className="text-xs text-muted-foreground">No access granted</span>
+                                  <span className="text-[10px] text-muted-foreground italic">No access yet</span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-2 flex-shrink-0">
+                            <div className="flex gap-1 flex-shrink-0">
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
+                                className="h-9 w-9 hover:bg-primary/10 hover:text-primary rounded-lg"
                                 onClick={() => openEditDialog(video)}
                               >
-                                <Pencil className="w-4 h-4" />
+                                <Edit2 className="w-4 h-4" />
                               </Button>
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
-                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                className="h-9 w-9 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-lg"
                                 onClick={() => setDeleteVideoId(video.id)}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1277,6 +1385,67 @@ const ParentDashboard = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showBulkAssignDialog} onOpenChange={setShowBulkAssignDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Assign {selectedVideos.length} Videos
+            </DialogTitle>
+            <DialogDescription>
+              Select children who should have access to these videos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 gap-2">
+              {children.map((child) => (
+                <div 
+                  key={child.user_id} 
+                  className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
+                    bulkTargetChildren.includes(child.user_id) 
+                      ? "border-primary bg-primary/5 shadow-sm" 
+                      : "border-muted hover:border-primary/20"
+                  }`}
+                  onClick={() => {
+                    if (bulkTargetChildren.includes(child.user_id)) {
+                      setBulkTargetChildren(bulkTargetChildren.filter(id => id !== child.user_id));
+                    } else {
+                      setBulkTargetChildren([...bulkTargetChildren, child.user_id]);
+                    }
+                  }}
+                >
+                  <Checkbox 
+                    checked={bulkTargetChildren.includes(child.user_id)}
+                    className="h-5 w-5"
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                      {child.display_name.charAt(0)}
+                    </div>
+                    <span className="font-medium">{child.display_name}</span>
+                  </div>
+                </div>
+              ))}
+              {children.length === 0 && (
+                <p className="text-center text-muted-foreground py-4 italic">No children found</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setShowBulkAssignDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleBulkAssign} 
+              disabled={isBulkLinking || bulkTargetChildren.length === 0}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {isBulkLinking ? "Linking..." : `Link to ${bulkTargetChildren.length} Children`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Child Form Dialog */}
       <Dialog open={showAddChildForm} onOpenChange={setShowAddChildForm}>
         <DialogContent className="max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none">
@@ -1292,5 +1461,8 @@ const ParentDashboard = () => {
     </div>
   );
 };
+
+// ... inside the component, add the handleBulkAssign function
+// I'll insert it near other handlers
 
 export default ParentDashboard;
