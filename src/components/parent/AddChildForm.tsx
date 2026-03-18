@@ -84,81 +84,41 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
       const childUserId = crypto.randomUUID();
       const dummyEmail = `child-${childUserId}@kids.saratube`;
       
-      const { error } = await supabase.from("profiles").insert({
-        id: childUserId, // Set the primary key
-        user_id: childUserId, // Link to the auth user we will create
-        display_name: name.trim(),
-        age: age ? parseInt(age) : null,
-        pin_hash: pin,
-        selected_theme: selectedTheme,
-        is_parent: false,
-        created_by_parent: user.id,
-        parent_email: user.email,
-        dummy_email: dummyEmail
-      });
+      // Calculate blocked categories based on theme
+      const themeDefaultCategory = themeCategoryMap[selectedTheme];
+      let blockedCategories: string[] = [];
+      if (themeDefaultCategory) {
+        blockedCategories = videoCategories
+          .filter((cat) => cat.id !== themeDefaultCategory)
+          .map((cat) => cat.id);
+      }
 
-      if (error) throw error;
-
-      // Create a real Supabase Auth user via RPC (Security Definer)
-      const { error: authError } = await (supabase.rpc as any)("create_child_auth_user", {
+      // Filter valid interests
+      const validCategories = ["music", "animals", "crafts", "stories", "science", "games",
+        "quran_stories", "nasheed", "ramadan", "dua_prayer", "farm", "sports", "cars", "magic"];
+      const interestsToSave = selectedInterests.filter((i) => validCategories.includes(i));
+      
+      // Use the Super Mega-Fix RPC to create everything in one secure transaction
+      const { error: rpcError } = await (supabase.rpc as any)("create_child_auth_user", {
         p_id: childUserId,
         p_email: dummyEmail,
-        p_password: pin, // PIN is the password for the child account
-        p_display_name: name.trim()
+        p_password: pin,
+        p_display_name: name.trim(),
+        p_pin_hash: pin,
+        p_age: age ? parseInt(age) : null,
+        p_selected_theme: selectedTheme,
+        p_created_by_parent: user.id,
+        p_parent_email: user.email,
+        p_blocked_categories: blockedCategories,
+        p_interests: interestsToSave
       });
 
-      if (authError) throw authError;
-
-      // Create parent-child link
-      const { error: linkError } = await supabase.from("parent_child_links").insert({
-        parent_user_id: user.id,
-        child_user_id: childUserId,
-      });
-
-      if (linkError) console.error("Error creating parent-child link:", linkError);
-
-      // Auto-block categories: if theme has a matching category, block everything else
-      const themeDefaultCategory = themeCategoryMap[selectedTheme];
-      if (themeDefaultCategory) {
-        const categoriesToBlock = videoCategories
-          .filter((cat) => cat.id !== themeDefaultCategory)
-          .map((cat) => ({
-            child_user_id: childUserId,
-            category: cat.id,
-            blocked_by: user.id,
-          }));
-
-        if (categoriesToBlock.length > 0) {
-          const { error: blockError } = await supabase
-            .from("blocked_categories")
-            .insert(categoriesToBlock);
-          if (blockError) console.error("Error blocking categories:", blockError);
-        }
-      }
-
-      // Save interests as video preferences
-      if (selectedInterests.length > 0) {
-        const validCategories = ["music", "animals", "crafts", "stories", "science", "games",
-          "quran_stories", "nasheed", "ramadan", "dua_prayer", "farm", "sports", "cars", "magic"];
-        const prefsToInsert = selectedInterests
-          .filter((i) => validCategories.includes(i))
-          .map((category) => ({
-            user_id: childUserId,
-            category: category as any,
-          }));
-
-        if (prefsToInsert.length > 0) {
-          const { error: prefError } = await supabase
-            .from("user_video_preferences")
-            .insert(prefsToInsert);
-          if (prefError) console.error("Error saving preferences:", prefError);
-        }
-      }
+      if (rpcError) throw rpcError;
 
       toast.success(
         <span className="flex items-center gap-2">
           <span className="text-xl">{themeConfigs[selectedTheme].emoji}</span>
-          <span>{name}'s profile created!</span>
+          <span>{name}'s profile created and linked!</span>
         </span>
       );
       
