@@ -25,7 +25,9 @@ const KidsPhotoUpload = ({ onAvatarUpdated }: KidsPhotoUploadProps) => {
 
   const isChild = !!childSession;
   const activeId = isChild ? childSession.id : profile?.id;
-  const parentId = isChild ? (profile?.user_id || user?.id) : user?.id;
+  const parentId = isChild 
+    ? (profile?.created_by_parent || profile?.user_id || user?.id) 
+    : user?.id;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

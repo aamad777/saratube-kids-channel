@@ -10,6 +10,7 @@ interface Profile {
   avatar_url: string | null;
   is_parent: boolean | null;
   selected_theme: string | null;
+  created_by_parent: string | null;
 }
 
 interface AuthContextType {
