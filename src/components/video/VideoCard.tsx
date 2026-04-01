@@ -246,7 +246,7 @@ const VideoCard = ({
             </span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="rounded-3xl border-none shadow-2xl">
