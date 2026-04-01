@@ -54,6 +54,7 @@ const VideoCard = ({
   const { childSession } = useChildSession();
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { triggerReward } = useReward();
 
   const isParent = profile?.is_parent === true;
 
