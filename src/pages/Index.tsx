@@ -7,6 +7,8 @@ import KidsPhotoFeed from "@/components/kids/KidsPhotoFeed";
 import UnifiedMediaGrid from "@/components/home/UnifiedMediaGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
 import KidsChatBot from "@/components/ai/KidsChatBot";
+import MobileKidsHeader from "@/components/mobile/MobileKidsHeader";
+import MobileSwipeCarousel from "@/components/mobile/MobileSwipeCarousel";
 import { useTheme, themeCategoryMap, themeConfigs } from "@/hooks/useTheme";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Video, Image as ImageIcon } from "lucide-react";
+import { sampleVideos } from "@/data/videoData";
 
 const Index = () => {
   const { theme, themeName } = useTheme();
