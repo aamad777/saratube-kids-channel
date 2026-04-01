@@ -44,6 +44,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </RewardProvider>
           </ChildSessionProvider>
         </AuthProvider>
       </LanguageProvider>
