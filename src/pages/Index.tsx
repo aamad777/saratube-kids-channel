@@ -71,6 +71,24 @@ const Index = () => {
 
   return (
     <ThemedLayout>
+      {/* Fun mobile kids header */}
+      <MobileKidsHeader />
+
+      {/* Mobile swipe carousel for trending */}
+      {isChildActive && (
+        <MobileSwipeCarousel
+          items={sampleVideos.slice(0, 8).map(v => ({
+            id: v.id,
+            title: v.title,
+            thumbnail: v.thumbnail,
+            creator: v.creator,
+            type: "video" as const,
+            duration: v.duration,
+          }))}
+          title="Trending Now 🔥"
+        />
+      )}
+
       <HeroSection />
       
       {/* Trending Section */}
