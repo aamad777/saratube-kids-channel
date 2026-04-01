@@ -132,7 +132,12 @@ const VideoCard = ({
 
   return (
     <Link to={`/watch/${id}`}>
-      <div className={`group relative ${theme.cardBg} rounded-3xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1`}>
+      <motion.div
+        className={`group relative ${theme.cardBg} rounded-3xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-300`}
+        whileHover={{ scale: 1.03, y: -4 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      >
         {/* Media Container */}
         <div 
           className="relative aspect-video overflow-hidden"
