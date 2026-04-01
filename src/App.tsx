@@ -25,6 +25,7 @@ const App = () => (
       <LanguageProvider>
         <AuthProvider>
           <ChildSessionProvider>
+            <RewardProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
