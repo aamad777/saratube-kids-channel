@@ -1,12 +1,14 @@
 import { Heart, MessageCircle, Play, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useTheme } from "@/hooks/useTheme";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { getAgeSuitability, getAgeBadgeStyle } from "@/utils/ageFilter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useReward } from "@/components/effects/RewardBurst";
 import {
   AlertDialog,
   AlertDialogAction,
