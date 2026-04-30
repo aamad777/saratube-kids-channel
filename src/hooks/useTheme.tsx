@@ -224,6 +224,10 @@ export const themeCategoryMap: Partial<Record<AppTheme, string>> = {
   sports: "sports",
   cars: "cars",
   magic: "magic",
+  labubu_pink: "labubu",
+  labubu_green: "labubu",
+  labubu_brown: "labubu",
+  labubu_blue: "labubu",
 };
 
 export const useTheme = () => {
