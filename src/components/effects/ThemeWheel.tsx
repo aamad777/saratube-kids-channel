@@ -16,8 +16,12 @@ interface ThemeWheelProps {
 
 const THEME_GROUPS = [
   {
+    label: "🧸 Labubu Special",
+    themes: ["labubu_pink", "labubu_green", "labubu_brown", "labubu_blue"] as AppTheme[],
+  },
+  {
     label: "✨ General",
-    themes: ["rainbow", "princess", "ocean", "space", "jungle", "candy", "superhero", "dinosaur", "unicorn", "fairy", "robot"] as AppTheme[],
+    themes: ["rainbow", "princess", "ocean", "space", "jungle", "candy", "superhero", "dinosaur", "unicorn", "fairy", "robot", "bunny"] as AppTheme[],
   },
   {
     label: "☪️ Islamic",
@@ -158,7 +162,13 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
                             background: `linear-gradient(135deg, ${getGradientColors(config.primary)})`,
                           }}
                         >
-                          <span className="text-2xl">{config.emoji}</span>
+                          <div className="w-12 h-12 flex items-center justify-center">
+                            {config.iconUrl ? (
+                              <img src={config.iconUrl} alt={config.name} className="w-10 h-10 object-contain" />
+                            ) : (
+                              <span className="text-2xl">{config.emoji}</span>
+                            )}
+                          </div>
                           <span className="text-[10px] font-medium text-white leading-tight text-center line-clamp-1">
                             {config.name}
                           </span>
@@ -182,10 +192,16 @@ export const ThemeWheel = ({ isOpen, onClose, currentTheme }: ThemeWheelProps) =
               animate={{ scale: 1, opacity: 1 }}
               className={`mt-5 text-center p-3 rounded-2xl bg-gradient-to-r ${themeConfigs[selectedTheme].primary} text-white`}
             >
-              <span className="text-2xl mr-2">{themeConfigs[selectedTheme].emoji}</span>
-              <span className="font-display font-bold">
-                {themeConfigs[selectedTheme].name}
-              </span>
+              <div className="flex items-center justify-center gap-3">
+                {themeConfigs[selectedTheme].iconUrl ? (
+                  <img src={themeConfigs[selectedTheme].iconUrl} alt="Selected" className="w-10 h-10 object-contain" />
+                ) : (
+                  <span className="text-2xl">{themeConfigs[selectedTheme].emoji}</span>
+                )}
+                <span className="font-display font-bold">
+                  {themeConfigs[selectedTheme].name}
+                </span>
+              </div>
               {currentTheme === selectedTheme && (
                 <span className="ml-2 text-xs bg-white/30 px-2 py-0.5 rounded-full">Current</span>
               )}
@@ -228,7 +244,9 @@ function getGradientColors(gradientClass: string): string {
     "teal-600": "#0d9488", "violet-600": "#7c3aed", "amber-400": "#fbbf24",
     "yellow-500": "#eab308", "teal-400": "#2dd4bf", "cyan-600": "#0891b2",
     "green-500": "#22c55e", "lime-600": "#65a30d", "blue-500b": "#3b82f6",
-    "orange-500": "#f97316",
+    "orange-500": "#f97316", "rose-400": "#fb7185", "green-300": "#86efac", 
+    "orange-700": "#c2410c", "sky-400": "#38bdf8", "pink-300": "#f9a8d4", 
+    "emerald-400": "#34d399",
   };
 
   const matches = gradientClass.match(/(?:from|via|to)-(\w+-\d+)/g) || [];

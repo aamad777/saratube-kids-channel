@@ -66,7 +66,7 @@ const HeroSection = () => {
     return "SARATUBE";
   };
 
-  const currentBackground = themeBackgrounds[themeName as AppTheme] || heroBgRainbow;
+  const currentBackground = theme.bgImage || themeBackgrounds[themeName as AppTheme] || heroBgRainbow;
 
   return (
     <section className="relative overflow-hidden min-h-[500px] md:min-h-[650px]">
@@ -116,7 +116,11 @@ const HeroSection = () => {
           {i % 3 === 0 ? (
             <Star className={`h-${6 + (i % 4) * 2} w-${6 + (i % 4) * 2} ${theme.accent} fill-current drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]`} style={{ width: 24 + i * 4, height: 24 + i * 4 }} />
           ) : i % 3 === 1 ? (
-            <span className="drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" style={{ fontSize: 32 + i * 4 }}>{theme.emoji}</span>
+            theme.iconUrl ? (
+              <img src={theme.iconUrl} alt="Labubu" className="drop-shadow-[0_0_15px_rgba(255,255,255,0.6)] object-contain" style={{ width: 40 + i * 5, height: 40 + i * 5 }} />
+            ) : (
+              <span className="drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" style={{ fontSize: 32 + i * 4 }}>{theme.emoji}</span>
+            )
           ) : (
             <Sparkles className={`${theme.accent} drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]`} style={{ width: 20 + i * 3, height: 20 + i * 3 }} />
           )}
@@ -152,14 +156,18 @@ const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 container px-4 py-12 md:py-28 flex flex-col items-center text-center">
         <motion.div 
-          className="mb-6"
+          className="mb-6 flex justify-center"
           animate={{ 
             y: [0, -15, 0],
             rotate: [0, 5, -5, 0]
           }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-5xl md:text-7xl lg:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter">{theme.emoji}</span>
+          {theme.iconUrl ? (
+            <img src={theme.iconUrl} alt="Labubu" className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]" />
+          ) : (
+            <span className="text-5xl md:text-7xl lg:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] filter">{theme.emoji}</span>
+          )}
         </motion.div>
 
         <motion.h1 

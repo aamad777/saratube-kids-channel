@@ -16,6 +16,7 @@ interface AddChildFormProps {
 }
 
 const themeOptions: AppTheme[] = [
+  "labubu_pink", "labubu_green", "labubu_brown", "labubu_blue",
   "rainbow", "princess", "ocean", "space", 
   "jungle", "candy", "superhero", "dinosaur",
   "unicorn", "fairy", "robot", "pirate",
@@ -262,7 +263,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
             Choose a Theme
           </Label>
           
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-3 max-h-[200px] overflow-y-auto p-1">
             {themeOptions.map((theme) => {
               const config = themeConfigs[theme];
               const isSelected = selectedTheme === theme;
@@ -273,11 +274,15 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedTheme(theme)}
-                  className={`relative p-3 rounded-2xl bg-gradient-to-br ${config.primary} transition-all ${
+                  className={`relative p-3 rounded-2xl bg-gradient-to-br ${config.primary} transition-all flex items-center justify-center overflow-hidden ${
                     isSelected ? "ring-4 ring-yellow-400 ring-offset-2" : ""
                   }`}
                 >
-                  <span className="text-2xl">{config.emoji}</span>
+                  {config.iconUrl ? (
+                    <img src={config.iconUrl} alt={config.name} className="w-8 h-8 object-contain" />
+                  ) : (
+                    <span className="text-2xl">{config.emoji}</span>
+                  )}
                   {isSelected && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
                       <Check className="w-3 h-3 text-yellow-800" />

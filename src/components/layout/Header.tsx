@@ -81,7 +81,11 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <div className="relative">
-              <span className="text-2xl sm:text-3xl animate-sparkle">{theme.emoji}</span>
+              {theme.iconUrl ? (
+                <img src={theme.iconUrl} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain animate-sparkle" />
+              ) : (
+                <span className="text-2xl sm:text-3xl animate-sparkle">{theme.emoji}</span>
+              )}
               <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gradient-to-r ${theme.primary} rounded-full animate-bounce-slow`} />
             </div>
             <span className={`font-display text-2xl font-bold bg-gradient-to-r ${theme.primary} bg-clip-text text-transparent hidden sm:inline transition-all duration-300`}>
@@ -219,7 +223,11 @@ const Header = () => {
                                 onClick={() => handleChildThemeChange(themeKey)}
                                 className={`gap-2 ${themeName === themeKey ? 'bg-accent' : ''}`}
                               >
-                                <span className="text-lg">{themeConfigs[themeKey].emoji}</span>
+                                {themeConfigs[themeKey].iconUrl ? (
+                                  <img src={themeConfigs[themeKey].iconUrl} alt={themeKey} className="w-6 h-6 object-contain" />
+                                ) : (
+                                  <span className="text-lg">{themeConfigs[themeKey].emoji}</span>
+                                )}
                                 <span>{themeConfigs[themeKey].name}</span>
                                 {themeName === themeKey && (
                                   <span className="ml-auto text-xs">✓</span>

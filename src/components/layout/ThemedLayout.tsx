@@ -87,6 +87,23 @@ const FloatingElements = ({ themeName }: { themeName: string }) => {
             <div className="absolute bottom-20 right-10 w-4 h-4 animate-float opacity-40 text-lg">🥕</div>
           </>
         );
+      case "labubu_pink":
+      case "labubu_green":
+      case "labubu_brown":
+      case "labubu_blue":
+        return (
+          <>
+            <div className="absolute top-20 left-10 w-12 h-12 animate-float opacity-60">
+              <img src="/assets/themes/labubu-icon.png" alt="Labubu" className="w-full h-full object-contain" />
+            </div>
+            <div className="absolute top-40 right-20 w-6 h-6 animate-bounce-slow opacity-50 text-2xl">✨</div>
+            <div className="absolute bottom-40 left-20 w-7 h-7 animate-sparkle opacity-60 text-2xl">💖</div>
+            <div className="absolute bottom-20 right-10 w-8 h-8 animate-float opacity-40">
+              <img src="/assets/themes/labubu-icon.png" alt="Labubu" className="w-full h-full object-contain" />
+            </div>
+            <div className="absolute top-1/2 left-1/4 w-4 h-4 animate-bounce-slow opacity-30 text-lg">✨</div>
+          </>
+        );
       default: // rainbow
         return (
           <>
@@ -137,7 +154,14 @@ const ThemedLayout = ({ children, showHeader = true, showFooter = true }: Themed
   };
 
   return (
-    <div key={themeName} className={`min-h-screen ${theme.background} theme-transition`}>
+    <div key={themeName} className={`min-h-screen ${theme.background} theme-transition relative overflow-hidden`}>
+      {/* Background Image Layer */}
+      {theme.bgImage && (
+        <div 
+          className="absolute inset-0 z-0 opacity-40 bg-cover bg-center bg-no-repeat pointer-events-none"
+          style={{ backgroundImage: `url(${theme.bgImage})` }}
+        />
+      )}
       <FloatingElements themeName={themeName} />
       <InteractiveFloatingElements themeName={themeName} />
       

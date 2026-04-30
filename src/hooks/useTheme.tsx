@@ -6,7 +6,8 @@ export type AppTheme =
   | "rainbow" | "princess" | "ocean" | "space" | "jungle" | "candy"
   | "superhero" | "dinosaur" | "unicorn" | "pirate" | "fairy" | "robot"
   | "quran_stories" | "nasheed" | "ramadan" | "dua_prayer"
-  | "farm" | "sports" | "cars" | "magic" | "bunny";
+  | "farm" | "sports" | "cars" | "magic" | "bunny"
+  | "labubu_pink" | "labubu_green" | "labubu_brown" | "labubu_blue";
 
 interface ThemeConfig {
   name: string;
@@ -17,6 +18,8 @@ interface ThemeConfig {
   gradient: string;
   cardBg: string;
   emoji: string;
+  bgImage?: string;
+  iconUrl?: string;
   group?: "general" | "islamic" | "adventure";
 }
 
@@ -172,6 +175,42 @@ const themeConfigs: Record<AppTheme, ThemeConfig> = {
     background: "bg-gradient-to-br from-pink-50 via-white to-orange-50",
     gradient: "bg-gradient-to-r from-pink-300 to-orange-300",
     cardBg: "bg-white/90 backdrop-blur-md border-pink-100", emoji: "🐰", group: "general",
+  },
+  labubu_pink: {
+    name: "Labubu Pink", primary: "from-rose-400 to-pink-500",
+    secondary: "from-pink-300 to-rose-400", accent: "text-rose-500",
+    background: "bg-gradient-to-br from-rose-50 via-pink-50 to-white",
+    gradient: "bg-gradient-to-r from-rose-400 to-pink-500",
+    cardBg: "bg-white/80 backdrop-blur-sm border-rose-100", emoji: "💖", 
+    bgImage: "/assets/themes/labubu-pink.png", iconUrl: "/assets/themes/labubu-icon.png", 
+    group: "general",
+  },
+  labubu_green: {
+    name: "Labubu Green", primary: "from-emerald-400 to-green-600",
+    secondary: "from-green-300 to-emerald-400", accent: "text-emerald-600",
+    background: "bg-gradient-to-br from-emerald-50 via-green-50 to-white",
+    gradient: "bg-gradient-to-r from-emerald-400 to-green-600",
+    cardBg: "bg-white/80 backdrop-blur-sm border-emerald-100", emoji: "🍇", 
+    bgImage: "/assets/themes/labubu-green.png", iconUrl: "/assets/themes/labubu-icon.png", 
+    group: "general",
+  },
+  labubu_brown: {
+    name: "Labubu Toffee", primary: "from-amber-500 to-orange-700",
+    secondary: "from-orange-400 to-amber-600", accent: "text-amber-700",
+    background: "bg-gradient-to-br from-amber-50 via-orange-50 to-white",
+    gradient: "bg-gradient-to-r from-amber-500 to-orange-700",
+    cardBg: "bg-white/80 backdrop-blur-sm border-amber-100", emoji: "🍮", 
+    bgImage: "/assets/themes/labubu-brown.png", iconUrl: "/assets/themes/labubu-icon.png", 
+    group: "general",
+  },
+  labubu_blue: {
+    name: "Labubu Blue", primary: "from-sky-400 to-blue-600",
+    secondary: "from-blue-300 to-sky-400", accent: "text-blue-600",
+    background: "bg-gradient-to-br from-sky-50 via-blue-50 to-white",
+    gradient: "bg-gradient-to-r from-sky-400 to-blue-600",
+    cardBg: "bg-white/80 backdrop-blur-sm border-sky-100", emoji: "🥥", 
+    bgImage: "/assets/themes/labubu-blue.png", iconUrl: "/assets/themes/labubu-icon.png", 
+    group: "general",
   },
 };
 

@@ -24,6 +24,10 @@ const ProfilePage = () => {
   const [showTransition, setShowTransition] = useState(false);
 
   const themeOptions: { id: AppTheme; name: string; emoji: string }[] = [
+    { id: "labubu_pink", name: "Labubu Pink", emoji: "💖" },
+    { id: "labubu_green", name: "Labubu Green", emoji: "🍇" },
+    { id: "labubu_brown", name: "Labubu Brown", emoji: "🍮" },
+    { id: "labubu_blue", name: "Labubu Blue", emoji: "🥥" },
     { id: "rainbow", name: "Rainbow", emoji: "🌈" },
     { id: "princess", name: "Princess", emoji: "👑" },
     { id: "ocean", name: "Ocean", emoji: "🌊" },
@@ -141,11 +145,25 @@ const ProfilePage = () => {
             <CardContent>
               {/* Theme Preview */}
               <div 
-                className="mb-6 p-6 rounded-2xl transition-all duration-500"
-                style={{ background: previewConfig.gradient }}
+                className="mb-6 p-6 rounded-2xl transition-all duration-500 relative overflow-hidden"
+                style={{ 
+                  background: previewConfig.gradient,
+                }}
               >
-                <div className="text-center text-white">
-                  <div className="text-4xl mb-2">{previewConfig.emoji}</div>
+                {previewConfig.bgImage && (
+                  <div 
+                    className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${previewConfig.bgImage})` }}
+                  />
+                )}
+                <div className="relative z-10 text-center text-white flex flex-col items-center">
+                  <div className="text-4xl mb-2">
+                    {previewConfig.iconUrl ? (
+                      <img src={previewConfig.iconUrl} alt="Preview" className="w-16 h-16 object-contain" />
+                    ) : (
+                      previewConfig.emoji
+                    )}
+                  </div>
                   <h3 className="text-xl font-bold mb-1">
                     {themeOptions.find(t => t.id === selectedTheme)?.name} Theme
                   </h3>
@@ -154,7 +172,7 @@ const ProfilePage = () => {
               </div>
 
               {/* Theme Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 max-h-[400px] overflow-y-auto p-2">
                 {themeOptions.map((themeOption) => {
                   const config = themeConfigs[themeOption.id];
                   const isSelected = selectedTheme === themeOption.id;
@@ -171,8 +189,14 @@ const ProfilePage = () => {
                       `}
                       style={{ background: config.gradient }}
                     >
-                      <div className="text-center text-white">
-                        <div className="text-2xl mb-1">{themeOption.emoji}</div>
+                      <div className="text-center text-white flex flex-col items-center">
+                        <div className="text-2xl mb-1">
+                          {config.iconUrl ? (
+                            <img src={config.iconUrl} alt={themeOption.name} className="w-8 h-8 object-contain" />
+                          ) : (
+                            themeOption.emoji
+                          )}
+                        </div>
                         <div className="text-sm font-medium">{themeOption.name}</div>
                       </div>
                       

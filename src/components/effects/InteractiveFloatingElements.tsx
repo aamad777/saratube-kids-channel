@@ -152,6 +152,21 @@ const getThemeElements = (themeName: string): { icons: ReactNode[]; colors: stri
         ],
         colors: ["text-sky-400", "text-cyan-400", "text-slate-400", "text-blue-400"],
       };
+    case "labubu_pink":
+    case "labubu_green":
+    case "labubu_brown":
+    case "labubu_blue":
+      return {
+        icons: [
+          <img key="e1" src="/assets/themes/labubu-icon.png" alt="Labubu" className="w-full h-full object-contain" />,
+          <span key="e2">✨</span>,
+          <span key="e3">💖</span>,
+          <span key="e4">🍭</span>,
+          <span key="e5">🌟</span>,
+          <img key="e6" src="/assets/themes/labubu-icon.png" alt="Labubu" className="w-full h-full object-contain opacity-70" />,
+        ],
+        colors: ["text-rose-300", "text-pink-300", "text-emerald-300", "text-amber-300"],
+      };
     default: // rainbow
       return {
         icons: [

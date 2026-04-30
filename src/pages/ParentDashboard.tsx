@@ -643,15 +643,19 @@ const ParentDashboard = () => {
                       }`}
                       onClick={() => setSelectedChild(child.user_id)}
                     >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-2xl">
-                        {child.selected_theme === "princess" ? "👑" : 
-                         child.selected_theme === "superhero" ? "⚡" :
-                         child.selected_theme === "dinosaur" ? "🦖" :
-                         child.selected_theme === "ocean" ? "🌊" :
-                         child.selected_theme === "space" ? "🚀" :
-                         child.selected_theme === "jungle" ? "🌴" :
-                         child.selected_theme === "bunny" ? "🐰" :
-                         child.selected_theme === "candy" ? "🍭" : "🌈"}
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${themeConfigs[child.selected_theme as AppTheme]?.primary || "from-pink-500 to-purple-500"} flex items-center justify-center text-2xl overflow-hidden`}>
+                        {themeConfigs[child.selected_theme as AppTheme]?.iconUrl ? (
+                          <img src={themeConfigs[child.selected_theme as AppTheme]?.iconUrl} alt={child.selected_theme || ""} className="w-8 h-8 object-contain" />
+                        ) : (
+                          child.selected_theme === "princess" ? "👑" : 
+                          child.selected_theme === "superhero" ? "⚡" :
+                          child.selected_theme === "dinosaur" ? "🦖" :
+                          child.selected_theme === "ocean" ? "🌊" :
+                          child.selected_theme === "space" ? "🚀" :
+                          child.selected_theme === "jungle" ? "🌴" :
+                          child.selected_theme === "bunny" ? "🐰" :
+                          child.selected_theme === "candy" ? "🍭" : "🌈"
+                        )}
                       </div>
                       <div className="text-left flex-1 min-w-0">
                         <p className="font-medium truncate">{child.display_name}</p>
