@@ -20,5 +20,7 @@ spec:
           ports:
             - containerPort: 3000
           envFrom:
+            - configMapRef:
+                name: saratube-api-config
             - secretRef:
                 name: saratube-api-secret
