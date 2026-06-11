@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saratube-api
+  namespace: saratube-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saratube-api
+  template:
+    metadata:
+      labels:
+        app: saratube-api
+    spec:
+      containers:
+        - name: saratube-api
+          image: saratube-api:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: saratube-api-secret
