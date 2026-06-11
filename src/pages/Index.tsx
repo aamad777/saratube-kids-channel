@@ -25,7 +25,11 @@ const Index = () => {
   const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
   const [blockedMediaIds, setBlockedMediaIds] = useState<string[]>([]);
   const [mediaType, setMediaType] = useState<"home" | "videos" | "photos">("home");
-
+  const [apiStatus, setApiStatus] = useState<{
+  status: string;
+  rows?: { id: number; message: string; created_at: string }[];
+  error?: string;
+} | null>(null);
   // Determine the default category based on theme
   const themeCategory = themeCategoryMap[themeName] || null;
   const [category, setCategory] = useState(themeCategory && isChildActive ? themeCategory : "all");
@@ -59,8 +63,24 @@ const Index = () => {
 
     fetchBlocked();
   }, [isChildActive, childSession?.userId, user]);
+  // Test backend API connection to PostgreSQL
+  useEffect(() => {
+    const fetchApiStatus = async () => {
+      try {
+        const response = await fetch("http://192.168.0.113:30088/persistence-test");
+        const data = await response.json();
+        setApiStatus(data);
+      } catch (error) {
+        setApiStatus({
+          status: "api connection failed",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    };
 
-  // Reset category when theme changes for child sessions
+    fetchApiStatus();
+  }, []);
+// Reset category when theme changes for child sessions
   useEffect(() => {
     if (isChildActive && themeCategory) {
       setCategory(themeCategory);
@@ -90,7 +110,33 @@ const Index = () => {
       )}
 
       <HeroSection />
-      
+            {/* Backend API / PostgreSQL status card */}
+      <section className="container relative z-10 mt-6 px-4">
+        <div className="rounded-2xl border bg-card/80 p-4 shadow-sm backdrop-blur-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-lg font-bold">Database API Status</h3>
+              <p className="text-sm text-muted-foreground">
+                Frontend → Backend API → PostgreSQL in saratube-data namespace
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-muted px-4 py-2 text-sm">
+              {apiStatus ? apiStatus.status : "Checking API..."}
+            </div>
+          </div>
+
+          {apiStatus?.rows?.length ? (
+            <div className="mt-3 rounded-xl bg-muted/50 p-3 text-sm">
+              <strong>Database message:</strong> {apiStatus.rows[0].message}
+            </div>
+          ) : apiStatus?.error ? (
+            <div className="mt-3 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
+              <strong>Error:</strong> {apiStatus.error}
+            </div>
+          ) : null}
+        </div>
+      </section>
       {/* Trending Section */}
       <section id="videos" className="py-16 relative overflow-hidden">
         {/* Fun background pattern */}
