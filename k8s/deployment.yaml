@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saratube-app
+  namespace: saratube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saratube-app
+  template:
+    metadata:
+      labels:
+        app: saratube-app
+    spec:
+      containers:
+        - name: saratube-app
+          image: saratube-kids-channel:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80

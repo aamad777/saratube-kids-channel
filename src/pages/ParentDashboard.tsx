@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { themeConfigs, AppTheme } from "@/hooks/useTheme";
 import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
