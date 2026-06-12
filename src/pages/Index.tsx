@@ -67,7 +67,8 @@ const Index = () => {
   useEffect(() => {
     const fetchApiStatus = async () => {
       try {
-        const response = await fetch("http://192.168.0.113:30088/persistence-test");
+        const apiUrl = import.meta.env.VITE_API_URL || "http://192.168.0.113:30088";
+        const response = await fetch(`${apiUrl}/persistence-test`);
         const data = await response.json();
         setApiStatus(data);
       } catch (error) {
