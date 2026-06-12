@@ -4,11 +4,10 @@ metadata:
   name: saratube-api-service
   namespace: saratube-app
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: saratube-api
   ports:
     - name: http
       port: 3000
       targetPort: 3000
-      nodePort: 30088
