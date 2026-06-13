@@ -22,8 +22,8 @@ spec:
               app: saratube-app
       containers:
         - name: saratube-app
-          image: saratube-kids-channel:local
-          imagePullPolicy: Never
+          image: 192.168.0.101:5050/saratube-kids-channel:v101
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           resources:
