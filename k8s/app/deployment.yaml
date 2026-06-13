@@ -4,7 +4,7 @@ metadata:
   name: saratube-app
   namespace: saratube-app
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: saratube-app
@@ -13,6 +13,13 @@ spec:
       labels:
         app: saratube-app
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: saratube-app
       containers:
         - name: saratube-app
           image: saratube-kids-channel:local
