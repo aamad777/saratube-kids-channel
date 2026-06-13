@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Video, Image as ImageIcon } from "lucide-react";
 import { sampleVideos } from "@/data/videoData";
+import PromoSection from "@/components/home/PromoSection";
 
 const Index = () => {
   const { theme, themeName } = useTheme();
@@ -111,7 +112,11 @@ const Index = () => {
       )}
 
       <HeroSection />
-            {/* Backend API / PostgreSQL status card */}
+
+      {/* Visual promotional section telling kids & parents about the site */}
+      {!isChildActive && <PromoSection />}
+
+      {/* Backend API / PostgreSQL status card */}
       <section className="container relative z-10 mt-6 px-4">
         <div className="rounded-2xl border bg-card/80 p-4 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
