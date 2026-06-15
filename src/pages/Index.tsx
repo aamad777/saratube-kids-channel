@@ -4,10 +4,12 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
 import VideoGrid from "@/components/video/VideoGrid";
 import KidsPhotoFeed from "@/components/kids/KidsPhotoFeed";
+import NasChildMediaGallery from "@/components/kids/NasChildMediaGallery";
 import UnifiedMediaGrid from "@/components/home/UnifiedMediaGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
 import KidsChatBot from "@/components/ai/KidsChatBot";
 import MobileKidsHeader from "@/components/mobile/MobileKidsHeader";
+import AdminGearButton from "@/components/admin/AdminGearButton";
 import MobileSwipeCarousel from "@/components/mobile/MobileSwipeCarousel";
 import { useTheme, themeCategoryMap, themeConfigs } from "@/hooks/useTheme";
 import { useChildSession } from "@/contexts/ChildSessionContext";
@@ -68,7 +70,7 @@ const Index = () => {
   useEffect(() => {
     const fetchApiStatus = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://192.168.0.113:30088";
+        const apiUrl = import.meta.env.VITE_API_URL || "http://192.168.0.113:30080/api";
         const response = await fetch(`${apiUrl}/persistence-test`);
         const data = await response.json();
         setApiStatus(data);
@@ -94,6 +96,7 @@ const Index = () => {
   return (
     <ThemedLayout>
       {/* Fun mobile kids header */}
+      <AdminGearButton />
       <MobileKidsHeader />
 
       {/* Mobile swipe carousel for trending */}
@@ -120,12 +123,8 @@ const Index = () => {
       <section className="container relative z-10 mt-6 px-4">
         <div className="rounded-2xl border bg-card/80 p-4 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h3 className="text-lg font-bold">Database API Status</h3>
-              <p className="text-sm text-muted-foreground">
-                Frontend → Backend API → PostgreSQL in saratube-data namespace
-              </p>
-            </div>
+            
+
 
             <div className="rounded-xl bg-muted px-4 py-2 text-sm">
               {apiStatus ? apiStatus.status : "Checking API..."}
@@ -143,6 +142,9 @@ const Index = () => {
           ) : null}
         </div>
       </section>
+      {/* NAS child media gallery from PostgreSQL permissions + NAS storage */}
+      <NasChildMediaGallery childLoginName="sasa" />
+
       {/* Trending Section */}
       <section id="videos" className="py-16 relative overflow-hidden">
         {/* Fun background pattern */}

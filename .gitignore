@@ -32,3 +32,9 @@ dist-ssr
 supabase/.branches/
 supabase/.temp/
 supabase/snippets
+
+# Local backup files created during lab troubleshooting
+*.bak
+*.bak-*
+*.backup
+*.backup-*
