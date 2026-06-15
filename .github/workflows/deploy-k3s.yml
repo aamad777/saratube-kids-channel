@@ -14,11 +14,11 @@ env:
   DEPLOYMENT_NAME: saratube-app
   CONTAINER_NAME: saratube-app
   DOCKER_HOST: unix:///var/run/docker.sock
-  KUBECONFIG: /home/ahmad/.kube/config
+  KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, k3s, docker, dell]
 
     steps:
       - name: Checkout code
