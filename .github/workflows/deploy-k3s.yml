@@ -13,6 +13,8 @@ env:
   NAMESPACE: saratube-app
   DEPLOYMENT_NAME: saratube-app
   CONTAINER_NAME: saratube-app
+  DOCKER_HOST: unix:///var/run/docker.sock
+  KUBECONFIG: /home/ahmad/.kube/config
 
 jobs:
   build-and-deploy:
