@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: saratube-frontend-ingress
+  namespace: saratube-app
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: saratube-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
