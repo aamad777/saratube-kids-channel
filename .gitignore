@@ -38,3 +38,5 @@ supabase/snippets
 *.bak-*
 *.backup
 *.backup-*
+.env
+.env.local
