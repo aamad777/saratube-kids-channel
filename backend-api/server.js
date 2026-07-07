@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
+import { registerAuthRoutes } from "./auth.js";
 
 const { Pool } = pg;
 
@@ -65,6 +66,7 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD
 });
+registerAuthRoutes(app, pool);
 
 function safeFileName(originalName) {
   const ext = path.extname(originalName || "").toLowerCase();
