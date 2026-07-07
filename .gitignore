@@ -40,3 +40,5 @@ supabase/snippets
 *.backup-*
 .env
 .env.local
+*.bak*
+npm_install_output.txt
