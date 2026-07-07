@@ -72,15 +72,32 @@ export function registerDataRoutes(app, pool) {
   });
 
   app.put('/api/media/:id', requireAuth, requireParent, async (req, res) => {
-    const { original_name, visibility } = req.body || {};
+    const { original_name, visibility, title, description, category, available_from, available_until } = req.body || {};
     const { rows } = await pool.query(
       `UPDATE media_files SET
-         original_name = COALESCE($1, original_name),
-         visibility    = COALESCE($2, visibility)
-       WHERE id=$3 RETURNING *`,
-      [original_name, visibility, req.params.id]);
+         original_name    = COALESCE($1, original_name),
+         visibility       = COALESCE($2, visibility),
+         title            = COALESCE($3, title),
+         description      = COALESCE($4, description),
+         category         = COALESCE($5, category),
+         available_from   = $6,
+         available_until  = $7
+       WHERE id=$8 RETURNING *`,
+      [original_name, visibility, title, description, category,
+       available_from || null, available_until || null, req.params.id]);
     if (!rows[0]) return res.status(404).json({ error: 'media not found' });
     res.json(rows[0]);
+  });
+
+  // Add children to an item's access list WITHOUT removing existing ones (bulk assign)
+  app.post('/api/media/:id/access/add', requireAuth, requireParent, async (req, res) => {
+    const childIds = (req.body?.child_ids || []).map(Number).filter(Boolean);
+    const mediaId = Number(req.params.id);
+    for (const cid of childIds)
+      await pool.query(
+        `INSERT INTO media_child_access (media_id, child_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+        [mediaId, cid]);
+    res.json({ ok: true });
   });
 
   app.delete('/api/media/:id', requireAuth, requireParent, async (req, res) => {

@@ -207,35 +207,17 @@ const ParentDashboard = () => {
 
     setIsSaving(true);
     try {
-      // Update video metadata
-      const { error: updateError } = await supabase
-        .from("videos")
-        .update({
-          title: editForm.title,
-          description: editForm.description || null,
-          category: editForm.category,
-          available_from: editForm.availableFrom || null,
-          available_until: editForm.availableUntil || null,
-        })
-        .eq("id", editingVideo.id);
+      await api.put(`/media/${editingVideo.id}`, {
+        title: editForm.title,
+        description: editForm.description || null,
+        category: editForm.category,
+        available_from: editForm.availableFrom || null,
+        available_until: editForm.availableUntil || null,
+      });
 
-      if (updateError) throw updateError;
-
-      // Update child access - remove all then add selected
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", editingVideo.id);
-
-      if (editForm.selectedChildren.length > 0) {
-        const accessRecords = editForm.selectedChildren.map(childId => ({
-          video_id: editingVideo.id,
-          child_user_id: childId,
-          granted_by: user.id,
-        }));
-
-        await supabase.from("video_child_access").insert(accessRecords);
-      }
+      await api.put(`/media/${editingVideo.id}/access`, {
+        child_ids: editForm.selectedChildren,
+      });
 
       toast.success("Video updated successfully! 🎉");
       setEditingVideo(null);
