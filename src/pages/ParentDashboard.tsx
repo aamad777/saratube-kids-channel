@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
@@ -156,13 +157,7 @@ const ParentDashboard = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("created_by_parent", user.id)
-        .eq("is_parent", false);
-
-      if (error) throw error;
+      const data = await api.get<any[]>("/children");
       setCreatedChildren(data || []);
     } catch (error) {
       console.error("Error fetching created children:", error);
@@ -179,38 +174,14 @@ const ParentDashboard = () => {
     if (!user) return;
     setLoadingVideos(true);
     try {
-      const { data: videos, error } = await supabase
-        .from("videos")
-        .select("*")
-        .eq("uploaded_by", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch child access for each video
-      const videosWithAccess: ParentVideo[] = await Promise.all(
-        (videos || []).map(async (video) => {
-          const { data: access } = await supabase
-            .from("video_child_access")
-            .select("child_user_id")
-            .eq("video_id", video.id);
-
-          const childIds = access?.map(a => a.child_user_id) || [];
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, display_name")
-            .in("user_id", childIds.length > 0 ? childIds : ["none"]);
-
-          return {
-            ...video,
-            child_access: profiles?.map(p => ({
-              child_user_id: p.user_id,
-              display_name: p.display_name,
-            })) || [],
-          };
-        })
-      );
-
+      const media = await api.get<any[]>("/media?type=video");
+      const videosWithAccess: ParentVideo[] = media.map((m: any) => ({
+        ...m,
+        child_access: (m.access || []).map((a: any) => ({
+          child_user_id: String(a.child_id),
+          display_name: a.name,
+        })),
+      }));
       setMyVideos(videosWithAccess);
     } catch (error) {
       console.error("Error fetching videos:", error);
