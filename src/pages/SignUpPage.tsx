@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const { signup } = useAuth();
 
   const handleSignUp = async () => {
     if (!email || !password || !displayName) {
@@ -31,31 +32,9 @@ const SignUpPage = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            display_name: displayName,
-            is_parent: true,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        await supabase
-          .from("profiles")
-          .update({ 
-            is_parent: true,
-          })
-          .eq("user_id", data.user.id);
-
-        toast.success("Welcome! You can now create profiles for your kids! 🎉");
-        navigate("/parent");
-      }
+      await signup(email, password, displayName);
+      toast.success("Welcome! You can now create profiles for your kids!");
+      navigate("/parent");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong!");
     } finally {

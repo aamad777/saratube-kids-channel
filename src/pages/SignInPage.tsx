@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ const SignInPage = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useAuth();
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
@@ -23,19 +24,7 @@ const SignInPage = () => {
       toast.error("Please enter your email address");
       return;
     }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/signin`,
-      });
-      if (error) throw error;
-      setResetSent(true);
-      toast.success("Password reset link sent! Check your email 📧");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send reset link");
-    } finally {
-      setLoading(false);
-    }
+    toast.info("Password reset is handled by the admin. Please contact them. 🛠️");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -48,12 +37,7 @@ const SignInPage = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      await login(email, password);
 
       toast.success("Welcome back! 🎉✨");
       navigate("/");
