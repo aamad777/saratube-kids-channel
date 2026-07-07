@@ -234,22 +234,11 @@ const ParentDashboard = () => {
     
     setIsBulkLinking(true);
     try {
-      const accessRecords = [];
+      const promises = [];
       for (const videoId of selectedVideos) {
-        for (const childId of bulkTargetChildren) {
-          accessRecords.push({
-            video_id: videoId,
-            child_user_id: childId,
-            granted_by: user.id
-          });
-        }
+        promises.push(api.post(`/media/${videoId}/access/add`, { child_ids: bulkTargetChildren }));
       }
-
-      const { error } = await supabase
-        .from("video_child_access")
-        .upsert(accessRecords, { onConflict: 'video_id,child_user_id' });
-
-      if (error) throw error;
+      await Promise.all(promises);
 
       toast.success(`Successfully linked ${selectedVideos.length} videos to children! ✨`);
       setSelectedVideos([]);
@@ -268,19 +257,7 @@ const ParentDashboard = () => {
     if (!deleteVideoId) return;
 
     try {
-      // Delete child access first
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", deleteVideoId);
-
-      // Delete video record
-      const { error } = await supabase
-        .from("videos")
-        .delete()
-        .eq("id", deleteVideoId);
-
-      if (error) throw error;
+      await api.del(`/media/${deleteVideoId}`);
 
       toast.success("Video deleted successfully");
       setDeleteVideoId(null);
@@ -294,9 +271,7 @@ const ParentDashboard = () => {
     if (!deleteChildId) return;
     
     try {
-      const { error } = await (supabase as any).rpc('delete_child_profile', { p_child_id: deleteChildId });
-      
-      if (error) throw error;
+      await api.del(`/children/${deleteChildId}`);
       
       toast.success("Child profile deleted successfully! 🗑️");
       setDeleteChildId(null);
