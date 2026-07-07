@@ -326,39 +326,17 @@ const ParentDashboard = () => {
 
   const fetchChildData = async (childId: string) => {
     try {
-      // Fetch activity logs
-      const { data: logs } = await supabase
-        .from("activity_logs")
-        .select("*")
-        .eq("user_id", childId)
-        .order("watched_at", { ascending: false })
-        .limit(20);
+      const logs = await api.get<any[]>(`/children/${childId}/activity`);
       setActivityLogs(logs || []);
 
-      // Fetch time limits
-      const { data: limits } = await supabase
-        .from("time_limits")
-        .select("*")
-        .eq("child_user_id", childId)
-        .single();
-      setTimeLimit(limits);
+      const limit = await api.get<any>(`/children/${childId}/time-limit`);
+      setTimeLimit(limit);
 
-      // Fetch today's watch time
-      const today = new Date().toISOString().split("T")[0];
-      const { data: watchTime } = await supabase
-        .from("daily_watch_time")
-        .select("*")
-        .eq("user_id", childId)
-        .eq("watch_date", today)
-        .single();
-      setDailyWatchTime(watchTime);
+      const watchDays = await api.get<any[]>(`/children/${childId}/watch-time?days=1`);
+      setDailyWatchTime(watchDays[0] || null);
 
-      // Fetch blocked categories
-      const { data: blocked } = await supabase
-        .from("blocked_categories")
-        .select("category")
-        .eq("child_user_id", childId);
-      setBlockedCategories(blocked?.map(b => b.category) || []);
+      const blocked = await api.get<string[]>(`/children/${childId}/blocked-categories`);
+      setBlockedCategories(blocked || []);
     } catch (error) {
       console.error("Error fetching child data:", error);
     }
