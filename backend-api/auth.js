@@ -47,6 +47,25 @@ export function registerAuthRoutes(app, pool) {
     res.json({ token, user: { id: u.id, display_name: u.display_name, email: u.email } });
   });
 
+  // Public: find children by display name (for the kid login screen)
+  app.get('/api/children/lookup', async (req, res) => {
+    const name = String(req.query.name || '').trim();
+    const code = String(req.query.code || '').trim();
+    if (!name && !code) return res.status(400).json({ error: 'name or code required' });
+    const { rows } = code
+      ? await pool.query(`SELECT id, display_name, login_name, selected_theme, avatar_url FROM children WHERE UPPER(login_code)=UPPER($1)`, [code])
+      : await pool.query(`SELECT id, display_name, login_name, selected_theme, avatar_url FROM children WHERE display_name ILIKE $1 OR LOWER(login_name)=LOWER($1)`, [name]);
+    res.json(rows);
+  });
+
+  // Child updates own theme
+  app.put('/api/children/theme', requireAuth, async (req, res) => {
+    const { theme } = req.body || {};
+    if (req.user.role !== 'child') return res.status(403).json({ error: 'child token required' });
+    await pool.query(`UPDATE children SET selected_theme=$1 WHERE id=$2`, [theme || 'rainbow', req.user.sub]);
+    res.json({ ok: true });
+  });
+
   app.post('/api/auth/kid-login', async (req, res) => {
     const { login_name, pin } = req.body || {};
     const { rows } = await pool.query(

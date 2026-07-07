@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api, setToken } from "@/lib/api";
 import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,14 +49,7 @@ const KidLoginPage = () => {
 
     setLoading(true);
     try {
-      // Direct select from profiles instead of RPC to avoid schema cache issues
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, selected_theme, dummy_email")
-        .ilike("display_name", childName.trim())
-        .eq("is_parent", false);
-
-      if (error) throw error;
+      const data = await api.get<any[]>(`/children/lookup?name=${encodeURIComponent(childName.trim())}`);
 
       if (!data || data.length === 0) {
         toast.error("Profile not found. Ask your parent for help!");
@@ -87,13 +80,8 @@ const KidLoginPage = () => {
     if (!loginId.trim()) return;
     setLoading(true);
     try {
-      const { data, error } = await (supabase.from("profiles") as any)
-        .select("id, display_name, avatar_url, selected_theme, dummy_email, child_login_id")
-        .eq("child_login_id", loginId.trim().toUpperCase())
-        .eq("is_parent", false)
-        .maybeSingle();
-
-      if (error) throw error;
+      const rows = await api.get<any[]>(`/children/lookup?code=${encodeURIComponent(loginId.trim())}`);
+      const data = rows[0] || null;
       if (!data) {
         toast.error("Login ID not found. Check with your parent! 🔍");
         return;
@@ -113,24 +101,13 @@ const KidLoginPage = () => {
     if (!selectedChild) return;
     
     setLoading(true);
-    console.log("Attempting login for:", selectedChild.dummy_email, "with PIN:", p);
-    
     try {
-      // Direct sign-in using the dummy email and PIN as password
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: selectedChild.dummy_email,
-        password: p,
+      const res = await api.post<{ token: string; child: any }>("/auth/kid-login", {
+        login_name: (selectedChild as any).login_name || selectedChild.display_name,
+        pin: p,
       });
-
-      if (error) {
-        console.error("Supabase Auth Error:", error);
-        setPinError(true);
-        setPin("");
-        toast.error(`Error: ${error.message}`);
-        throw error;
-      }
-
-      console.log("Login successful! User data:", data.user);
+      setToken(res.token);
+      const data = { user: { id: String(res.child.id) } };
 
       // Success! Set the child session
       setChildSession({
@@ -138,7 +115,7 @@ const KidLoginPage = () => {
         userId: data.user.id,
         name: selectedChild.display_name,
         theme: selectedChild.selected_theme || "rainbow",
-        age: (data.user.user_metadata as any).age || null,
+        age: null,
       });
 
       toast.success(`Welcome back, ${selectedChild.display_name}! 🌈✨`);
