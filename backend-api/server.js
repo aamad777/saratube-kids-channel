@@ -786,6 +786,42 @@ function renderMediaPage(title, files, options = {}) {
 
       ${options.showAdminForm ? `
       <div class="upload-box">
+        <h2>Admin tools</h2>
+
+        ${options.reindexMessage ? `<p style="background:#e8fff1;border:1px solid #b7ebc6;padding:10px;border-radius:8px;">${options.reindexMessage}</p>` : ""}
+
+        <form method="GET" action="/api/admin/media-db-page" style="margin-bottom:14px;">
+          <input type="hidden" name="key" value="${options.adminKey || ""}" />
+
+          <label>Media type filter</label>
+          <select name="mediaType">
+            <option value="all" ${(options.filters?.mediaType || "all") === "all" ? "selected" : ""}>All media</option>
+            <option value="photo" ${(options.filters?.mediaType || "all") === "photo" ? "selected" : ""}>Photos only</option>
+            <option value="video" ${(options.filters?.mediaType || "all") === "video" ? "selected" : ""}>Videos only</option>
+          </select>
+
+          <label>Assignment filter</label>
+          <select name="assignment">
+            <option value="all" ${(options.filters?.assignment || "all") === "all" ? "selected" : ""}>All</option>
+            <option value="assigned" ${(options.filters?.assignment || "all") === "assigned" ? "selected" : ""}>Assigned only</option>
+            <option value="unassigned" ${(options.filters?.assignment || "all") === "unassigned" ? "selected" : ""}>Not assigned only</option>
+          </select>
+
+          <button type="submit">Apply filters</button>
+        </form>
+
+        <form method="POST" action="/api/admin/media/reindex?key=${encodeURIComponent(options.adminKey || "")}" onsubmit="return confirm('Reindex copied NAS files now?');">
+          <input type="hidden" name="adminKey" value="${options.adminKey || ""}" />
+          <button type="submit">Reindex copied NAS files</button>
+        </form>
+
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" onclick="setAllMediaCheckboxes(true)">Select all shown</button>
+          <button type="button" onclick="setAllMediaCheckboxes(false)">Unselect all shown</button>
+        </div>
+      </div>
+
+      <div class="upload-box">
         <h2>Bulk update selected media</h2>
         <form id="bulkUpdateForm" method="POST" action="/api/admin/media/bulk-update?key=${encodeURIComponent(options.adminKey || "")}">
           <input type="hidden" name="adminKey" value="${options.adminKey || ""}" />
@@ -810,6 +846,19 @@ function renderMediaPage(title, files, options = {}) {
           <button type="submit">Update selected media</button>
         </form>
         <p style="font-size:13px;color:#666;">Tick media cards below, choose child/visibility here, then click update selected media.</p>
+      </div>
+
+      <div class="upload-box">
+        <h2>Bulk delete selected media</h2>
+        <form id="bulkDeleteForm" method="POST" action="/api/admin/media/bulk-delete?key=${encodeURIComponent(options.adminKey || "")}" onsubmit="return prepareBulkDelete();">
+          <input type="hidden" name="adminKey" value="${options.adminKey || ""}" />
+          <label>
+            <input type="checkbox" name="deleteFiles" value="yes" />
+            Also delete selected files from NAS
+          </label>
+          <button type="submit" style="background:#b91c1c;">Delete selected media</button>
+        </form>
+        <p style="font-size:13px;color:#666;">This deletes selected database records. Tick the checkbox to also delete files from NAS.</p>
       </div>
 
       <div class="upload-box">
@@ -838,6 +887,37 @@ function renderMediaPage(title, files, options = {}) {
       <div class="grid">
         ${cards || "<p>No media found.</p>"}
       </div>
+      <script>
+        function setAllMediaCheckboxes(checked) {
+          document.querySelectorAll('input[name="mediaIds"]').forEach(function(cb) {
+            cb.checked = checked;
+          });
+        }
+
+        function prepareBulkDelete() {
+          const selected = Array.from(document.querySelectorAll('input[name="mediaIds"]:checked'));
+          if (selected.length === 0) {
+            alert("Please select at least one media item.");
+            return false;
+          }
+
+          const form = document.getElementById("bulkDeleteForm");
+          form.querySelectorAll('input[data-generated="media-id"]').forEach(function(input) {
+            input.remove();
+          });
+
+          selected.forEach(function(cb) {
+            const hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = "mediaIds";
+            hidden.value = cb.value;
+            hidden.setAttribute("data-generated", "media-id");
+            form.appendChild(hidden);
+          });
+
+          return confirm("Delete " + selected.length + " selected media item(s)?");
+        }
+      </script>
     </body>
     </html>
   `;
@@ -845,8 +925,32 @@ function renderMediaPage(title, files, options = {}) {
 
 app.get("/admin/media-db-page", requireAdminKey, async (req, res) => {
   try {
+    const adminKey = req.query.key || req.body?.adminKey || req.headers["x-admin-key"] || "";
+
+    const mediaTypeFilter = req.query.mediaType || "all";
+    const assignmentFilter = req.query.assignment || "all";
+
+    const where = [];
+    const params = [];
+
+    if (["photo", "video"].includes(mediaTypeFilter)) {
+      params.push(mediaTypeFilter);
+      where.push(`media_type = $${params.length}`);
+    }
+
+    if (assignmentFilter === "assigned") {
+      where.push(`(assigned_child_id IS NOT NULL OR NULLIF(assigned_child_name, '') IS NOT NULL)`);
+    }
+
+    if (assignmentFilter === "unassigned") {
+      where.push(`(assigned_child_id IS NULL AND (assigned_child_name IS NULL OR assigned_child_name = ''))`);
+    }
+
+    const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+
     const mediaResult = await pool.query(
-      "SELECT * FROM media_files ORDER BY created_at DESC"
+      `SELECT * FROM media_files ${whereSql} ORDER BY created_at DESC`,
+      params
     );
 
     const childrenResult = await pool.query(
@@ -860,17 +964,26 @@ app.get("/admin/media-db-page", requireAdminKey, async (req, res) => {
        ORDER BY c.display_name`
     );
 
-    const adminKey = req.query.key || req.body?.adminKey || req.headers["x-admin-key"] || "";
-
     console.log("ADMIN_PAGE_CHILDREN_DEBUG " + JSON.stringify({
       childCount: childrenResult.rowCount,
-      children: childrenResult.rows
+      children: childrenResult.rows,
+      filters: {
+        mediaType: mediaTypeFilter,
+        assignment: assignmentFilter
+      }
     }));
 
     res.send(renderMediaPage("Master Admin - Registered Media", mediaResult.rows, {
       showAdminForm: true,
       adminKey,
-      children: childrenResult.rows
+      children: childrenResult.rows,
+      filters: {
+        mediaType: mediaTypeFilter,
+        assignment: assignmentFilter
+      },
+      reindexMessage: req.query.reindexed === "1"
+        ? `Reindex completed. Imported photos: ${req.query.photosImported || 0}, imported videos: ${req.query.videosImported || 0}.`
+        : ""
     }));
   } catch (error) {
     console.log("ADMIN_PAGE_ERROR", error);
@@ -954,6 +1067,168 @@ const adminMediaUpload = multer({
     cb(null, true);
   }
 });
+
+
+function isSupportedMediaFile(filename, mediaType) {
+  const ext = path.extname(filename).toLowerCase();
+
+  if (mediaType === "photo") {
+    return [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"].includes(ext);
+  }
+
+  if (mediaType === "video") {
+    return [".mp4", ".mov", ".webm", ".mkv", ".avi", ".m4v"].includes(ext);
+  }
+
+  return false;
+}
+
+async function reindexMediaFolder(folderPath, mediaType) {
+  if (!fs.existsSync(folderPath)) {
+    return { scanned: 0, imported: 0, skipped: 0 };
+  }
+
+  const files = fs.readdirSync(folderPath, { withFileTypes: true })
+    .filter(item => item.isFile())
+    .map(item => item.name)
+    .filter(name => !name.startsWith("."))
+    .filter(name => isSupportedMediaFile(name, mediaType))
+    .sort();
+
+  let imported = 0;
+  let skipped = 0;
+
+  for (const filename of files) {
+    const storagePath = `/app/uploads/${mediaType}s/${filename}`;
+    const publicUrl = `/api/uploads/${mediaType}s/${filename}`;
+
+    const result = await pool.query(
+      `
+      INSERT INTO media_files (
+        filename,
+        original_name,
+        media_type,
+        storage_path,
+        public_url,
+        uploaded_by,
+        visibility
+      )
+      SELECT
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        'admin-reindex',
+        'admin_only'
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM media_files
+        WHERE filename = $1
+          AND media_type = $3
+      )
+      RETURNING id
+      `,
+      [filename, filename, mediaType, storagePath, publicUrl]
+    );
+
+    if (result.rowCount > 0) {
+      imported++;
+    } else {
+      skipped++;
+    }
+  }
+
+  return {
+    scanned: files.length,
+    imported,
+    skipped
+  };
+}
+
+app.post("/admin/media/reindex", requireAdminKey, async (req, res) => {
+  try {
+    const adminKey = req.query.key || req.body?.adminKey || req.headers["x-admin-key"] || "";
+
+    const photoResult = await reindexMediaFolder(photosDir, "photo");
+    const videoResult = await reindexMediaFolder(videosDir, "video");
+
+    console.log("MEDIA_REINDEX_RESULT_JSON " + JSON.stringify({
+      photoResult,
+      videoResult
+    }));
+
+    res.redirect(`/api/admin/media-db-page?key=${encodeURIComponent(adminKey)}&reindexed=1&photosImported=${photoResult.imported}&videosImported=${videoResult.imported}`);
+  } catch (error) {
+    console.log("MEDIA_REINDEX_ERROR", error);
+    res.status(500).send(`<h1>Reindex failed</h1><pre>${error.message}</pre>`);
+  }
+});
+
+app.post("/admin/media/bulk-delete", requireAdminKey, async (req, res) => {
+  try {
+    const adminKey = req.query.key || req.body?.adminKey || req.headers["x-admin-key"] || "";
+    const deleteFiles = req.body?.deleteFiles === "yes";
+
+    let mediaIds = req.body?.mediaIds || [];
+    if (!Array.isArray(mediaIds)) {
+      mediaIds = [mediaIds];
+    }
+
+    mediaIds = mediaIds
+      .map(id => Number(id))
+      .filter(id => Number.isInteger(id) && id > 0);
+
+    if (mediaIds.length === 0) {
+      return res.status(400).send(`
+        <h1>No media selected</h1>
+        <p>Please go back, select at least one media item, then try again.</p>
+        <a href="/api/admin/media-db-page?key=${encodeURIComponent(adminKey)}">Back to admin media</a>
+      `);
+    }
+
+    const existing = await pool.query(
+      "SELECT * FROM media_files WHERE id = ANY($1::int[])",
+      [mediaIds]
+    );
+
+    if (deleteFiles) {
+      for (const file of existing.rows) {
+        let realPath = null;
+
+        if (file.media_type === "photo") {
+          realPath = path.join(photosDir, file.filename);
+        }
+
+        if (file.media_type === "video") {
+          realPath = path.join(videosDir, file.filename);
+        }
+
+        if (realPath && fs.existsSync(realPath)) {
+          fs.unlinkSync(realPath);
+        }
+      }
+    }
+
+    const result = await pool.query(
+      "DELETE FROM media_files WHERE id = ANY($1::int[]) RETURNING id, filename, media_type",
+      [mediaIds]
+    );
+
+    console.log("MEDIA_BULK_DELETE_RESULT_JSON " + JSON.stringify({
+      deleteFiles,
+      requestedCount: mediaIds.length,
+      deletedCount: result.rowCount,
+      rows: result.rows
+    }));
+
+    res.redirect(`/api/admin/media-db-page?key=${encodeURIComponent(adminKey)}`);
+  } catch (error) {
+    console.log("MEDIA_BULK_DELETE_ERROR", error);
+    res.status(500).send(`<h1>Bulk delete failed</h1><pre>${error.message}</pre>`);
+  }
+});
+
 
 app.post("/admin/media/upload", requireAdminKey, adminMediaUpload.single("file"), async (req, res) => {
   try {
