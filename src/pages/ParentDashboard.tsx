@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
@@ -59,6 +58,7 @@ interface ChildProfile {
   created_by_parent: string | null;
   selected_theme: string | null;
   child_login_id?: string | null;
+  login_code?: string | null;
 }
 
 interface ActivityLog {
@@ -105,7 +105,6 @@ const ParentDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
-  const [children, setChildren] = useState<ChildProfile[]>([]);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [timeLimit, setTimeLimit] = useState<TimeLimit | null>(null);
@@ -142,7 +141,6 @@ const ParentDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      fetchChildren();
       fetchCreatedChildren();
       fetchMyVideos();
     }
@@ -156,6 +154,8 @@ const ParentDashboard = () => {
       setCreatedChildren(data || []);
     } catch (error) {
       console.error("Error fetching created children:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -271,7 +271,6 @@ const ParentDashboard = () => {
       toast.success("Child profile deleted successfully! 🗑️");
       setDeleteChildId(null);
       fetchCreatedChildren();
-      fetchChildren();
       if (selectedChild === deleteChildId) {
         setSelectedChild(null);
       }
@@ -290,34 +289,6 @@ const ParentDashboard = () => {
     }));
   };
 
-  const fetchChildren = async () => {
-    try {
-      const { data: links, error } = await supabase
-        .from("parent_child_links")
-        .select("child_user_id")
-        .eq("parent_user_id", user?.id);
-
-      if (error) throw error;
-
-      if (links && links.length > 0) {
-        const childIds = links.map(l => l.child_user_id);
-        const { data: profiles, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("user_id", childIds);
-
-        if (profileError) throw profileError;
-        setChildren(profiles || []);
-        if (profiles && profiles.length > 0 && !selectedChild) {
-          setSelectedChild(profiles[0].user_id);
-        }
-      }
-    } catch (error: any) {
-      console.error("Error fetching children:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchChildData = async (childId: string) => {
     try {
@@ -340,44 +311,24 @@ const ParentDashboard = () => {
 
   const updateTimeLimit = async (field: string, value: any) => {
     if (!selectedChild || !timeLimit) return;
-
     try {
-      const { error } = await supabase
-        .from("time_limits")
-        .update({ [field]: value })
-        .eq("child_user_id", selectedChild);
-
-      if (error) throw error;
-      setTimeLimit({ ...timeLimit, [field]: value });
+      const updated = await api.put<any>(`/children/${selectedChild}/time-limit`, { [field]: value });
+      setTimeLimit(updated);
       toast.success("Time limit updated! ⏰");
     } catch (error: any) {
       toast.error("Failed to update time limit");
     }
   };
 
-  const toggleBlockedCategory = async (category: string) => {
+    const toggleBlockedCategory = async (category: string) => {
     if (!selectedChild || !user) return;
-
     const isBlocked = blockedCategories.includes(category);
-
     try {
-      if (isBlocked) {
-        await supabase
-          .from("blocked_categories")
-          .delete()
-          .eq("child_user_id", selectedChild)
-          .eq("category", category);
-        setBlockedCategories(blockedCategories.filter(c => c !== category));
-      } else {
-        await supabase
-          .from("blocked_categories")
-          .insert({
-            child_user_id: selectedChild,
-            category,
-            blocked_by: user.id,
-          });
-        setBlockedCategories([...blockedCategories, category]);
-      }
+      const nextCategories = isBlocked
+        ? blockedCategories.filter(c => c !== category)
+        : [...blockedCategories, category];
+      await api.put(`/children/${selectedChild}/blocked-categories`, { categories: nextCategories });
+      setBlockedCategories(nextCategories);
       toast.success(isBlocked ? "Category unblocked" : "Category blocked");
     } catch (error) {
       toast.error("Failed to update blocked categories");
@@ -407,7 +358,7 @@ const ParentDashboard = () => {
     );
   }
 
-  const selectedChildProfile = children.find(c => c.user_id === selectedChild);
+  const selectedChildProfile = createdChildren.find(c => String(c.id) === selectedChild);
   const watchProgress = timeLimit && dailyWatchTime 
     ? Math.min((dailyWatchTime.total_seconds / 60 / timeLimit.daily_limit_minutes) * 100, 100)
     : 0;
@@ -445,13 +396,13 @@ const ParentDashboard = () => {
                   </p>
                   {createdChildren.map((child) => (
                     <div
-                      key={child.user_id}
+                      key={child.id}
                       className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
-                        selectedChild === child.user_id
+                        selectedChild === String(child.id)
                           ? "bg-primary/10 border-2 border-primary"
                           : "bg-muted hover:bg-muted/80 border-2 border-transparent"
                       }`}
-                      onClick={() => setSelectedChild(child.user_id)}
+                      onClick={() => setSelectedChild(String(child.id))}
                     >
                       <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${themeConfigs[child.selected_theme as AppTheme]?.primary || "from-pink-500 to-purple-500"} flex items-center justify-center text-2xl overflow-hidden`}>
                         {themeConfigs[child.selected_theme as AppTheme]?.iconUrl ? (
@@ -475,9 +426,9 @@ const ParentDashboard = () => {
                               {child.age} yrs
                             </span>
                           )}
-                          {child.child_login_id && (
+                          {child.login_code && (
                             <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded font-mono border border-accent/20 whitespace-nowrap">
-                              ID: {child.child_login_id}
+                              ID: {child.login_code}
                             </span>
                           )}
                         </div>
@@ -498,37 +449,7 @@ const ParentDashboard = () => {
                 </div>
               )}
 
-              {/* Linked Children */}
-              {children.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    {t("parent.linked.accounts")}
-                  </p>
-                  {children.map((child) => (
-                    <div
-                      key={child.user_id}
-                      className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
-                        selectedChild === child.user_id
-                          ? "bg-primary/10 border-2 border-primary"
-                          : "bg-muted hover:bg-muted/80 border-2 border-transparent"
-                      }`}
-                      onClick={() => setSelectedChild(child.user_id)}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
-                        {child.display_name?.charAt(0) || "?"}
-                      </div>
-                      <div className="text-left flex-1">
-                        <p className="font-medium">{child.display_name}</p>
-                        {child.age && (
-                          <p className="text-xs text-muted-foreground">{child.age} {t("parent.years.old")}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {children.length === 0 && createdChildren.length === 0 && (
+              {createdChildren.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   {t("parent.no.children")}
                 </p>
@@ -971,21 +892,21 @@ const ParentDashboard = () => {
                 Who can watch?
               </Label>
               <div className="space-y-3 p-4 bg-muted/50 rounded-2xl border border-border/50">
-                {children.map((child) => (
-                  <div key={child.user_id} className="flex items-center gap-3 p-2 hover:bg-background/50 rounded-xl transition-colors">
+                {createdChildren.map((child) => (
+                  <div key={child.id} className="flex items-center gap-3 p-2 hover:bg-background/50 rounded-xl transition-colors">
                     <Checkbox
-                      id={`edit-child-${child.user_id}`}
-                      checked={editForm.selectedChildren.includes(child.user_id)}
-                      onCheckedChange={() => toggleEditChildSelection(child.user_id)}
+                      id={`edit-child-${child.id}`}
+                      checked={editForm.selectedChildren.includes(String(child.id))}
+                      onCheckedChange={() => toggleEditChildSelection(String(child.id))}
                       className="h-5 w-5 rounded-md"
                     />
-                    <Label htmlFor={`edit-child-${child.user_id}`} className="cursor-pointer font-medium">
+                    <Label htmlFor={`edit-child-${child.id}`} className="cursor-pointer font-medium">
                       {child.display_name}
                     </Label>
                   </div>
                 ))}
-                {children.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic p-2">No linked children found</p>
+                {createdChildren.length === 0 && (
+                  <p className="text-sm text-muted-foreground italic p-2">No kids found. Create one first!</p>
                 )}
               </div>
             </div>
@@ -1126,24 +1047,24 @@ const ParentDashboard = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 gap-2">
-              {children.map((child) => (
-                <div 
-                  key={child.user_id} 
+              {createdChildren.map((child) => (
+                <div
+                  key={child.id}
                   className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                    bulkTargetChildren.includes(child.user_id) 
-                      ? "border-primary bg-primary/5 shadow-sm" 
+                    bulkTargetChildren.includes(String(child.id))
+                      ? "border-primary bg-primary/5 shadow-sm"
                       : "border-muted hover:border-primary/20"
                   }`}
                   onClick={() => {
-                    if (bulkTargetChildren.includes(child.user_id)) {
-                      setBulkTargetChildren(bulkTargetChildren.filter(id => id !== child.user_id));
+                    if (bulkTargetChildren.includes(String(child.id))) {
+                      setBulkTargetChildren(bulkTargetChildren.filter(id => id !== String(child.id)));
                     } else {
-                      setBulkTargetChildren([...bulkTargetChildren, child.user_id]);
+                      setBulkTargetChildren([...bulkTargetChildren, String(child.id)]);
                     }
                   }}
                 >
-                  <Checkbox 
-                    checked={bulkTargetChildren.includes(child.user_id)}
+                  <Checkbox
+                    checked={bulkTargetChildren.includes(String(child.id))}
                     className="h-5 w-5"
                   />
                   <div className="flex items-center gap-3">
@@ -1154,8 +1075,8 @@ const ParentDashboard = () => {
                   </div>
                 </div>
               ))}
-              {children.length === 0 && (
-                <p className="text-center text-muted-foreground py-4 italic">No children found</p>
+              {createdChildren.length === 0 && (
+                <p className="text-center text-muted-foreground py-4 italic">No kids found</p>
               )}
             </div>
           </div>
