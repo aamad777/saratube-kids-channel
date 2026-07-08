@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +42,19 @@ import CategoryManager from "@/components/parent/CategoryManager";
 import AgeFilterInfo from "@/components/parent/AgeFilterInfo";
 import ParentAIAdvisor from "@/components/parent/ParentAIAdvisor";
 import KidsPhotoGallery from "@/components/parent/KidsPhotoGallery";
+import ParentVideoManager from "@/components/parent/ParentVideoManager";
 import NASSetupGuide from "@/components/parent/NASSetupGuide";
 import { videoCategories } from "@/data/videoData";
+import { themeConfigs } from "@/hooks/useTheme";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+
+interface LocalUser {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
 
 interface ChildProfile {
   id: string;
@@ -100,7 +109,8 @@ const CATEGORY_OPTIONS = videoCategories.map(c => c.name);
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const [user, setUser] = useState<LocalUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<ChildProfile[]>([]);
@@ -138,85 +148,61 @@ const ParentDashboard = () => {
   const [isBulkLinking, setIsBulkLinking] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/signin");
-    }
-  }, [user, authLoading, navigate]);
+    const checkLocalAuth = async () => {
+      const token = localStorage.getItem("saratube_token");
+
+      if (!token) {
+        setAuthLoading(false);
+        navigate("/signin");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          localStorage.removeItem("saratube_token");
+          localStorage.removeItem("saratube_user");
+          navigate("/signin");
+          return;
+        }
+
+        setUser(data.user);
+      } catch (error) {
+        console.error("Local auth check failed:", error);
+        navigate("/signin");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkLocalAuth();
+  }, [navigate]);
 
   useEffect(() => {
     if (user) {
       fetchChildren();
-      fetchCreatedChildren();
-      fetchMyVideos();
     }
   }, [user]);
 
   const fetchCreatedChildren = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("created_by_parent", user.id)
-        .eq("is_parent", false);
-
-      if (error) throw error;
-      setCreatedChildren(data || []);
-    } catch (error) {
-      console.error("Error fetching created children:", error);
-    }
+    // Local version: children are loaded by fetchChildren()
+    await fetchChildren();
   };
 
-  useEffect(() => {
-    if (selectedChild) {
-      fetchChildData(selectedChild);
-    }
-  }, [selectedChild]);
 
   const fetchMyVideos = async () => {
-    if (!user) return;
-    setLoadingVideos(true);
-    try {
-      const { data: videos, error } = await supabase
-        .from("videos")
-        .select("*")
-        .eq("uploaded_by", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch child access for each video
-      const videosWithAccess: ParentVideo[] = await Promise.all(
-        (videos || []).map(async (video) => {
-          const { data: access } = await supabase
-            .from("video_child_access")
-            .select("child_user_id")
-            .eq("video_id", video.id);
-
-          const childIds = access?.map(a => a.child_user_id) || [];
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, display_name")
-            .in("user_id", childIds.length > 0 ? childIds : ["none"]);
-
-          return {
-            ...video,
-            child_access: profiles?.map(p => ({
-              child_user_id: p.user_id,
-              display_name: p.display_name,
-            })) || [],
-          };
-        })
-      );
-
-      setMyVideos(videosWithAccess);
-    } catch (error) {
-      console.error("Error fetching videos:", error);
-    } finally {
-      setLoadingVideos(false);
-    }
+    // Local media upload/videos are not migrated yet.
+    setMyVideos([]);
+    setLoadingVideos(false);
   };
+
 
   const openEditDialog = (video: ParentVideo) => {
     setEditingVideo(video);
@@ -231,131 +217,59 @@ const ParentDashboard = () => {
   };
 
   const handleSaveVideo = async () => {
-    if (!editingVideo || !user) return;
-
-    setIsSaving(true);
-    try {
-      // Update video metadata
-      const { error: updateError } = await supabase
-        .from("videos")
-        .update({
-          title: editForm.title,
-          description: editForm.description || null,
-          category: editForm.category,
-          available_from: editForm.availableFrom || null,
-          available_until: editForm.availableUntil || null,
-        })
-        .eq("id", editingVideo.id);
-
-      if (updateError) throw updateError;
-
-      // Update child access - remove all then add selected
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", editingVideo.id);
-
-      if (editForm.selectedChildren.length > 0) {
-        const accessRecords = editForm.selectedChildren.map(childId => ({
-          video_id: editingVideo.id,
-          child_user_id: childId,
-          granted_by: user.id,
-        }));
-
-        await supabase.from("video_child_access").insert(accessRecords);
-      }
-
-      toast.success("Video updated successfully! 🎉");
-      setEditingVideo(null);
-      fetchMyVideos();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update video");
-    } finally {
-      setIsSaving(false);
-    }
+    toast.info("Video editing is not migrated yet.");
+    setIsSaving(false);
   };
-  
+
+
   const handleBulkAssign = async () => {
-    if (selectedVideos.length === 0 || bulkTargetChildren.length === 0 || !user) return;
-    
-    setIsBulkLinking(true);
-    try {
-      const accessRecords = [];
-      for (const videoId of selectedVideos) {
-        for (const childId of bulkTargetChildren) {
-          accessRecords.push({
-            video_id: videoId,
-            child_user_id: childId,
-            granted_by: user.id
-          });
-        }
-      }
-
-      const { error } = await supabase
-        .from("video_child_access")
-        .upsert(accessRecords, { onConflict: 'video_id,child_user_id' });
-
-      if (error) throw error;
-
-      toast.success(`Successfully linked ${selectedVideos.length} videos to children! ✨`);
-      setSelectedVideos([]);
-      setBulkTargetChildren([]);
-      setShowBulkAssignDialog(false);
-      fetchMyVideos();
-    } catch (error: any) {
-      console.error("Error in bulk assignment:", error);
-      toast.error(error.message || "Failed to assign videos");
-    } finally {
-      setIsBulkLinking(false);
-    }
+    toast.info("Bulk video assignment is not migrated yet.");
+    setIsBulkLinking(false);
   };
+
 
   const handleDeleteVideo = async () => {
-    if (!deleteVideoId) return;
-
-    try {
-      // Delete child access first
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", deleteVideoId);
-
-      // Delete video record
-      const { error } = await supabase
-        .from("videos")
-        .delete()
-        .eq("id", deleteVideoId);
-
-      if (error) throw error;
-
-      toast.success("Video deleted successfully");
-      setDeleteVideoId(null);
-      fetchMyVideos();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete video");
-    }
+    toast.info("Video delete is not migrated yet.");
+    setDeleteVideoId(null);
   };
+
 
   const handleDeleteChild = async () => {
     if (!deleteChildId) return;
-    
+
+    const token = localStorage.getItem("saratube_token");
+
+    if (!token) {
+      toast.error("Please sign in again.");
+      return;
+    }
+
     try {
-      const { error } = await (supabase as any).rpc('delete_child_profile', { p_child_id: deleteChildId });
-      
-      if (error) throw error;
-      
-      toast.success("Child profile deleted successfully! 🗑️");
+      const response = await fetch(`${API_BASE_URL}/api/parent/children/${deleteChildId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete child");
+      }
+
+      toast.success("Child profile deleted locally.");
       setDeleteChildId(null);
-      fetchCreatedChildren();
-      fetchChildren();
+      await fetchChildren();
+
       if (selectedChild === deleteChildId) {
         setSelectedChild(null);
       }
     } catch (error: any) {
-      console.error("Error deleting profile:", error);
-      toast.error(error.message || "Failed to delete profile");
+      toast.error(error.message || "Failed to delete child");
     }
   };
+
 
   const toggleEditChildSelection = (childId: string) => {
     setEditForm(prev => ({
@@ -368,211 +282,76 @@ const ParentDashboard = () => {
 
   const fetchChildren = async () => {
     try {
-      const { data: links, error } = await supabase
-        .from("parent_child_links")
-        .select("child_user_id")
-        .eq("parent_user_id", user?.id);
+      const token = localStorage.getItem("saratube_token");
 
-      if (error) throw error;
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
 
-      if (links && links.length > 0) {
-        const childIds = links.map(l => l.child_user_id);
-        const { data: profiles, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("user_id", childIds);
-
-        if (profileError) throw profileError;
-        setChildren(profiles || []);
-        if (profiles && profiles.length > 0 && !selectedChild) {
-          setSelectedChild(profiles[0].user_id);
+      const response = await fetch(`${API_BASE_URL}/api/parent/children`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch children");
+      }
+
+      const localChildren = data.children || [];
+      setChildren(localChildren);
+      setCreatedChildren(localChildren);
+
+      if (localChildren.length > 0 && !selectedChild) {
+        setSelectedChild(localChildren[0].user_id);
       }
     } catch (error: any) {
-      console.error("Error fetching children:", error);
+      console.error("Error fetching local children:", error);
+      toast.error(error.message || "Failed to fetch children");
     } finally {
       setLoading(false);
     }
   };
 
   const fetchChildData = async (childId: string) => {
-    try {
-      // Fetch activity logs
-      const { data: logs } = await supabase
-        .from("activity_logs")
-        .select("*")
-        .eq("user_id", childId)
-        .order("watched_at", { ascending: false })
-        .limit(20);
-      setActivityLogs(logs || []);
-
-      // Fetch time limits
-      const { data: limits } = await supabase
-        .from("time_limits")
-        .select("*")
-        .eq("child_user_id", childId)
-        .single();
-      setTimeLimit(limits);
-
-      // Fetch today's watch time
-      const today = new Date().toISOString().split("T")[0];
-      const { data: watchTime } = await supabase
-        .from("daily_watch_time")
-        .select("*")
-        .eq("user_id", childId)
-        .eq("watch_date", today)
-        .single();
-      setDailyWatchTime(watchTime);
-
-      // Fetch blocked categories
-      const { data: blocked } = await supabase
-        .from("blocked_categories")
-        .select("category")
-        .eq("child_user_id", childId);
-      setBlockedCategories(blocked?.map(b => b.category) || []);
-    } catch (error) {
-      console.error("Error fetching child data:", error);
-    }
+    // Local activity/time-limit/category APIs are not migrated yet.
+    setActivityLogs([]);
+    setTimeLimit(null);
+    setDailyWatchTime(null);
+    setBlockedCategories([]);
   };
+
 
   const searchChildren = async () => {
-    if (!childEmail.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setSearching(true);
-    try {
-      // Get already linked children
-      const { data: existingLinks } = await supabase
-        .from("parent_child_links")
-        .select("child_user_id")
-        .eq("parent_user_id", user?.id);
-
-      const linkedIds = existingLinks?.map(l => l.child_user_id) || [];
-
-      // Search for child accounts by email or display name
-      const { data: results, error } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, email")
-        .eq("is_parent", false)
-        .or(`email.ilike.%${childEmail}%,display_name.ilike.%${childEmail}%`)
-        .limit(10);
-
-      if (error) throw error;
-
-      // Filter out already linked children
-      const filteredResults = (results || []).filter(
-        r => !linkedIds.includes(r.user_id) && r.user_id !== user?.id
-      );
-
-      setSearchResults(filteredResults);
-    } catch (error) {
-      console.error("Error searching:", error);
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
+    toast.info("Search/link existing child is not migrated yet.");
+    setSearchResults([]);
+    setSearching(false);
   };
+
 
   const linkChild = async (childUserId: string) => {
-    setAddingChild(true);
-    try {
-      const { error } = await supabase
-        .from("parent_child_links")
-        .insert({
-          parent_user_id: user?.id,
-          child_user_id: childUserId,
-        });
-
-      if (error) throw error;
-
-      // Create default time limits
-      await supabase
-        .from("time_limits")
-        .insert({
-          child_user_id: childUserId,
-          daily_limit_minutes: 60,
-          is_enabled: true,
-        });
-
-      toast.success("Child account linked successfully! 🎉");
-      setChildEmail("");
-      setSearchResults([]);
-      setShowLinkDialog(false);
-      fetchChildren();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to link child account");
-    } finally {
-      setAddingChild(false);
-    }
+    toast.info("Link existing child account is not migrated yet.");
+    setAddingChild(false);
   };
+
 
   const unlinkChild = async (childUserId: string) => {
-    try {
-      const { error } = await supabase
-        .from("parent_child_links")
-        .delete()
-        .eq("parent_user_id", user?.id)
-        .eq("child_user_id", childUserId);
-
-      if (error) throw error;
-
-      toast.success("Child account unlinked");
-      if (selectedChild === childUserId) {
-        setSelectedChild(null);
-      }
-      fetchChildren();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to unlink child");
-    }
+    toast.info("Unlink child is not migrated yet.");
   };
+
 
   const updateTimeLimit = async (field: string, value: any) => {
-    if (!selectedChild || !timeLimit) return;
-
-    try {
-      const { error } = await supabase
-        .from("time_limits")
-        .update({ [field]: value })
-        .eq("child_user_id", selectedChild);
-
-      if (error) throw error;
-      setTimeLimit({ ...timeLimit, [field]: value });
-      toast.success("Time limit updated! ⏰");
-    } catch (error: any) {
-      toast.error("Failed to update time limit");
-    }
+    toast.info("Time limits are not migrated yet.");
   };
+
 
   const toggleBlockedCategory = async (category: string) => {
-    if (!selectedChild || !user) return;
-
-    const isBlocked = blockedCategories.includes(category);
-
-    try {
-      if (isBlocked) {
-        await supabase
-          .from("blocked_categories")
-          .delete()
-          .eq("child_user_id", selectedChild)
-          .eq("category", category);
-        setBlockedCategories(blockedCategories.filter(c => c !== category));
-      } else {
-        await supabase
-          .from("blocked_categories")
-          .insert({
-            child_user_id: selectedChild,
-            category,
-            blocked_by: user.id,
-          });
-        setBlockedCategories([...blockedCategories, category]);
-      }
-      toast.success(isBlocked ? "Category unblocked" : "Category blocked");
-    } catch (error) {
-      toast.error("Failed to update blocked categories");
-    }
+    toast.info("Blocked categories are not migrated yet.");
   };
+
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -787,151 +566,7 @@ const ParentDashboard = () => {
 
               {/* My Videos Tab */}
               <TabsContent value="videos" className="space-y-6">
-                <Card className="shadow-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex flex-col gap-1">
-                        <span className="flex items-center gap-2">
-                          <Video className="w-5 h-5 text-primary" />
-                          My Uploaded Videos
-                        </span>
-                        {selectedVideos.length > 0 && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex items-center gap-2 mt-2 bg-primary/5 p-1.5 rounded-lg border border-primary/10"
-                          >
-                            <span className="text-xs font-bold text-primary pl-1">{selectedVideos.length} Selected</span>
-                            <Button 
-                              size="sm" 
-                              onClick={() => setShowBulkAssignDialog(true)}
-                              className="h-7 px-3 text-xs bg-primary hover:bg-primary/90"
-                            >
-                              <Users className="w-3 h-3 mr-1" />
-                              Link to Kids
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => setSelectedVideos([])}
-                              className="h-7 w-7 text-muted-foreground"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </motion.div>
-                        )}
-                      </div>
-                      <Button asChild size="sm" className="rounded-xl">
-                        <Link to="/upload">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Upload New
-                        </Link>
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loadingVideos ? (
-                      <div className="flex justify-center py-8">
-                        <Sparkles className="w-8 h-8 animate-spin text-primary" />
-                      </div>
-                    ) : myVideos.length > 0 ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/20">
-                          <Checkbox 
-                            id="selectAll"
-                            checked={selectedVideos.length === myVideos.length && myVideos.length > 0}
-                            onCheckedChange={(checked) => {
-                              if (checked) setSelectedVideos(myVideos.map(v => v.id));
-                              else setSelectedVideos([]);
-                            }}
-                          />
-                          <Label htmlFor="selectAll" className="text-sm font-medium text-muted-foreground cursor-pointer">
-                            Select All Videos
-                          </Label>
-                        </div>
-                        {myVideos.map((video) => (
-                          <div
-                            key={video.id}
-                            className={`flex items-start gap-4 p-4 rounded-xl transition-all border-2 ${
-                              selectedVideos.includes(video.id)
-                                ? "bg-primary/5 border-primary/20 shadow-sm"
-                                : "bg-muted border-transparent"
-                            }`}
-                          >
-                            <div className="pt-5 mr-1">
-                              <Checkbox 
-                                checked={selectedVideos.includes(video.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) setSelectedVideos([...selectedVideos, video.id]);
-                                  else setSelectedVideos(selectedVideos.filter(id => id !== video.id));
-                                }}
-                              />
-                            </div>
-                            <div className="w-24 h-16 rounded-lg bg-gradient-hero flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
-                              {video.thumbnail_url ? (
-                                <img
-                                  src={video.thumbnail_url}
-                                  alt={video.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <Video className="w-8 h-8 text-primary-foreground" />
-                              )}
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                                <Play className="w-6 h-6 text-white fill-white" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold truncate text-base">{video.title}</h4>
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                                {video.category} • {new Date(video.created_at).toLocaleDateString()}
-                              </p>
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {video.child_access.map((child) => (
-                                  <span
-                                    key={child.child_user_id}
-                                    className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-medium rounded-full border border-primary/10"
-                                  >
-                                    {child.display_name}
-                                  </span>
-                                ))}
-                                {video.child_access.length === 0 && (
-                                  <span className="text-[10px] text-muted-foreground italic">No access yet</span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 hover:bg-primary/10 hover:text-primary rounded-lg"
-                                onClick={() => openEditDialog(video)}
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-lg"
-                                onClick={() => setDeleteVideoId(video.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <Video className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-muted-foreground mb-4">No videos uploaded yet</p>
-                        <Button asChild>
-                          <Link to="/upload">Upload Your First Video</Link>
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <ParentVideoManager childId={selectedChild} />
               </TabsContent>
 
               {/* Photos Tab */}
@@ -1456,7 +1091,7 @@ const ParentDashboard = () => {
           <AddChildForm
             onSuccess={() => {
               setShowAddChildForm(false);
-              fetchCreatedChildren();
+              fetchChildren();
             }}
             onCancel={() => setShowAddChildForm(false)}
           />

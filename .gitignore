@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.env
+.env.local
+backend-api/.env
+*.bak
+*.bak-*
+backups/
+backend-api/uploads/
+uploads/
+dist/
+supabase/

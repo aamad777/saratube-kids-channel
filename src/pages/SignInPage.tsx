@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Star, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
 const SignInPage = () => {
   const navigate = useNavigate();
@@ -19,28 +20,12 @@ const SignInPage = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      toast.error("Please enter your email address");
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/signin`,
-      });
-      if (error) throw error;
-      setResetSent(true);
-      toast.success("Password reset link sent! Check your email 📧");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send reset link");
-    } finally {
-      setLoading(false);
-    }
+    toast.info("Password reset is not connected yet in local on-prem auth.");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields! 💖");
       return;
@@ -48,15 +33,28 @@ const SignInPage = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      localStorage.setItem("saratube_token", data.token);
+      localStorage.setItem("saratube_user", JSON.stringify(data.user));
 
       toast.success("Welcome back! 🎉✨");
-      navigate("/");
+      navigate("/parent");
     } catch (error: any) {
       toast.error(error.message || "Oops! Something went wrong 😢");
     } finally {

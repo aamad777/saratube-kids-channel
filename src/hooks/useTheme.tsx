@@ -230,33 +230,22 @@ export const themeCategoryMap: Partial<Record<AppTheme, string>> = {
   labubu_blue: "labubu",
 };
 
+
 export const useTheme = () => {
-  const { profile } = useAuth();
-  const { childSession, isChildActive } = useChildSession();
+  const storedTheme = (localStorage.getItem("activeChildTheme") || "rainbow") as AppTheme;
+  const childName = localStorage.getItem("activeChildName") || "";
+  const isChildActive = !!localStorage.getItem("activeChildId");
 
-  const currentTheme = useMemo(() => {
-    if (isChildActive && childSession?.theme) {
-      return themeConfigs[childSession.theme] || themeConfigs.rainbow;
-    }
-    const selectedTheme = (profile?.selected_theme as AppTheme) || "rainbow";
-    return themeConfigs[selectedTheme] || themeConfigs.rainbow;
-  }, [profile?.selected_theme, childSession?.theme, isChildActive]);
-
-  const themeName = useMemo(() => {
-    if (isChildActive && childSession?.theme) {
-      return childSession.theme;
-    }
-    return (profile?.selected_theme as AppTheme) || "rainbow";
-  }, [profile?.selected_theme, childSession?.theme, isChildActive]);
+  const themeName = themeConfigs[storedTheme] ? storedTheme : "rainbow";
+  const theme = themeConfigs[themeName];
 
   return {
-    theme: currentTheme,
+    theme,
     themeName,
-    themeConfigs,
-    isAuthenticated: !!profile || isChildActive,
     isChildActive,
-    childName: childSession?.name,
+    childName,
   };
 };
 
 export { themeConfigs };
+export type { AppTheme };

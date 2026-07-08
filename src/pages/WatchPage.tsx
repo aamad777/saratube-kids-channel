@@ -7,10 +7,8 @@ import CommentSection from "@/components/video/CommentSection";
 import { Button } from "@/components/ui/button";
 import VideoGrid from "@/components/video/VideoGrid";
 import { useTheme } from "@/hooks/useTheme";
-import { useScreenTimeTracker } from "@/hooks/useScreenTimeTracker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getVideoById, sampleVideos, VideoItem } from "@/data/videoData";
-import { supabase } from "@/integrations/supabase/client";
 
 const WatchPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,64 +20,22 @@ const WatchPage = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    const fetchVideo = async () => {
-      if (!id) return;
+    if (!id) return;
 
-      // Check if it's a sample video first
-      const sampleVideo = getVideoById(id);
-      if (sampleVideo) {
-        setVideo(sampleVideo);
-        setLikes(sampleVideo.likes);
-        setLoading(false);
-        return;
-      }
+    const sampleVideo = getVideoById(id);
 
-      // If not sample, try fetching from Supabase
-      try {
-        const { data, error } = await supabase
-          .from("videos")
-          .select("*")
-          .eq("id", id)
-          .single();
+    if (sampleVideo) {
+      setVideo(sampleVideo);
+      setLikes(sampleVideo.likes);
+    } else {
+      setVideo(null);
+    }
 
-        if (error) throw error;
-
-        if (data) {
-          const mappedVideo: VideoItem = {
-            id: data.id,
-            title: data.title,
-            thumbnail: data.thumbnail_url || "/placeholder.svg",
-            creator: "Parent Upload",
-            views: 0,
-            likes: 0,
-            comments: 0,
-            duration: "Video",
-            category: data.category,
-            description: data.description || "",
-            youtubeId: data.video_url.includes("youtube.com") || data.video_url.includes("youtu.be") 
-              ? (data.video_url.split("v=")[1]?.split("&")[0] || data.video_url.split("/").pop() || "")
-              : "",
-            // Store the direct URL for non-youtube videos
-            ...({ videoUrl: data.video_url } as any)
-          };
-          setVideo(mappedVideo);
-          setLikes(0);
-        }
-      } catch (error) {
-        console.error("Error fetching video:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVideo();
+    setLoading(false);
   }, [id]);
 
-  useScreenTimeTracker({
-    videoId: id || "1",
-    videoTitle: video?.title || "Loading...",
-    category: video?.category || "all",
-  });
+  // Local screen-time tracking will be migrated later.
+
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -220,4 +176,4 @@ const WatchPage = () => {
   );
 };
 
-export default WatchPage;
+export default WatchPage;

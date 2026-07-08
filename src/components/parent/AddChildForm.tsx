@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { themeConfigs, AppTheme, themeCategoryMap } from "@/hooks/useTheme";
 import { videoCategories } from "@/data/videoData";
 import { User, Lock, Palette, Check, X, Heart, Sparkles } from "lucide-react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
 interface AddChildFormProps {
   onSuccess: () => void;
@@ -40,7 +40,6 @@ const INTEREST_OPTIONS = [
 ];
 
 const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
-  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -67,65 +66,51 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
-    
     if (!name.trim()) {
       toast.error("Please enter a name");
       return;
     }
-    
+
     if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
       toast.error("PIN must be 4 digits");
       return;
     }
-    
+
     if (pin !== confirmPin) {
       toast.error("PINs don't match");
       return;
     }
 
-    if (!name.trim()) {
-      toast.error("Please enter a name");
-      return;
-    }
-
     setLoading(true);
-    
+
     try {
-      const childUserId = crypto.randomUUID();
-      const dummyEmail = `child-${childUserId}@kids.saratube`;
-      
-      // Calculate blocked categories based on theme
-      const themeDefaultCategory = themeCategoryMap[selectedTheme];
-      let blockedCategories: string[] = [];
-      if (themeDefaultCategory) {
-        blockedCategories = videoCategories
-          .filter((cat) => cat.id !== themeDefaultCategory)
-          .map((cat) => cat.id);
+      const token = localStorage.getItem("saratube_token");
+
+      if (!token) {
+        toast.error("Please sign in again");
+        return;
       }
 
-      // Filter valid interests
-      const validCategories = ["music", "animals", "crafts", "stories", "science", "games",
-        "quran_stories", "nasheed", "ramadan", "dua_prayer", "farm", "sports", "cars", "magic"];
-      const interestsToSave = selectedInterests.filter((i) => validCategories.includes(i));
-      
-      // Use the Super Mega-Fix RPC to create everything in one secure transaction
-      const { error: rpcError } = await (supabase.rpc as any)("create_child_auth_user", {
-        p_id: childUserId,
-        p_email: dummyEmail,
-        p_password: pin,
-        p_display_name: name.trim(),
-        p_pin_hash: pin,
-        p_age: age ? parseInt(age) : null,
-        p_selected_theme: selectedTheme,
-        p_created_by_parent: user.id,
-        p_parent_email: user.email,
-        p_child_login_id: loginId || null,
-        p_blocked_categories: blockedCategories,
-        p_interests: interestsToSave
+      const response = await fetch(`${API_BASE_URL}/api/parent/children`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          displayName: name.trim(),
+          age: age ? parseInt(age) : null,
+          selectedTheme,
+          childLoginId: loginId || null,
+          pin
+        })
       });
 
-      if (rpcError) throw rpcError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create child profile");
+      }
 
       toast.success(
         <span className="flex items-center gap-2">
@@ -133,7 +118,7 @@ const AddChildForm = ({ onSuccess, onCancel }: AddChildFormProps) => {
           <span>{name}'s profile created and linked!</span>
         </span>
       );
-      
+
       onSuccess();
     } catch (error: any) {
       console.error("Error creating child profile:", error);

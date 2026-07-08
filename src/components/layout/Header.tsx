@@ -1,10 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Search, Upload, Bell, LogOut, User, Shield, Palette, Users, UserCircle, Sparkles, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useChildSession } from "@/contexts/ChildSessionContext";
 import { useTheme, AppTheme, themeConfigs } from "@/hooks/useTheme";
 import { ThemeWheel } from "@/components/effects/ThemeWheel";
  import SearchDialog from "@/components/search/SearchDialog";
@@ -22,9 +20,31 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 const Header = () => {
   const navigate = useNavigate();
-  const { user, profile, signOut, loading } = useAuth();
-  const { childSession, clearChildSession, isChildActive, updateChildTheme } = useChildSession();
-  const { theme, themeName, childName } = useTheme();
+  const [user, setUser] = useState<any>(null);
+  const profile: any = null;
+  const isChildActive = false;
+  const childName = "";
+  const clearChildSession = () => {};
+  const updateChildTheme = async (_newTheme: AppTheme) => {};
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("saratube_user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
+
+  const signOut = () => {
+    localStorage.removeItem("saratube_token");
+    localStorage.removeItem("saratube_user");
+    setUser(null);
+    navigate("/signin");
+  };
+  const { theme, themeName } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [showThemeWheel, setShowThemeWheel] = useState(false);
    const [showSearch, setShowSearch] = useState(false);
@@ -60,12 +80,7 @@ const Header = () => {
 
   const handleSwitchProfile = async () => {
     clearChildSession();
-    if (profile && !profile.is_parent) {
-      await signOut();
-      navigate("/kid-login");
-    } else {
-      navigate("/kids");
-    }
+    navigate("/kids");
   };
 
   return (

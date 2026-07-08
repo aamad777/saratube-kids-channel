@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Star, Shield, Users, Eye, Baby, Upload, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -24,38 +25,37 @@ const SignUpPage = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters!");
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters!");
       return;
     }
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            display_name: displayName,
-            is_parent: true,
-          },
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
         },
+        body: JSON.stringify({
+          email,
+          password,
+          displayName,
+          role: "parent"
+        })
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      if (data.user) {
-        await supabase
-          .from("profiles")
-          .update({ 
-            is_parent: true,
-          })
-          .eq("user_id", data.user.id);
-
-        toast.success("Welcome! You can now create profiles for your kids! 🎉");
-        navigate("/parent");
+      if (!response.ok) {
+        throw new Error(data.error || "Signup failed");
       }
+
+      localStorage.setItem("saratube_token", data.token);
+      localStorage.setItem("saratube_user", JSON.stringify(data.user));
+
+      toast.success("Welcome! You can now create profiles for your kids! 🎉");
+      navigate("/parent");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong!");
     } finally {

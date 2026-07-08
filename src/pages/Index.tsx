@@ -2,26 +2,29 @@ import { useState, useEffect } from "react";
 import ThemedLayout from "@/components/layout/ThemedLayout";
 import HeroSection from "@/components/home/HeroSection";
 import CategoryNav from "@/components/layout/CategoryNav";
-import VideoGrid from "@/components/video/VideoGrid";
-import KidsPhotoFeed from "@/components/kids/KidsPhotoFeed";
 import UnifiedMediaGrid from "@/components/home/UnifiedMediaGrid";
 import GuidedQuizBot from "@/components/ai/GuidedQuizBot";
 import KidsChatBot from "@/components/ai/KidsChatBot";
 import MobileKidsHeader from "@/components/mobile/MobileKidsHeader";
 import MobileSwipeCarousel from "@/components/mobile/MobileSwipeCarousel";
 import { useTheme, themeCategoryMap, themeConfigs } from "@/hooks/useTheme";
-import { useChildSession } from "@/contexts/ChildSessionContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Video, Image as ImageIcon } from "lucide-react";
 import { sampleVideos } from "@/data/videoData";
 
+interface LocalChildSession {
+  id: string;
+  userId: string;
+  name: string;
+  theme: string;
+  age: number | null;
+}
+
 const Index = () => {
   const { theme, themeName } = useTheme();
-  const { childSession, isChildActive } = useChildSession();
-  const { user } = useAuth();
+  const [childSession, setChildSession] = useState<LocalChildSession | null>(null);
+  const isChildActive = !!childSession;
   const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
   const [blockedMediaIds, setBlockedMediaIds] = useState<string[]>([]);
   const [mediaType, setMediaType] = useState<"home" | "videos" | "photos">("home");
@@ -30,35 +33,30 @@ const Index = () => {
   const themeCategory = themeCategoryMap[themeName] || null;
   const [category, setCategory] = useState(themeCategory && isChildActive ? themeCategory : "all");
 
-  // Fetch blocked categories when child session is active
+  // Load local child session from browser localStorage
   useEffect(() => {
-    if (!isChildActive || !childSession?.userId || !user) {
-      setBlockedCategories([]);
-      return;
+    const id = localStorage.getItem("activeChildId");
+    const userId = localStorage.getItem("activeChildUserId");
+    const name = localStorage.getItem("activeChildName");
+    const theme = localStorage.getItem("activeChildTheme") || "rainbow";
+    const age = localStorage.getItem("activeChildAge");
+
+    if (id && userId && name) {
+      setChildSession({
+        id,
+        userId,
+        name,
+        theme,
+        age: age ? Number(age) : null
+      });
+    } else {
+      setChildSession(null);
     }
 
-    const fetchBlocked = async () => {
-      const { data: catData } = await supabase
-        .from("blocked_categories")
-        .select("category")
-        .eq("child_user_id", childSession.userId);
-
-      if (catData) {
-        setBlockedCategories(catData.map((d) => d.category));
-      }
-
-      // Fetch blocked media IDs for this parent/child context
-      const { data: mediaData } = await (supabase as any)
-        .from("blocked_media")
-        .select("media_id");
-      
-      if (mediaData) {
-        setBlockedMediaIds((mediaData as any[]).map(m => m.media_id));
-      }
-    };
-
-    fetchBlocked();
-  }, [isChildActive, childSession?.userId, user]);
+    // Local blocked category/media APIs are not migrated yet.
+    setBlockedCategories([]);
+    setBlockedMediaIds([]);
+  }, []);
 
   // Reset category when theme changes for child sessions
   useEffect(() => {
@@ -169,15 +167,11 @@ const Index = () => {
             transition={{ delay: 0.1 }}
           >
             {mediaType === "home" ? (
-              <UnifiedMediaGrid blockedMediaIds={blockedMediaIds} />
+              <UnifiedMediaGrid filter="all" />
             ) : mediaType === "videos" ? (
-              <VideoGrid 
-                category={category} 
-                blockedCategories={isChildActive ? blockedCategories : []} 
-                blockedMediaIds={blockedMediaIds}
-              />
+              <UnifiedMediaGrid filter="video" />
             ) : (
-              <KidsPhotoFeed blockedMediaIds={blockedMediaIds} />
+              <UnifiedMediaGrid filter="photo" />
             )}
           </motion.div>
         </div>
