@@ -142,16 +142,25 @@ export function registerDataRoutes(app, pool) {
   // ---------- time limits ----------
   app.get('/api/children/:id/time-limit', requireAuth, async (req, res) => {
     const { rows } = await pool.query(
-      `SELECT * FROM time_limits WHERE child_id=$1`, [req.params.id]);
-    res.json(rows[0] || { child_id: Number(req.params.id), daily_minutes: null });
+      `SELECT id, child_id, daily_minutes AS daily_limit_minutes, is_enabled, bedtime_start, bedtime_end
+       FROM time_limits WHERE child_id=$1`, [req.params.id]);
+    res.json(rows[0] || { child_id: Number(req.params.id), daily_limit_minutes: 60, is_enabled: true, bedtime_start: '20:00', bedtime_end: '07:00' });
   });
 
   app.put('/api/children/:id/time-limit', requireAuth, requireParent, async (req, res) => {
-    const { daily_minutes } = req.body || {};
+    const existing = await pool.query(`SELECT * FROM time_limits WHERE child_id=$1`, [req.params.id]);
+    const cur = existing.rows[0] || {};
+    const daily_minutes   = req.body?.daily_minutes   ?? cur.daily_minutes   ?? 60;
+    const is_enabled      = req.body?.is_enabled      ?? cur.is_enabled      ?? true;
+    const bedtime_start   = req.body?.bedtime_start   ?? cur.bedtime_start   ?? '20:00';
+    const bedtime_end     = req.body?.bedtime_end     ?? cur.bedtime_end     ?? '07:00';
     const { rows } = await pool.query(
-      `INSERT INTO time_limits (child_id, daily_minutes) VALUES ($1,$2)
-       ON CONFLICT (child_id) DO UPDATE SET daily_minutes=$2, updated_at=now()
-       RETURNING *`, [req.params.id, daily_minutes]);
+      `INSERT INTO time_limits (child_id, daily_minutes, is_enabled, bedtime_start, bedtime_end)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (child_id) DO UPDATE SET
+         daily_minutes=$2, is_enabled=$3, bedtime_start=$4, bedtime_end=$5, updated_at=now()
+       RETURNING id, child_id, daily_minutes AS daily_limit_minutes, is_enabled, bedtime_start, bedtime_end`,
+      [req.params.id, daily_minutes, is_enabled, bedtime_start, bedtime_end]);
     res.json(rows[0]);
   });
 
