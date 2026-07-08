@@ -4,6 +4,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { testDbConnection, pool } from "./db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -49,8 +50,20 @@ if (!JWT_SECRET) {
 }
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || "http://localhost:8081")
+  .split(",")
+  .map((origin) => origin.trim());
+
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+app.use(express.json({ limit: "1mb" }));
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
