@@ -41,7 +41,12 @@ const upload = multer({
 const PORT = process.env.PORT || 4000;
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral";
-const JWT_SECRET = process.env.JWT_SECRET || "change-this-dev-secret-before-production";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET environment variable is required");
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 app.use(cors());
