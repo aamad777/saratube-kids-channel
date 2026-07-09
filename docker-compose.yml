@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: saratube-postgres-compose
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - saratube_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend-api:
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    image: saratube-backend:local
+    container_name: saratube-backend-compose
+    env_file:
+      - .env
+    ports:
+      - "4000:4000"
+    volumes:
+      - saratube_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: saratube-frontend:local
+    container_name: saratube-frontend-compose
+    ports:
+      - "8081:8080"
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  saratube_postgres_data:
+  saratube_uploads:
