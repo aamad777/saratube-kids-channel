@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: saratube-backend-secret
+  namespace: saratube
+type: Opaque
+stringData:
+  JWT_SECRET: change_me_generate_real_secret_before_production
+  DB_PASSWORD: saratube_dev_password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saratube-backend
+  namespace: saratube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saratube-backend
+  template:
+    metadata:
+      labels:
+        app: saratube-backend
+    spec:
+      containers:
+        - name: backend-api
+          image: 192.168.0.101:5050/saratube-backend:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "4000"
+            - name: FRONTEND_ORIGIN
+              value: "http://localhost:8081"
+            - name: DB_HOST
+              value: "saratube-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "saratube"
+            - name: DB_USER
+              value: "saratube"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: saratube-backend-secret
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: saratube-backend-secret
+                  key: JWT_SECRET
+            - name: OLLAMA_URL
+              value: "http://192.168.0.113:11434"
+            - name: OLLAMA_MODEL
+              value: "mistral"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 4000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: saratube-backend
+  namespace: saratube
+spec:
+  type: ClusterIP
+  selector:
+    app: saratube-backend
+  ports:
+    - port: 4000
+      targetPort: 4000
