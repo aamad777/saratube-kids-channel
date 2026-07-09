@@ -11,7 +11,7 @@ for (const key of requiredDbEnv) {
   }
 }
 
-const pool = new Pool({
+export const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT || 5433),
   database: process.env.DB_NAME || "saratube",
