@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saratube-app
+  namespace: saratube-app
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: saratube-app
+  template:
+    metadata:
+      labels:
+        app: saratube-app
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: saratube-app
+      containers:
+        - name: saratube-app
+          image: 192.168.0.101:5050/saratube-kids-channel:v101
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"

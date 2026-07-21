@@ -103,7 +103,7 @@ BEGIN
 
   FOREACH v_interest IN ARRAY p_interests LOOP
     INSERT INTO public.user_video_preferences (user_id, category)
-    VALUES (p_id, v_interest) ON CONFLICT DO NOTHING;
+    VALUES (p_id, v_interest::public.video_category) ON CONFLICT DO NOTHING;
   END LOOP;
 END;
 $$;

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AppTheme } from "@/hooks/useTheme";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 
 interface ChildSession {
   id: string;
@@ -85,11 +85,8 @@ export const ChildSessionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const updateChildTheme = async (theme: AppTheme) => {
     if (!childSession) return;
 
-    // Update in database
-    await supabase
-      .from("profiles")
-      .update({ selected_theme: theme })
-      .eq("id", childSession.id);
+    // Update in database (ignore failure so theme still changes locally)
+    try { await api.put("/children/theme", { theme }); } catch (e) { console.error(e); }
 
     // Update local state and storage
     const updatedSession = { ...childSession, theme };

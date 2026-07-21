@@ -8,6 +8,7 @@ import { ChildSessionProvider } from "@/contexts/ChildSessionContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { RewardProvider } from "@/components/effects/RewardBurst";
 import Index from "./pages/Index";
+import AdminMediaPage from "./pages/AdminMediaPage";
 import WatchPage from "./pages/WatchPage";
 import UploadPage from "./pages/UploadPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -42,7 +43,8 @@ const App = () => (
                 <Route path="/kid-login" element={<KidLoginPage />} />
                 <Route path="/explore" element={<Index />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
+                <Route path="/admin-media" element={<AdminMediaPage />} />
+          <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
             </RewardProvider>

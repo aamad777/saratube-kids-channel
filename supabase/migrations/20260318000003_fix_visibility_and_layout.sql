@@ -12,8 +12,8 @@ DROP POLICY IF EXISTS "Children can view shared photos" ON public.kids_photos;
 CREATE POLICY "Children can view shared photos"
 ON public.kids_photos FOR SELECT
 USING (
-  child_profile_id = auth.uid() 
-  OR parent_user_id = auth.uid()
+  child_profile_id = auth.uid()::text 
+  OR parent_user_id = auth.uid()::text
 );
 
 -- 3. Confirm RLS on video_child_access is enabled

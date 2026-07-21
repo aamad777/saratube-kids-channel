@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: saratube-api-config
+  namespace: saratube-app
+data:
+  DB_HOST: saratube-postgres-service.saratube-data.svc.cluster.local
+  DB_PORT: "5432"
+  DB_NAME: saratube
+  DB_USER: saratube_user

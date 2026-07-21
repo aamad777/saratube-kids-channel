@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: saratube-app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: saratube-data

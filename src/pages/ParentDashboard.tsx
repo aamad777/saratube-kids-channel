@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { themeConfigs, AppTheme } from "@/hooks/useTheme";
 import AddChildForm from "@/components/parent/AddChildForm";
 import ScreenTimeChart from "@/components/parent/ScreenTimeChart";
 import CategoryManager from "@/components/parent/CategoryManager";
@@ -57,6 +58,7 @@ interface ChildProfile {
   created_by_parent: string | null;
   selected_theme: string | null;
   child_login_id?: string | null;
+  login_code?: string | null;
 }
 
 interface ActivityLog {
@@ -103,17 +105,11 @@ const ParentDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
-  const [children, setChildren] = useState<ChildProfile[]>([]);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [timeLimit, setTimeLimit] = useState<TimeLimit | null>(null);
   const [dailyWatchTime, setDailyWatchTime] = useState<DailyWatchTime | null>(null);
   const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
-  const [childEmail, setChildEmail] = useState("");
-  const [addingChild, setAddingChild] = useState(false);
-  const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ user_id: string; display_name: string; email: string | null }[]>([]);
-  const [searching, setSearching] = useState(false);
   const [showAddChildForm, setShowAddChildForm] = useState(false);
   const [createdChildren, setCreatedChildren] = useState<ChildProfile[]>([]);
   
@@ -145,7 +141,6 @@ const ParentDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      fetchChildren();
       fetchCreatedChildren();
       fetchMyVideos();
     }
@@ -155,16 +150,12 @@ const ParentDashboard = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("created_by_parent", user.id)
-        .eq("is_parent", false);
-
-      if (error) throw error;
+      const data = await api.get<any[]>("/children");
       setCreatedChildren(data || []);
     } catch (error) {
       console.error("Error fetching created children:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,38 +169,14 @@ const ParentDashboard = () => {
     if (!user) return;
     setLoadingVideos(true);
     try {
-      const { data: videos, error } = await supabase
-        .from("videos")
-        .select("*")
-        .eq("uploaded_by", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch child access for each video
-      const videosWithAccess: ParentVideo[] = await Promise.all(
-        (videos || []).map(async (video) => {
-          const { data: access } = await supabase
-            .from("video_child_access")
-            .select("child_user_id")
-            .eq("video_id", video.id);
-
-          const childIds = access?.map(a => a.child_user_id) || [];
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, display_name")
-            .in("user_id", childIds.length > 0 ? childIds : ["none"]);
-
-          return {
-            ...video,
-            child_access: profiles?.map(p => ({
-              child_user_id: p.user_id,
-              display_name: p.display_name,
-            })) || [],
-          };
-        })
-      );
-
+      const media = await api.get<any[]>("/media?type=video");
+      const videosWithAccess: ParentVideo[] = media.map((m: any) => ({
+        ...m,
+        child_access: (m.access || []).map((a: any) => ({
+          child_user_id: String(a.child_id),
+          display_name: a.name,
+        })),
+      }));
       setMyVideos(videosWithAccess);
     } catch (error) {
       console.error("Error fetching videos:", error);
@@ -235,35 +202,17 @@ const ParentDashboard = () => {
 
     setIsSaving(true);
     try {
-      // Update video metadata
-      const { error: updateError } = await supabase
-        .from("videos")
-        .update({
-          title: editForm.title,
-          description: editForm.description || null,
-          category: editForm.category,
-          available_from: editForm.availableFrom || null,
-          available_until: editForm.availableUntil || null,
-        })
-        .eq("id", editingVideo.id);
+      await api.put(`/media/${editingVideo.id}`, {
+        title: editForm.title,
+        description: editForm.description || null,
+        category: editForm.category,
+        available_from: editForm.availableFrom || null,
+        available_until: editForm.availableUntil || null,
+      });
 
-      if (updateError) throw updateError;
-
-      // Update child access - remove all then add selected
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", editingVideo.id);
-
-      if (editForm.selectedChildren.length > 0) {
-        const accessRecords = editForm.selectedChildren.map(childId => ({
-          video_id: editingVideo.id,
-          child_user_id: childId,
-          granted_by: user.id,
-        }));
-
-        await supabase.from("video_child_access").insert(accessRecords);
-      }
+      await api.put(`/media/${editingVideo.id}/access`, {
+        child_ids: editForm.selectedChildren,
+      });
 
       toast.success("Video updated successfully! 🎉");
       setEditingVideo(null);
@@ -280,22 +229,11 @@ const ParentDashboard = () => {
     
     setIsBulkLinking(true);
     try {
-      const accessRecords = [];
+      const promises = [];
       for (const videoId of selectedVideos) {
-        for (const childId of bulkTargetChildren) {
-          accessRecords.push({
-            video_id: videoId,
-            child_user_id: childId,
-            granted_by: user.id
-          });
-        }
+        promises.push(api.post(`/media/${videoId}/access/add`, { child_ids: bulkTargetChildren }));
       }
-
-      const { error } = await supabase
-        .from("video_child_access")
-        .upsert(accessRecords, { onConflict: 'video_id,child_user_id' });
-
-      if (error) throw error;
+      await Promise.all(promises);
 
       toast.success(`Successfully linked ${selectedVideos.length} videos to children! ✨`);
       setSelectedVideos([]);
@@ -314,19 +252,7 @@ const ParentDashboard = () => {
     if (!deleteVideoId) return;
 
     try {
-      // Delete child access first
-      await supabase
-        .from("video_child_access")
-        .delete()
-        .eq("video_id", deleteVideoId);
-
-      // Delete video record
-      const { error } = await supabase
-        .from("videos")
-        .delete()
-        .eq("id", deleteVideoId);
-
-      if (error) throw error;
+      await api.del(`/media/${deleteVideoId}`);
 
       toast.success("Video deleted successfully");
       setDeleteVideoId(null);
@@ -340,14 +266,11 @@ const ParentDashboard = () => {
     if (!deleteChildId) return;
     
     try {
-      const { error } = await (supabase as any).rpc('delete_child_profile', { p_child_id: deleteChildId });
-      
-      if (error) throw error;
+      await api.del(`/children/${deleteChildId}`);
       
       toast.success("Child profile deleted successfully! 🗑️");
       setDeleteChildId(null);
       fetchCreatedChildren();
-      fetchChildren();
       if (selectedChild === deleteChildId) {
         setSelectedChild(null);
       }
@@ -366,208 +289,46 @@ const ParentDashboard = () => {
     }));
   };
 
-  const fetchChildren = async () => {
-    try {
-      const { data: links, error } = await supabase
-        .from("parent_child_links")
-        .select("child_user_id")
-        .eq("parent_user_id", user?.id);
-
-      if (error) throw error;
-
-      if (links && links.length > 0) {
-        const childIds = links.map(l => l.child_user_id);
-        const { data: profiles, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .in("user_id", childIds);
-
-        if (profileError) throw profileError;
-        setChildren(profiles || []);
-        if (profiles && profiles.length > 0 && !selectedChild) {
-          setSelectedChild(profiles[0].user_id);
-        }
-      }
-    } catch (error: any) {
-      console.error("Error fetching children:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchChildData = async (childId: string) => {
     try {
-      // Fetch activity logs
-      const { data: logs } = await supabase
-        .from("activity_logs")
-        .select("*")
-        .eq("user_id", childId)
-        .order("watched_at", { ascending: false })
-        .limit(20);
+      const logs = await api.get<any[]>(`/children/${childId}/activity`);
       setActivityLogs(logs || []);
 
-      // Fetch time limits
-      const { data: limits } = await supabase
-        .from("time_limits")
-        .select("*")
-        .eq("child_user_id", childId)
-        .single();
-      setTimeLimit(limits);
+      const limit = await api.get<any>(`/children/${childId}/time-limit`);
+      setTimeLimit(limit);
 
-      // Fetch today's watch time
-      const today = new Date().toISOString().split("T")[0];
-      const { data: watchTime } = await supabase
-        .from("daily_watch_time")
-        .select("*")
-        .eq("user_id", childId)
-        .eq("watch_date", today)
-        .single();
-      setDailyWatchTime(watchTime);
+      const watchDays = await api.get<any[]>(`/children/${childId}/watch-time?days=1`);
+      setDailyWatchTime(watchDays[0] || null);
 
-      // Fetch blocked categories
-      const { data: blocked } = await supabase
-        .from("blocked_categories")
-        .select("category")
-        .eq("child_user_id", childId);
-      setBlockedCategories(blocked?.map(b => b.category) || []);
+      const blocked = await api.get<string[]>(`/children/${childId}/blocked-categories`);
+      setBlockedCategories(blocked || []);
     } catch (error) {
       console.error("Error fetching child data:", error);
     }
   };
 
-  const searchChildren = async () => {
-    if (!childEmail.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setSearching(true);
-    try {
-      // Get already linked children
-      const { data: existingLinks } = await supabase
-        .from("parent_child_links")
-        .select("child_user_id")
-        .eq("parent_user_id", user?.id);
-
-      const linkedIds = existingLinks?.map(l => l.child_user_id) || [];
-
-      // Search for child accounts by email or display name
-      const { data: results, error } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, email")
-        .eq("is_parent", false)
-        .or(`email.ilike.%${childEmail}%,display_name.ilike.%${childEmail}%`)
-        .limit(10);
-
-      if (error) throw error;
-
-      // Filter out already linked children
-      const filteredResults = (results || []).filter(
-        r => !linkedIds.includes(r.user_id) && r.user_id !== user?.id
-      );
-
-      setSearchResults(filteredResults);
-    } catch (error) {
-      console.error("Error searching:", error);
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const linkChild = async (childUserId: string) => {
-    setAddingChild(true);
-    try {
-      const { error } = await supabase
-        .from("parent_child_links")
-        .insert({
-          parent_user_id: user?.id,
-          child_user_id: childUserId,
-        });
-
-      if (error) throw error;
-
-      // Create default time limits
-      await supabase
-        .from("time_limits")
-        .insert({
-          child_user_id: childUserId,
-          daily_limit_minutes: 60,
-          is_enabled: true,
-        });
-
-      toast.success("Child account linked successfully! 🎉");
-      setChildEmail("");
-      setSearchResults([]);
-      setShowLinkDialog(false);
-      fetchChildren();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to link child account");
-    } finally {
-      setAddingChild(false);
-    }
-  };
-
-  const unlinkChild = async (childUserId: string) => {
-    try {
-      const { error } = await supabase
-        .from("parent_child_links")
-        .delete()
-        .eq("parent_user_id", user?.id)
-        .eq("child_user_id", childUserId);
-
-      if (error) throw error;
-
-      toast.success("Child account unlinked");
-      if (selectedChild === childUserId) {
-        setSelectedChild(null);
-      }
-      fetchChildren();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to unlink child");
-    }
-  };
 
   const updateTimeLimit = async (field: string, value: any) => {
     if (!selectedChild || !timeLimit) return;
-
     try {
-      const { error } = await supabase
-        .from("time_limits")
-        .update({ [field]: value })
-        .eq("child_user_id", selectedChild);
-
-      if (error) throw error;
-      setTimeLimit({ ...timeLimit, [field]: value });
+      const updated = await api.put<any>(`/children/${selectedChild}/time-limit`, { [field]: value });
+      setTimeLimit(updated);
       toast.success("Time limit updated! ⏰");
     } catch (error: any) {
       toast.error("Failed to update time limit");
     }
   };
 
-  const toggleBlockedCategory = async (category: string) => {
+    const toggleBlockedCategory = async (category: string) => {
     if (!selectedChild || !user) return;
-
     const isBlocked = blockedCategories.includes(category);
-
     try {
-      if (isBlocked) {
-        await supabase
-          .from("blocked_categories")
-          .delete()
-          .eq("child_user_id", selectedChild)
-          .eq("category", category);
-        setBlockedCategories(blockedCategories.filter(c => c !== category));
-      } else {
-        await supabase
-          .from("blocked_categories")
-          .insert({
-            child_user_id: selectedChild,
-            category,
-            blocked_by: user.id,
-          });
-        setBlockedCategories([...blockedCategories, category]);
-      }
+      const nextCategories = isBlocked
+        ? blockedCategories.filter(c => c !== category)
+        : [...blockedCategories, category];
+      await api.put(`/children/${selectedChild}/blocked-categories`, { categories: nextCategories });
+      setBlockedCategories(nextCategories);
       toast.success(isBlocked ? "Category unblocked" : "Category blocked");
     } catch (error) {
       toast.error("Failed to update blocked categories");
@@ -597,7 +358,7 @@ const ParentDashboard = () => {
     );
   }
 
-  const selectedChildProfile = children.find(c => c.user_id === selectedChild);
+  const selectedChildProfile = createdChildren.find(c => String(c.id) === selectedChild);
   const watchProgress = timeLimit && dailyWatchTime 
     ? Math.min((dailyWatchTime.total_seconds / 60 / timeLimit.daily_limit_minutes) * 100, 100)
     : 0;
@@ -635,13 +396,13 @@ const ParentDashboard = () => {
                   </p>
                   {createdChildren.map((child) => (
                     <div
-                      key={child.user_id}
+                      key={child.id}
                       className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
-                        selectedChild === child.user_id
+                        selectedChild === String(child.id)
                           ? "bg-primary/10 border-2 border-primary"
                           : "bg-muted hover:bg-muted/80 border-2 border-transparent"
                       }`}
-                      onClick={() => setSelectedChild(child.user_id)}
+                      onClick={() => setSelectedChild(String(child.id))}
                     >
                       <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${themeConfigs[child.selected_theme as AppTheme]?.primary || "from-pink-500 to-purple-500"} flex items-center justify-center text-2xl overflow-hidden`}>
                         {themeConfigs[child.selected_theme as AppTheme]?.iconUrl ? (
@@ -665,9 +426,9 @@ const ParentDashboard = () => {
                               {child.age} yrs
                             </span>
                           )}
-                          {child.child_login_id && (
+                          {child.login_code && (
                             <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded font-mono border border-accent/20 whitespace-nowrap">
-                              ID: {child.child_login_id}
+                              ID: {child.login_code}
                             </span>
                           )}
                         </div>
@@ -688,48 +449,7 @@ const ParentDashboard = () => {
                 </div>
               )}
 
-              {/* Linked Children */}
-              {children.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    {t("parent.linked.accounts")}
-                  </p>
-                  {children.map((child) => (
-                    <div
-                      key={child.user_id}
-                      className={`p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer ${
-                        selectedChild === child.user_id
-                          ? "bg-primary/10 border-2 border-primary"
-                          : "bg-muted hover:bg-muted/80 border-2 border-transparent"
-                      }`}
-                      onClick={() => setSelectedChild(child.user_id)}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
-                        {child.display_name?.charAt(0) || "?"}
-                      </div>
-                      <div className="text-left flex-1">
-                        <p className="font-medium">{child.display_name}</p>
-                        {child.age && (
-                          <p className="text-xs text-muted-foreground">{child.age} {t("parent.years.old")}</p>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          unlinkChild(child.user_id);
-                        }}
-                      >
-                        <Unlink className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {children.length === 0 && createdChildren.length === 0 && (
+              {createdChildren.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   {t("parent.no.children")}
                 </p>
@@ -742,14 +462,6 @@ const ParentDashboard = () => {
                 >
                   <Baby className="w-4 h-4 mr-2" />
                   {t("parent.create.child")}
-                </Button>
-                <Button 
-                  onClick={() => setShowLinkDialog(true)} 
-                  className="w-full"
-                  variant="outline"
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  {t("parent.link.account")}
                 </Button>
               </div>
             </CardContent>
@@ -1180,21 +892,21 @@ const ParentDashboard = () => {
                 Who can watch?
               </Label>
               <div className="space-y-3 p-4 bg-muted/50 rounded-2xl border border-border/50">
-                {children.map((child) => (
-                  <div key={child.user_id} className="flex items-center gap-3 p-2 hover:bg-background/50 rounded-xl transition-colors">
+                {createdChildren.map((child) => (
+                  <div key={child.id} className="flex items-center gap-3 p-2 hover:bg-background/50 rounded-xl transition-colors">
                     <Checkbox
-                      id={`edit-child-${child.user_id}`}
-                      checked={editForm.selectedChildren.includes(child.user_id)}
-                      onCheckedChange={() => toggleEditChildSelection(child.user_id)}
+                      id={`edit-child-${child.id}`}
+                      checked={editForm.selectedChildren.includes(String(child.id))}
+                      onCheckedChange={() => toggleEditChildSelection(String(child.id))}
                       className="h-5 w-5 rounded-md"
                     />
-                    <Label htmlFor={`edit-child-${child.user_id}`} className="cursor-pointer font-medium">
+                    <Label htmlFor={`edit-child-${child.id}`} className="cursor-pointer font-medium">
                       {child.display_name}
                     </Label>
                   </div>
                 ))}
-                {children.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic p-2">No linked children found</p>
+                {createdChildren.length === 0 && (
+                  <p className="text-sm text-muted-foreground italic p-2">No kids found. Create one first!</p>
                 )}
               </div>
             </div>
@@ -1320,74 +1032,7 @@ const ParentDashboard = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Link Child Dialog */}
-      <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              Link Child Account
-            </DialogTitle>
-            <DialogDescription>
-              Search for your child's account by email or name to link it to your parent account.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Search by email or name..."
-                value={childEmail}
-                onChange={(e) => setChildEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchChildren()}
-              />
-              <Button onClick={searchChildren} disabled={searching}>
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
 
-            {searching && (
-              <div className="flex justify-center py-4">
-                <Sparkles className="w-6 h-6 animate-spin text-primary" />
-              </div>
-            )}
-
-            {!searching && searchResults.length > 0 && (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {searchResults.map((result) => (
-                  <div
-                    key={result.user_id}
-                    className="flex items-center gap-3 p-3 bg-muted rounded-lg"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gradient-button flex items-center justify-center text-primary-foreground font-bold">
-                      {result.display_name?.charAt(0) || "?"}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{result.display_name}</p>
-                      {result.email && (
-                        <p className="text-xs text-muted-foreground">{result.email}</p>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => linkChild(result.user_id)}
-                      disabled={addingChild}
-                    >
-                      {addingChild ? "Linking..." : "Link"}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!searching && childEmail && searchResults.length === 0 && (
-              <div className="text-center py-4 text-muted-foreground">
-                <p>No child accounts found.</p>
-                <p className="text-sm mt-1">Make sure your child has signed up first!</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={showBulkAssignDialog} onOpenChange={setShowBulkAssignDialog}>
         <DialogContent className="max-w-md">
@@ -1402,24 +1047,24 @@ const ParentDashboard = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 gap-2">
-              {children.map((child) => (
-                <div 
-                  key={child.user_id} 
+              {createdChildren.map((child) => (
+                <div
+                  key={child.id}
                   className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                    bulkTargetChildren.includes(child.user_id) 
-                      ? "border-primary bg-primary/5 shadow-sm" 
+                    bulkTargetChildren.includes(String(child.id))
+                      ? "border-primary bg-primary/5 shadow-sm"
                       : "border-muted hover:border-primary/20"
                   }`}
                   onClick={() => {
-                    if (bulkTargetChildren.includes(child.user_id)) {
-                      setBulkTargetChildren(bulkTargetChildren.filter(id => id !== child.user_id));
+                    if (bulkTargetChildren.includes(String(child.id))) {
+                      setBulkTargetChildren(bulkTargetChildren.filter(id => id !== String(child.id)));
                     } else {
-                      setBulkTargetChildren([...bulkTargetChildren, child.user_id]);
+                      setBulkTargetChildren([...bulkTargetChildren, String(child.id)]);
                     }
                   }}
                 >
-                  <Checkbox 
-                    checked={bulkTargetChildren.includes(child.user_id)}
+                  <Checkbox
+                    checked={bulkTargetChildren.includes(String(child.id))}
                     className="h-5 w-5"
                   />
                   <div className="flex items-center gap-3">
@@ -1430,8 +1075,8 @@ const ParentDashboard = () => {
                   </div>
                 </div>
               ))}
-              {children.length === 0 && (
-                <p className="text-center text-muted-foreground py-4 italic">No children found</p>
+              {createdChildren.length === 0 && (
+                <p className="text-center text-muted-foreground py-4 italic">No kids found</p>
               )}
             </div>
           </div>

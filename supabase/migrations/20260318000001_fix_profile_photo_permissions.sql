@@ -5,11 +5,11 @@ DROP POLICY IF EXISTS "Parents can update child profiles" ON public.profiles;
 CREATE POLICY "Parents can update child profiles"
 ON public.profiles FOR UPDATE
 USING (
-  auth.uid() = user_id OR 
+  auth.uid() = user_id OR
   created_by_parent = auth.uid()
 )
 WITH CHECK (
-  auth.uid() = user_id OR 
+  auth.uid() = user_id OR
   created_by_parent = auth.uid()
 );
 
@@ -32,9 +32,21 @@ ALTER TABLE public.kids_photos ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Parents can manage kids photos" ON public.kids_photos;
 CREATE POLICY "Parents can manage kids photos"
 ON public.kids_photos FOR ALL
-USING (parent_user_id = auth.uid());
+USING (parent_user_id = auth.uid()::text);
 
 DROP POLICY IF EXISTS "Children can see their own shared photos" ON public.kids_photos;
 CREATE POLICY "Children can see their own shared photos"
 ON public.kids_photos FOR SELECT
-USING (child_profile_id = (SELECT id FROM public.profiles WHERE user_id = auth.uid()) OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = child_profile_id AND p.created_by_parent = auth.uid()));
+USING (
+  child_profile_id = (
+    SELECT id::text
+    FROM public.profiles
+    WHERE user_id = auth.uid()
+  )
+  OR EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id::text = child_profile_id
+    AND p.created_by_parent = auth.uid()
+  )
+);

@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local environment and backups
+.env
+.env.*.bak
+*.bak
+
+# Supabase local runtime files
+supabase/.branches/
+supabase/.temp/
+supabase/snippets
+
+# Local backup files created during lab troubleshooting
+*.bak
+*.bak-*
+*.backup
+*.backup-*
+.env
+.env.local
+*.bak*
+npm_install_output.txt
